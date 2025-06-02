@@ -12,7 +12,7 @@ const pool = new Pool({
   user: 'postgres',
   host: 'localhost', // This changes between 'postgres' for docker and 'localhost' for non-containerized
   database: 'LEAP',
-  password: 'admin',
+  password: 'postgres',
   port: 5432,
 });
 
