@@ -638,7 +638,7 @@ app.post('/api/newpresetunit', async (req, res) => {
     res.status(500).send('Server Error');
   }
 });
-
+// not really used anywhere else ??
 app.get('/api/sectionunits', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM section_units');
@@ -665,6 +665,7 @@ app.get('/api/sectionunits/sectionSort', async (req, res) => {
 app.get('/api/sectionunits/enemyUnits', async (req, res) => {
   const sectionid = req.query.sectionid;
   try {
+    //TODO: below: add another filter to section_untis to filter for enemy in friendly WEZ
     const result = await pool.query('SELECT * FROM section_units WHERE section_id = $1 AND "is_friendly"::boolean = false AND "unit_health" != 0', [sectionid]);
     res.json(result.rows);
   } catch (err) {

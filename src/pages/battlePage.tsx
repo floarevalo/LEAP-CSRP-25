@@ -53,7 +53,8 @@ function BattlePage() {
   const [round, setRound] = useState<number>(1); // Sets the round number for each round of the engagement
   const [totalEnemyDamage, setTotalEnemyDamage] = useState<number>(0);
   const [totalFriendlyDamage, setTotalFriendlyDamage] = useState<number | null>(null);
-  const [enemyUnits, setEnemyUnits] = useState<Unit[]>([]);
+  const [enemyUnits, setEnemyUnits] = useState<Unit[]>([]); //initializes enemyUnits as an empty array every time BattlePage runs, used to render dropdown list of enemies
+                                                            //setEnemyUnits is the setter function for enemyUnits, cannot edit enemyUnits directly
   const [unitTactics, setUnitTactics] = useState<UnitTactics | null>(null);
   const [enemyBaseValue, setEnemyBaseValue] = useState<number>(0); // Sets and gets the state for the enemy base value 
 
@@ -92,7 +93,7 @@ function BattlePage() {
     fetchData();
   }, []);
 
-
+  // Fetches unit tactics based on unit ID
   useEffect(() => {
     const fetchUnitTactics = async () => {
       try {
@@ -292,12 +293,15 @@ function BattlePage() {
     // These are based on values given by Lt. Col. Rayl
     if (unit_type === 'Armored Mechanized' || unit_type === 'Armored Mechanized Tracked' || unit_type === 'Field Artillery') {
       b = 20;
+    } // add armor company b = 10
+    else if (unit_type === 'Armor Company') {
+      b = 10;
     }
     else if (unit_type === 'Air Defense') {
       b = 50;
     }
     else if (unit_type === 'Infantry') {
-      b = 3;
+      b = 10; //needs to be 10
     }
     else if (unit_type === 'Reconnaissance' || unit_type === 'Unmanned Aerial Systems') {
       b = 5;
@@ -311,28 +315,36 @@ function BattlePage() {
     else if (unit_type === 'Signal' || unit_type === 'Special Operations Forces') {
       b = 10;
     }
+    // add multiple special forces types some are b = 10 and some are b = 15 add MEU and MLR
+    else if (unit_type === 'Special Operations Forces - EZO') {
+      b = 15;
+    }
     else {
       b = 0;
     }
 
     // These are based on values given by Lt. Col. Rayl
     if (enemyUnit?.unit_type === 'Armored Mechanized' || enemyUnit?.unit_type === 'Armored Mechanized Tracked' || enemyUnit?.unit_type === 'Field Artillery') {
-      b_enemy = 20;
+      b_enemy = 10;
+    }
+    //add armor company
+    else if (enemyUnit?.unit_type === 'Armored Company') {
+      b_enemy = 10;
     }
     else if (enemyUnit?.unit_type === 'Air Defense') {
-      b_enemy = 50;
+      b_enemy = 10;
     }
     else if (enemyUnit?.unit_type === 'Infantry') {
-      b_enemy = 3;
+      b_enemy = 10;
     }
     else if (enemyUnit?.unit_type === 'Reconnaissance' || enemyUnit?.unit_type === 'Unmanned Aerial Systems') {
-      b_enemy = 5;
+      b_enemy = 10;
     }
     else if (enemyUnit?.unit_type === 'Combined Arms') {
-      b_enemy = 30;
+      b_enemy = 10;
     }
     else if (enemyUnit?.unit_type === 'Self-propelled' || enemyUnit?.unit_type === 'Electronic Warfare' || enemyUnit?.unit_type === 'Air Assault' || unit_type === 'Aviation Rotary Wing') {
-      b_enemy = 15;
+      b_enemy = 10;
     }
     else if (enemyUnit?.unit_type === 'Signal' || enemyUnit?.unit_type === 'Special Operations Forces') {
       b_enemy = 10;
