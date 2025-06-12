@@ -613,7 +613,9 @@ export default function NodeEditModal({ isOpen, onClose, nodeID, is_friendly, us
                                     { value: 'Combat Service Support', label: 'Combat Service Support' },
                                     { value: 'Petroleum, Oil and Lubricants', label: 'Petroleum, Oil and Lubricants' },
                                     { value: 'Sea Port', label: 'Sea Port' },
-                                    { value: 'Railhead', label: 'Railhead' }
+                                    { value: 'Railhead', label: 'Railhead' },
+                                    { value: 'Special Operations Forces - EZO', label: 'Special Operations Forces - EZO'},
+                                    { value: 'Armor Company', label: 'Armor Company'}
                                 ]}
                             />
 
