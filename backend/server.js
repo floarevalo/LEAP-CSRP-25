@@ -12,7 +12,7 @@ const pool = new Pool({
   user: 'postgres',
   host: 'localhost', // This changes between 'postgres' for docker and 'localhost' for non-containerized
   database: 'LEAP',
-  password: 'admin',
+  password: 'postgres',
   port: 5432,
 });
 
@@ -95,10 +95,14 @@ app.get('/api/units/sectionSort', async (req, res) => {
 });
 
 
+//point1=[selected_XCoord,selected_YCoord, selected_ZCoord]
+//point2=[XCoord, YCoord, ZCoord]
+//inwez(point1, point2, unit_WEZ)=true
 app.get('/api/units/enemyUnits', async (req, res) => {
   const sectionid = req.query.sectionid;
   try {
-    const result = await pool.query('SELECT * FROM units WHERE section = $1 AND "isFriendly" = false AND "unit_health" != 0', [sectionid]);
+    const result = await pool.query('SELECT * FROM units WHERE section = $1 AND "isFriendly" = false AND "unit_health" != 0', [sectionid]); 
+    // use inwez to set a comparision constraint to that enemy units must be in range
     res.json(result.rows);
   } catch (err) {
     console.error('sectionid: ', [sectionid]);
@@ -665,7 +669,7 @@ app.get('/api/sectionunits/sectionSort', async (req, res) => {
 app.get('/api/sectionunits/enemyUnits', async (req, res) => {
   const sectionid = req.query.sectionid;
   try {
-    const result = await pool.query('SELECT * FROM section_units WHERE section_id = $1 AND "is_friendly"::boolean = false AND "unit_health" != 0', [sectionid]);
+    const result = await pool.query('SELECT * FROM section_units WHERE section_id = $1 AND "is_friendly"::boolean = false AND "unit_health" != 0', [sectionid]); // update to add another filter for wez of selected unit comparison 
     res.json(result.rows);
   } catch (err) {
     console.error('sectionid: ', [sectionid]);
