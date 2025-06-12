@@ -109,7 +109,7 @@ function BattlePage() {
   }, [enemyUnit]);
 
 
-  // initializes the characteristics of each enemy unit
+  // initializes the characteristics of each enemy unit --- comment wrong? selected unit is friendly?
   const unit = units.find((u) => u.unit_id === selectedUnit);
   const {
     unit_type,
