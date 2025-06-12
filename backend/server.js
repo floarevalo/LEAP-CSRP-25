@@ -95,14 +95,10 @@ app.get('/api/units/sectionSort', async (req, res) => {
 });
 
 
-//point1=[selected_XCoord,selected_YCoord, selected_ZCoord]
-//point2=[XCoord, YCoord, ZCoord]
-//inwez(point1, point2, unit_WEZ)=true
 app.get('/api/units/enemyUnits', async (req, res) => {
   const sectionid = req.query.sectionid;
   try {
-    const result = await pool.query('SELECT * FROM units WHERE section = $1 AND "isFriendly" = false AND "unit_health" != 0', [sectionid]); 
-    // use inwez to set a comparision constraint to that enemy units must be in range
+    const result = await pool.query('SELECT * FROM units WHERE section = $1 AND "isFriendly" = false AND "unit_health" != 0', [sectionid]);
     res.json(result.rows);
   } catch (err) {
     console.error('sectionid: ', [sectionid]);
@@ -642,7 +638,7 @@ app.post('/api/newpresetunit', async (req, res) => {
     res.status(500).send('Server Error');
   }
 });
-
+// not really used anywhere else ??
 app.get('/api/sectionunits', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM section_units');
@@ -669,7 +665,8 @@ app.get('/api/sectionunits/sectionSort', async (req, res) => {
 app.get('/api/sectionunits/enemyUnits', async (req, res) => {
   const sectionid = req.query.sectionid;
   try {
-    const result = await pool.query('SELECT * FROM section_units WHERE section_id = $1 AND "is_friendly"::boolean = false AND "unit_health" != 0', [sectionid]); // update to add another filter for wez of selected unit comparison 
+    //TODO: below: add another filter to section_untis to filter for enemy in friendly WEZ
+    const result = await pool.query('SELECT * FROM section_units WHERE section_id = $1 AND "is_friendly"::boolean = false AND "unit_health" != 0', [sectionid]);
     res.json(result.rows);
   } catch (err) {
     console.error('sectionid: ', [sectionid]);
