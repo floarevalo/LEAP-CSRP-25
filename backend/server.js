@@ -85,7 +85,7 @@ app.get('/api/tactics/:id', async (req, res) => {
 app.get('/api/units/sectionSort', async (req, res) => {
   const sectionid = req.query.sectionid;
   try {
-    const result = await pool.query('SELECT * FROM units WHERE section = $1 AND "isFriendly" = true', [sectionid]);
+    const result = await pool.query('SELECT * FROM units WHERE section_id = $1 AND "is_friendly" = true', [sectionid]);
     res.json(result.rows);
   } catch (err) {
     console.error('sectionid: ', [sectionid]);

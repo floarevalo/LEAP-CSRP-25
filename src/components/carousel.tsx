@@ -15,20 +15,20 @@ import { useUserRole } from '../context/UserContext';
 // Define the carousel
 // These are the categories the cards are sorted by
 // The cards are sorted in when their 'unit_type' matches the unitType 'value' field
-const unitTypes = [
-  {
-    label: 'JFLCC',
-    value: 'JFLCC'
-  },
-  {
-    label: 'JFSOC',
-    value: 'Special Operations Forces'
-  },
-  {
-    label: 'C2',
-    value: 'Command and Control'
-  }
-];
+// const unitTypes = [
+//   {
+//     label: 'JFLCC',
+//     value: 'JFLCC'
+//   },
+//   {
+//     label: 'JFSOC',
+//     value: 'Special Operations Forces'
+//   },
+//   {
+//     label: 'C2',
+//     value: 'Command and Control'
+//   }
+// ];
 
 
 // CarouselC() renders all of the carousels
@@ -36,16 +36,18 @@ function CarouselC() {
   const { userSection } = useUserRole();
   const [units, setUnits] = useState<Unit[]>([]);
 
-  // Fetch unit data from the backend endpoint
+  // Fetch friendly unit data from the backend endpoint
   useEffect(() => {
     const fetchData = async () => {
       try {
         console.log('Fetching data for section:', userSection);
-        const response = await axios.get<Unit[]>(`${process.env.REACT_APP_BACKEND_URL}/api/sectionunits/sectionSort`, {
+        const response = await axios.get<Unit[]>(`${process.env.REACT_APP_BACKEND_URL}/api/units/sectionSort`, {
           params: {
             sectionid: userSection  // Pass userSection as a query parameter
           }
         });
+        // prints to console to see what units are being fetched from 'units'
+        // console.log('API Response Data:', response.data);
         setUnits(response.data);
       } catch (error) {
         console.error('Error fetching data:', error);

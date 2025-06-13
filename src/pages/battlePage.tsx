@@ -61,7 +61,7 @@ function BattlePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get<Unit[]>(`${process.env.REACT_APP_BACKEND_URL}/api/sectionunits/sectionSort`, {
+        const response = await axios.get<Unit[]>(`${process.env.REACT_APP_BACKEND_URL}/api/units/sectionSort`, {
           params: {
             sectionid: userSection  // Pass userSection as a query parameter
           }
@@ -78,7 +78,7 @@ function BattlePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get<Unit[]>(`${process.env.REACT_APP_BACKEND_URL}/api/sectionunits/enemyUnits`, {
+        const response = await axios.get<Unit[]>(`${process.env.REACT_APP_BACKEND_URL}/api/units/enemyUnits`, {
           params: {
             sectionid: userSection  // Pass userSection as a query parameter
           }
