@@ -57,6 +57,7 @@ function BattlePage() {
   const [unitTactics, setUnitTactics] = useState<UnitTactics | null>(null);
   const [enemyBaseValue, setEnemyBaseValue] = useState<number>(0); // Sets and gets the state for the enemy base value 
 
+  const [enemyWithinWEZ, setEnemeyWithinWEZ] =  useState<Unit[]>([]); //array of strings that tracks enemies within the WEZ
   // Fetches data of the units based on class section
   useEffect(() => {
     const fetchData = async () => {
@@ -76,6 +77,19 @@ function BattlePage() {
 
   // Fetches data of the enemy units based on class section
   useEffect(() => {
+    
+    // const fetchEnemyWithinWEZ = async () => {
+    //   let enemyWithinWEZ: Unit[] = [];  // ✅ initialize the array
+    //   console.log(enemyUnitsLocal);
+    //   for (const eUnit of enemyUnitsLocal) {
+    //     const isInWEZ = await checkWEZ(eUnit.unit_id);
+    //     if (isInWEZ) {
+    //       enemyWithinWEZ.push(eUnit);
+    //       console.log("in WEZ");
+    //     }
+    //   }
+    //   setEnemeyWithinWEZ(enemyWithinWEZ);
+    //};
     const fetchData = async () => {
       try {
         const response = await axios.get<Unit[]>(`${process.env.REACT_APP_BACKEND_URL}/api/sectionunits/enemyUnits`, {
@@ -84,11 +98,22 @@ function BattlePage() {
           }
         });
         setEnemyUnits(response.data);
-        console.log('Enemy units:', enemyUnits);
+        let enemyUnitsLocal : Unit[] = [];
+        for (const eUnit of response.data) {
+          const isInWEZ = await checkWEZ(eUnit.unit_id);
+          if (isInWEZ) {
+            enemyUnitsLocal.push(eUnit);
+          }
+        }
+
+        setEnemeyWithinWEZ(enemyUnitsLocal);
       } catch (error) {
         console.error('Error fetching data:', error);
       }
-    };
+  
+    //fetchEnemyWithinWEZ();
+    console.log(enemyWithinWEZ);
+    }
     fetchData();
   }, []);
 
@@ -109,7 +134,8 @@ function BattlePage() {
   }, [enemyUnit]);
 
 
-  // initializes the characteristics of each enemy unit
+
+//initializes the characteristics of each enemy unit
   const unit = units.find((u) => u.unit_id === selectedUnit);
   const {
     unit_type,
@@ -177,6 +203,7 @@ function BattlePage() {
     const selectedUnit = enemyUnits.find(unit => unit.unit_id.toString() === value);
     setEnemyUnit(selectedUnit || null);
     // Set initial enemyHealth based on enemy unit health
+    //Note: error?
     setEnemyHealth(selectedUnit?.unit_health ?? 0);
   };
 
@@ -192,6 +219,7 @@ function BattlePage() {
   }
 
   //function that calculates the base value based on the overall characteristics of a unit
+  //Note: may be used as a ref to calculate the WEZ? keys are of type string, and values are of type number
   const calculateBaseValue = (unit: Unit) => {
     const unitTypeValues: Record<string, number> = {
       "Command and Control": 20, "Infantry": 30, "Reconnaissance": 10, "Armored Mechanized": 40,
@@ -726,6 +754,29 @@ function BattlePage() {
     }
   }
 
+  //check to see if the enemy with a specific enemy id is in the FriendlyForce WEZ
+  const   checkWEZ = async (enemyID : number): Promise<boolean> => {
+    try {
+      // Send a GET request to the backend API endpoint /api/withinWEZ
+      // Pass enemyID and friendlyID as query parameters
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/withinWEZ`,{
+          params: {
+            enemyid: enemyID, // ID of the enemy unit being checked
+            friendlyid: selectedUnit  // ID of the friendly unit
+          }
+    });
+    let isWEZ = false;
+
+    // Destructure the isWEZ property from the response data
+    ({isWEZ} = response.data);  
+    return isWEZ;
+    }catch (error) {
+        console.error('Error calculating WEZ:', error);
+        // If there's an error, return false as a fallback
+        return false;
+    }
+    };
+  
   // Starts the battle page if a unit has been selected
   if (unitNull()) {
     return (
@@ -822,13 +873,13 @@ function BattlePage() {
                     :
                     // Drop down menu to select the proper enemy unit to begin an engagement with
                     (
-                      enemyUnits.length === 0 ? (
+                      enemyWithinWEZ.length === 0 ? (
                         <h2>No enemy units to select</h2>
                       ) : (
                         <Select
                           label="Select Enemy Unit"
                           placeholder="Select Enemy Unit"
-                          data={enemyUnits.map(eUnit => ({ value: eUnit.unit_id.toString(), label: eUnit.unit_name }))}
+                          data={enemyWithinWEZ.map(eUnit => ({ value: eUnit.unit_id.toString(), label: eUnit.unit_name }))}
                           searchable
                           value={enemyUnit}
                           onChange={handleSelectEnemy}
