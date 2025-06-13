@@ -15,20 +15,20 @@ import { useUserRole } from '../context/UserContext';
 // Define the carousel
 // These are the categories the cards are sorted by
 // The cards are sorted in when their 'unit_type' matches the unitType 'value' field
-// const unitTypes = [
-//   {
-//     label: 'JFLCC',
-//     value: 'JFLCC'
-//   },
-//   {
-//     label: 'JFSOC',
-//     value: 'Special Operations Forces'
-//   },
-//   {
-//     label: 'C2',
-//     value: 'Command and Control'
-//   }
-// ];
+const unitTypes = [
+  {
+    label: 'JFLCC',
+    value: 'JFLCC'
+  },
+  {
+    label: 'JFSOC',
+    value: 'Special Operations Forces'
+  },
+  {
+    label: 'C2',
+    value: 'Command and Control'
+  }
+];
 
 
 // CarouselC() renders all of the carousels
