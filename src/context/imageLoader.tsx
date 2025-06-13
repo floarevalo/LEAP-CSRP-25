@@ -128,6 +128,10 @@ function unitTypeToKey(unitType: string): keyof typeof unitImages | undefined {
         return 'seaPort';
       case 'Railhead':
         return 'railhead';
+      case 'Special Operations Forces - EZO':
+        return 'specialOperationsForces';
+      case 'Armor Company':
+        return 'armoredMechanizedTracked';
       default:
         return undefined; // Handle cases where unitType does not match any key
     }

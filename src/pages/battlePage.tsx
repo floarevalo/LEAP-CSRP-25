@@ -62,7 +62,7 @@ function BattlePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get<Unit[]>(`${process.env.REACT_APP_BACKEND_URL}/api/sectionunits/sectionSort`, {
+        const response = await axios.get<Unit[]>(`${process.env.REACT_APP_BACKEND_URL}/api/units/sectionSort`, {
           params: {
             sectionid: userSection  // Pass userSection as a query parameter
           }
@@ -92,7 +92,7 @@ function BattlePage() {
     //};
     const fetchData = async () => {
       try {
-        const response = await axios.get<Unit[]>(`${process.env.REACT_APP_BACKEND_URL}/api/sectionunits/enemyUnits`, {
+        const response = await axios.get<Unit[]>(`${process.env.REACT_APP_BACKEND_URL}/api/units/enemyUnits`, {
           params: {
             sectionid: userSection  // Pass userSection as a query parameter
           }
@@ -134,8 +134,12 @@ function BattlePage() {
   }, [enemyUnit]);
 
 
+<<<<<<< HEAD
 
 //initializes the characteristics of each enemy unit
+=======
+  // initializes the characteristics of each friendly unit
+>>>>>>> 4db164cb7e91d2adea21b76267402f7c0dd3c576
   const unit = units.find((u) => u.unit_id === selectedUnit);
   const {
     unit_type,

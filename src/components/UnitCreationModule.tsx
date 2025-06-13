@@ -138,7 +138,7 @@ export default function UnitCreationModule({ isOpen, onClose }: UnitCreationProp
               placeholder="Select unit type"
               error={form.errors.unitType}
               data={[
-                { value: 'Command and Control', label: 'Command and Control' },
+                { value: 'Command and Control', label: 'Command + Control' },
                 { value: 'Infantry', label: 'Infantry' },
                 { value: 'Reconnaissance', label: 'Reconnaissance' },
                 { value: 'Armored Mechanized', label: 'Armored Mechanized' },
@@ -147,6 +147,7 @@ export default function UnitCreationModule({ isOpen, onClose }: UnitCreationProp
                 { value: 'Field Artillery', label: 'Field Artillery' },
                 { value: 'Self-propelled', label: 'Self-propelled' },
                 { value: 'Electronic Warfare', label: 'Electronic Warfare' },
+                { value: 'Armored Company', label: 'Armored Company'},
                 { value: 'Signal', label: 'Signal' },
                 { value: 'Special Operations Forces', label: 'Special Operations Forces' },
                 { value: 'Ammunition', label: 'Ammunition' },
@@ -161,7 +162,9 @@ export default function UnitCreationModule({ isOpen, onClose }: UnitCreationProp
                 { value: 'Combat Service Support', label: 'Combat Service Support' },
                 { value: 'Petroleum, Oil and Lubricants', label: 'Petroleum, Oil and Lubricants' },
                 { value: 'Sea Port', label: 'Sea Port' },
-                { value: 'Railhead', label: 'Railhead' }
+                { value: 'Railhead', label: 'Railhead' },
+                { value: 'Special Operations Forces - EZO', label: 'Special Operations Forces - EZO'},
+                
               ]}
               {...form.getInputProps('unitType')}
             />
