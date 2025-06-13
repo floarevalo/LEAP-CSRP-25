@@ -134,12 +134,9 @@ function BattlePage() {
   }, [enemyUnit]);
 
 
-<<<<<<< HEAD
+
 
 //initializes the characteristics of each enemy unit
-=======
-  // initializes the characteristics of each friendly unit
->>>>>>> 4db164cb7e91d2adea21b76267402f7c0dd3c576
   const unit = units.find((u) => u.unit_id === selectedUnit);
   const {
     unit_type,
