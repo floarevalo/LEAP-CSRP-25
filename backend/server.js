@@ -98,7 +98,7 @@ app.get('/api/units/sectionSort', async (req, res) => {
 app.get('/api/units/enemyUnits', async (req, res) => {
   const sectionid = req.query.sectionid;
   try {
-    const result = await pool.query('SELECT * FROM units WHERE section = $1 AND "isFriendly" = false AND "unit_health" != 0', [sectionid]);
+    const result = await pool.query('SELECT * FROM units WHERE section_id = $1 AND "is_friendly" = false AND "unit_health" != 0', [sectionid]);
     res.json(result.rows);
   } catch (err) {
     console.error('sectionid: ', [sectionid]);
@@ -521,7 +521,7 @@ app.put('/api/units/remove', async (req, res) => {
 app.put('/api/units/health', async (req, res) => {
   const { id, newHealth } = req.body; // Ensure request body contains id and newHealth
   try {
-    const result = await pool.query('UPDATE section_units SET unit_health = $1 WHERE unit_id = $2 RETURNING *', [
+    const result = await pool.query('UPDATE units SET unit_health = $1 WHERE unit_id = $2 RETURNING *', [
       newHealth,
       id,
     ]);
@@ -682,7 +682,7 @@ app.get('/api/withinWEZ', async(req, res) => {
   const {enemyid, friendlyid} = req.query;
   try {
     // Query database to get enemy unit's coordinates
-    const enemyCoordinates = await pool.query('SELECT xcord, ycord, zcord FROM units WHERE id = $1', [enemyid]);
+    const enemyCoordinates = await pool.query('SELECT xcord, ycord, zcord FROM units WHERE unit_id = $1', [enemyid]);
 
     // Extract enemy coordinates from query result
     const enemyXcord  = enemyCoordinates.rows[0].xcord;
@@ -690,7 +690,7 @@ app.get('/api/withinWEZ', async(req, res) => {
     const enemyZcord  = enemyCoordinates.rows[0].zcord;
 
     // Query database to get friendly unit's coordinates
-    const friendlyCoordinates = await pool.query('SELECT xcord, ycord, zcord FROM units WHERE id = $1', [friendlyid]);
+    const friendlyCoordinates = await pool.query('SELECT xcord, ycord, zcord FROM units WHERE unit_id = $1', [friendlyid]);
 
     // Extract friendly coordinates from query result
     const  friendlyXcord = friendlyCoordinates.rows[0].xcord;

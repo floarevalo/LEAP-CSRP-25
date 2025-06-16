@@ -4,15 +4,49 @@
 import '../App.css';
 import CarouselC from '../components/carousel'; // Remove the '.tsx' extension
 import SearchResultList from '../components/searchResults'
-import { AppShell, Group, Image, TextInput, Button, MantineProvider, SegmentedControl } from '@mantine/core';
+import { AppShell, Group, Image, TextInput, Button, MantineProvider, SegmentedControl, Card, Progress, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { useState, useEffect, SetStateAction } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useUserRole } from '../context/UserContext';
 import { useUnitProvider } from '../context/UnitContext';
 import { FaArrowAltCircleLeft } from "react-icons/fa";
-import Hierarchy from '../components/HierarchyBuilder';
 import logo from '../images/logo/Tr_FullColor_NoSlogan.png'
+import { Unit } from '../components/Cards';
+import axios from 'axios';
+
+interface UnitStatsProps {
+  friendlyCount: number;
+  enemyCount: number;
+}
+
+function UnitStats({ friendlyCount, enemyCount }: UnitStatsProps) {
+  const totalCount = friendlyCount + enemyCount;
+
+  if (totalCount === 0) {
+    return null; // Don't render anything if there are no units
+  }
+
+  return (
+    <Card withBorder radius="md" padding="xl" bg="var(--mantine-color-body)" my="xl">
+      <Text fz="xs" tt="uppercase" fw={700} c="dimmed">
+        Units Compared
+      </Text>
+      
+      {/* Friendly Units Progress */}
+      <Text fz="lg" fw={500} mt="sm">
+        Friendly: {friendlyCount}
+      </Text>
+      <Progress value={(friendlyCount / totalCount) * 100} size="lg" radius="xl" color="#3d85c6" />
+
+      {/* Enemy Units Progress */}
+      <Text fz="lg" fw={500} mt="lg">
+        Enemy: {enemyCount}
+      </Text>
+      <Progress value={(enemyCount / totalCount) * 100} size="lg" radius="xl" color="#c1432d" />
+    </Card>
+  );
+}
 
 // Function where the page renders
 function App() {
@@ -23,8 +57,10 @@ function App() {
   const { sectionId } = useParams(); // Retrieve sectionId from route parameters
   const { userRole, userSection } = useUserRole();
   const { selectedUnit } = useUnitProvider();
-  const [hierarchyToggle, setHierarchyToggle] = useState(false);
   const [view, setView] = useState('Unit Selection');
+  const [friendlyUnits, setFriendlyUnits] = useState<Unit[]>([]);
+  const [enemyUnits, setEnemyUnits] = useState<Unit[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Redirects to the home page if the user is not a 'Student' or if their section ID does not match the current section ID.
   useEffect(() => {
@@ -33,16 +69,44 @@ function App() {
       console.log(`user section: ${sectionId}`);
       navigate('/');
     }
-  }, [navigate, userRole]);
+  }, [navigate, userRole, userSection, sectionId]);
+
+  useEffect(() => {
+    // Don't fetch if we don't have the userSection yet
+    if (!userSection) return;
+
+    const fetchAllUnitData = async () => {
+      setIsLoading(true);
+      try {
+        // Create promises for both API calls
+        const friendlyPromise = axios.get<Unit[]>(`${process.env.REACT_APP_BACKEND_URL}/api/units/sectionSort`, {
+          params: { sectionid: userSection }
+        });
+        const enemyPromise = axios.get<Unit[]>(`${process.env.REACT_APP_BACKEND_URL}/api/units/enemyUnits`, {
+          params: { sectionid: userSection }
+        });
+
+        // Wait for both promises to resolve
+        const [friendlyResponse, enemyResponse] = await Promise.all([friendlyPromise, enemyPromise]);
+
+        // Set the state with the data from the responses
+        setFriendlyUnits(friendlyResponse.data);
+        setEnemyUnits(enemyResponse.data);
+
+      } catch (error) {
+        console.error('Error fetching unit data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAllUnitData();
+  }, [userSection]); // Dependency: re-fetch if the userSection changes
 
   const handleViewChange = (value: SetStateAction<string>) => {
     setView(value);
     if (value === 'After Action Reviews') {
       handleAARClick();
-    } else if (value === 'Hierarchy View') {
-      setHierarchyToggle(true);
-    } else {
-      setHierarchyToggle(false);
     }
   };
 
@@ -102,69 +166,57 @@ function App() {
 
         {/* Everything that isn't the header / nav bar */}
         <AppShell.Main>
-          {/* After action report Button where user can switch views */}
-          {/* <div style={{ justifyContent: 'right', display: 'flex' }}>
-            <Button size='sm' variant='link' onClick={handleAARClick} style={{ margin: '10px ' }}>After Action Reviews</Button>
-          </div> */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-
-            
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-
               {sectionId && (
                 <h1>
                   Scenerio: <strong>{sectionId}</strong>
                 </h1>
               )}
-              
             </div>
 
             <SegmentedControl
-            value={view}
-            onChange={handleViewChange}
-            data={[
-              { label: 'Unit Selection', value: 'Unit Selection' },
-              { label: 'Hierarchy View', value: 'Hierarchy View' },
-              { label: 'After Action Reviews', value: 'After Action Reviews' }
-            ]}
-            size = 'md'
-            style={{ margin: 15 }}
-          />
-            {/* Toggle between selection and hierarchy view */}
-            {/* <div>
-              <Button onClick={() => setHierarchyToggle(!hierarchyToggle)}>
-                {hierarchyToggle ? 'Selection Menu' : 'Hierarchy View'}
-              </Button>
-            </div> */}
+              value={view}
+              onChange={handleViewChange}
+              data={[
+                { label: 'Unit Selection', value: 'Unit Selection' },
+                { label: 'After Action Reviews', value: 'After Action Reviews' }
+              ]}
+              size='md'
+              style={{ margin: 15 }}
+            />
           </div>
 
           <div style={{ width: '250px' }}>
-
-          {/* Unit Search Bar */}
-          {!hierarchyToggle && (
-                <TextInput
-                  placeholder='Search'
-                  style={{ width: '100%' }}
-                  value={search}
-                  onChange={handleChange}
-                />
-              )}
+            {/* Unit Search Bar */}
+            <TextInput
+              placeholder='Search'
+              style={{ width: '100%' }}
+              value={search}
+              onChange={handleChange}
+            />
           </div>
 
+          {/* This renders the new stats component after loading is done */}
+          {!isLoading && (
+            <UnitStats
+              friendlyCount={friendlyUnits.length}
+              enemyCount={enemyUnits.length}
+            />
+          )}
+
           <div className="App">
-            {/* Decides what to render depending on toggle */}
-            {!hierarchyToggle ? (
-              // Render carousel view
+            {/* This shows a loading message OR the carousel/search results */}
+            {isLoading ? (
+              <Text>Loading units...</Text>
+            ) : (
               <>
-                {search && (
+                {search ? (
                   <SearchResultList search={search} />
+                ) : (
+                  <CarouselC units={friendlyUnits} />
                 )}
-                {!search && (
-                  <CarouselC />
-                )}
-                {/* Start engagement / battle button */}
                 <Group justify='center'>
-                  {/* Button is only enabled if a unit with a positive health is presently selected */}
                   <Button
                     disabled={!selectedUnit || selectedUnit.unit_health <= 0}
                     size='compact-xl'
@@ -175,9 +227,6 @@ function App() {
                   </Button>
                 </Group>
               </>
-            ) : (
-              // Render the hierarchy
-              <Hierarchy is_friendly={true} hierarchyRefresh={0} xCoord={1250} yCoord={70} />
             )}
           </div>
         </AppShell.Main>

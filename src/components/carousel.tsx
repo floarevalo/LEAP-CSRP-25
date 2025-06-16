@@ -3,14 +3,11 @@
  */
 
 import { Carousel } from '@mantine/carousel';
-import { useEffect, useState } from 'react';
 import CardC from './Cards';
 import { type Unit } from './Cards';
 import '@mantine/carousel/styles.css';
 import '@mantine/core/styles.css';
 import classes from './carousel.module.css';
-import axios from 'axios';
-import { useUserRole } from '../context/UserContext';
 
 // Define the carousel
 // These are the categories the cards are sorted by
@@ -18,44 +15,17 @@ import { useUserRole } from '../context/UserContext';
 const unitTypes = [
   {
     label: 'JFLCC',
-    value: 'JFLCC'
+    value: ['JFLCC']
   },
   {
     label: 'JFSOC',
-    value: 'Special Operations Forces'
-  },
-  {
-    label: 'C2',
-    value: 'Command and Control'
+    value: ['Special Operations Forces', 'Special Operations Forces - EZO']
   }
 ];
 
 
 // CarouselC() renders all of the carousels
-function CarouselC() {
-  const { userSection } = useUserRole();
-  const [units, setUnits] = useState<Unit[]>([]);
-
-  // Fetch friendly unit data from the backend endpoint
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        console.log('Fetching data for section:', userSection);
-        const response = await axios.get<Unit[]>(`${process.env.REACT_APP_BACKEND_URL}/api/units/sectionSort`, {
-          params: {
-            sectionid: userSection  // Pass userSection as a query parameter
-          }
-        });
-        // prints to console to see what units are being fetched from 'units'
-        // console.log('API Response Data:', response.data);
-        setUnits(response.data);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
-  
-    fetchData();
-  }, [userSection]);
+function CarouselC({ units }: { units: Unit[] }) {
 
   // Where rendering happens
   return (
@@ -63,7 +33,7 @@ function CarouselC() {
       {/* The map function makes a carousel for each unit type defined above */}
       {unitTypes.map((item) => (
         // Description for each carousel
-        <div key={item.value} style={{ marginBottom: 20 }}>
+        <div key={item.label} style={{ marginBottom: 20 }}>
           <h2>{item.label}</h2>
           {/* The Carousel is rendered here */}
           <Carousel
@@ -78,7 +48,7 @@ function CarouselC() {
               
               {/* This map function maps renders all the units in it's respective carousel category*/}
               {/* Uses filterUnitsByType to only render the units whose type matches the categpry of current carousel */}
-              {filterUnitsByType(item.value, units).map((unitCard, index) =>
+              {filterUnitsByType(item.label, item.value, units).map((unitCard, index) =>
                 <Carousel.Slide key={index}>
                   <CardC unit={unitCard} />
                 </Carousel.Slide>
@@ -92,12 +62,19 @@ function CarouselC() {
 }
 
 // Function to filter units by type
-function filterUnitsByType(type: string, units: Unit[]): Unit[] {
-  if (type === 'JFLCC') {
-    return units.filter((unit) => unit.unit_type !== 'Special Operations Forces' && unit.unit_type !== 'Command and Control');
-  } else {
-    return units.filter((unit) => unit.unit_type === type);
+function filterUnitsByType(label: string, value: string | string[], units: Unit[]): Unit[] {
+  // This logic for arrays handles the 'JFLCC' case
+  if (label === 'JFLCC') {
+    return units.filter((unit) => unit.unit_type !== 'Special Operations Forces' && unit.unit_type !== 'Command and Control' && unit.unit_type !== 'Special Operations Forces - EZO');
   }
+
+  // This logic for arrays handles the 'JFSOC' case
+  if (Array.isArray(value)) {
+    return units.filter((unit) => value.includes(unit.unit_type));
+  }
+
+  // Fallback for any other case
+  return units.filter((unit) => unit.unit_type === value);
 }
 
 export default CarouselC;

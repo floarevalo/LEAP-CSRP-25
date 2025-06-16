@@ -56,8 +56,8 @@ function BattlePage() {
   const [enemyUnits, setEnemyUnits] = useState<Unit[]>([]);
   const [unitTactics, setUnitTactics] = useState<UnitTactics | null>(null);
   const [enemyBaseValue, setEnemyBaseValue] = useState<number>(0); // Sets and gets the state for the enemy base value 
-
   const [enemyWithinWEZ, setEnemeyWithinWEZ] =  useState<Unit[]>([]); //array of strings that tracks enemies within the WEZ
+  
   // Fetches data of the units based on class section
   useEffect(() => {
     const fetchData = async () => {
@@ -136,7 +136,7 @@ function BattlePage() {
 
 
 
-//initializes the characteristics of each enemy unit
+//initializes the characteristics of each friendly unit
   const unit = units.find((u) => u.unit_id === selectedUnit);
   const {
     unit_type,
@@ -756,7 +756,7 @@ function BattlePage() {
   }
 
   //check to see if the enemy with a specific enemy id is in the FriendlyForce WEZ
-  const   checkWEZ = async (enemyID : number): Promise<boolean> => {
+  const checkWEZ = async (enemyID : number): Promise<boolean> => {
     try {
       // Send a GET request to the backend API endpoint /api/withinWEZ
       // Pass enemyID and friendlyID as query parameters
