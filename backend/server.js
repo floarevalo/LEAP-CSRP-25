@@ -283,7 +283,7 @@ app.post('/api/engagements', async (req, res) => {
 // Endpoint to make record tactics
 app.post('/api/tactics', async (req, res) => {
 
-  console.log("Attempting to store tactics record")
+  console.log("Attempting to store tactics record in tactics")
   const {
     FriendlyAwareness, EnemyAwareness,
     FriendlyLogistics, EnemyLogistics, FriendlyCoverage, EnemyCoverage,
@@ -677,48 +677,41 @@ app.get('/api/sectionunits/enemyUnits', async (req, res) => {
 
 
 // Define an API endpoint to check if an enemy unit is within the Weapon Engagement Zone (WEZ) of a friendly unit
-app.get('/api/withinWEZ', async(req, res) => {
-  // Extract enemyid and friendlyid from query parameters
-  const {enemyid, friendlyid} = req.query;
+app.get('/api/withinWEZ', async (req, res) => {
+  const { enemyid, friendlyid } = req.query;
   try {
-    // Query database to get enemy unit's coordinates
-    const enemyCoordinates = await pool.query('SELECT xcord, ycord, zcord FROM units WHERE unit_id = $1', [enemyid]);
-
-    // Extract enemy coordinates from query result
-    const enemyXcord  = enemyCoordinates.rows[0].xcord;
-    const enemyYcord  = enemyCoordinates.rows[0].ycord;
-    const enemyZcord  = enemyCoordinates.rows[0].zcord;
-
+    // Query database to get enemy unit's coordinates and WEZ
+    const enemyResult = await pool.query('SELECT xcord, ycord, zcord, unit_wez FROM units WHERE unit_id = $1', [enemyid]);
+    
     // Query database to get friendly unit's coordinates
-    const friendlyCoordinates = await pool.query('SELECT xcord, ycord, zcord FROM units WHERE unit_id = $1', [friendlyid]);
-
-    // Extract friendly coordinates from query result
-    const  friendlyXcord = friendlyCoordinates.rows[0].xcord;
-    const  friendlyYcord = friendlyCoordinates.rows[0].ycord;
-    const  friendlyZcord = friendlyCoordinates.rows[0].zcord;
+    const friendlyResult = await pool.query('SELECT xcord, ycord, zcord, unit_wez FROM units WHERE unit_id = $1', [friendlyid]);
 
     // If either enemy or friendly unit is not found, return 404 error
-    if (enemyCoordinates.rowCount === 0 || friendlyCoordinates.rowCount === 0) {
+    if (enemyResult.rowCount === 0 || friendlyResult.rowCount === 0) {
       return res.status(404).send("One or both units not found.");
     }
 
+    // Extract coordinates and WEZ from query results
+    const { xcord: enemyXcord, ycord: enemyYcord, zcord: enemyZcord, unit_wez: enemyWEZ } = enemyResult.rows[0];
+    const { xcord: friendlyXcord, ycord: friendlyYcord, zcord: friendlyZcord, unit_wez: friendlyWEZ } = friendlyResult.rows[0];
+
     // Calculate 3D Euclidean distance between enemy and friendly units
-    const distance = Math.sqrt((friendlyXcord - enemyXcord) ** 2 + (friendlyYcord - enemyYcord) ** 2 + (friendlyZcord - enemyZcord) ** 2);
+    const distanceMeters = Math.sqrt((friendlyXcord - enemyXcord) ** 2 + (friendlyYcord - enemyYcord) ** 2 + (friendlyZcord - enemyZcord) ** 2);
+    const distanceNM = distanceMeters / 1852; // Conversion from meters to nautical miles (NM), rep dist of enemy from friendly
+    
+    // Check if the distance is less than the enemy's WEZ
+    const enemyInWEZ = distanceNM < friendlyWEZ;
 
-    //will be changed later
-    //pull from units--add wez to the last column
-    const isWEZ = distance < 10;
-
-    //for debugging purposes
-    isWEZ?console.log("enemyid in backend: " + enemyid +  "friendly id: " + friendlyid +  "distance = " + distance): console.log("not in the WEZ. enemyid in backend: " + enemyid +  "friendly id: " + friendlyid +  "distance = " + distance);
+    // For debugging purposes, use the defined variable 'distanceNM'
+    console.log(`Enemy: ${enemyid}, Friendly: ${friendlyid}, Distance: ${distanceNM.toFixed(2)} NM, In WEZ: ${enemyInWEZ}`);
 
     // Return the result as JSON
-    res.json({isWEZ});
-  } catch(err) {
-    const fallBack = false;
-    res.json({fallBack});
+    res.json({ enemyInWEZ });
+
+  } catch (err) {
     console.error(err.message);
-    res.status(500).send('Server Error');
+    // Send only ONE response in the catch block
+    res.status(500).json({ message: 'Server Error', fallBack: false });
   }
 });
 
@@ -737,7 +730,7 @@ app.get('/api/units/sectionNullandAllianceSort', async (req, res) => {
 
 // Endpoint to make record tactics
 app.post('/api/newpresetunit/tactics', async (req, res) => {
-  console.log("Attempting to store tactics record");
+  console.log("Attempting to store tactics record in preset_tactics");
 
   const {
     unit_name, // Added unit_name for referencing the unit
@@ -898,7 +891,7 @@ app.put('/api/section_units/:parentId/addChild', async (req, res) => {
 
 // Endpoint to make record tactics
 app.post('/api/newsectionunit/tactics', async (req, res) => {
-  console.log("Attempting to store tactics record");
+  console.log("Attempting to store tactics record in section_tactics");
 
   const {
     unit_id,

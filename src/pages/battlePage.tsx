@@ -33,6 +33,11 @@ interface UnitTactics {
   pattern: number;
 }
 
+// define PresetTacticsResponse interface to be used when calling backend to populate preset enemy tactics
+interface PresetTacticsResponse {
+  tactics: UnitTactics;
+}
+
 function BattlePage() {
   //Initializes global variables
   const navigate = useNavigate(); // A way to navigate to different pages
@@ -117,14 +122,26 @@ function BattlePage() {
     fetchData();
   }, []);
 
-
+// fetches enemy tactics from preset tactics
   useEffect(() => {
     const fetchUnitTactics = async () => {
+      // Make sure there is an enemyUnit and it has a name before fetching
+      if (!enemyUnit?.unit_name) {
+        return; 
+      }
+      // call backend to get enemy tactics from preset_tactics
       try {
-        const response = await axios.get<UnitTactics>(`${process.env.REACT_APP_BACKEND_URL}/api/unitTactics/${enemyUnit?.unit_id}`);
-        setUnitTactics(response.data);
+        const response = await axios.get<PresetTacticsResponse>(`${process.env.REACT_APP_BACKEND_URL}/api/preset_tactics/`,
+          {
+            params: {
+              unit_name: enemyUnit?.unit_name
+            }
+          }
+        );
+        setUnitTactics(response.data.tactics);
       } catch (error) {
         console.error('Error fetching unit tactics:', error);
+        setUnitTactics(null); 
       }
     };
 
@@ -760,21 +777,21 @@ function BattlePage() {
     try {
       // Send a GET request to the backend API endpoint /api/withinWEZ
       // Pass enemyID and friendlyID as query parameters
+      let enemyInWEZ = false;
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/withinWEZ`,{
-          params: {
-            enemyid: enemyID, // ID of the enemy unit being checked
-            friendlyid: selectedUnit  // ID of the friendly unit
-          }
-    });
-    let isWEZ = false;
-
-    // Destructure the isWEZ property from the response data
-    ({isWEZ} = response.data);  
-    return isWEZ;
-    }catch (error) {
-        console.error('Error calculating WEZ:', error);
-        // If there's an error, return false as a fallback
-        return false;
+        params: {
+          enemyid: enemyID, // ID of the enemy unit being checked
+          friendlyid: selectedUnit  // ID of the friendly unit
+        }
+      });
+      // Destructure the enemyInWEZ property from the response data
+      ({enemyInWEZ} = response.data);  
+      return enemyInWEZ;
+      
+    } catch (error) {
+      console.error('Error calculating WEZ:', error);
+      // If there's an error, return false as a fallback
+      return false;
     }
     };
   
