@@ -169,6 +169,18 @@ app.get('/api/units/sectionSort', async (req, res) => {
   }
 });
 
+// used for observer page so it is also tracking killed enemy units
+app.get('/api/units/allEnemyUnits', async (req, res) => {
+  const sectionid = req.query.sectionid;
+  try {
+    const result = await pool.query('SELECT * FROM units WHERE section_id = $1 AND "is_friendly" = false', [sectionid]);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('sectionid: ', [sectionid]);
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
 
 app.get('/api/units/enemyUnits', async (req, res) => {
   const sectionid = req.query.sectionid;
