@@ -46,6 +46,7 @@ export default function LandingPage() {
     }
   }, []);
 
+  //Note: selectedSection is where you navigate after you hit the scenario name
   // Function to handle login based on role and selected section
   const handleLogin = (values: { password: string }) => {
     if (role === 'Administrator' && values.password === 'admin') {

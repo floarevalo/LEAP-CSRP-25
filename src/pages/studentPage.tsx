@@ -99,9 +99,52 @@ function App() {
         setIsLoading(false);
       }
     };
-
+    
     fetchAllUnitData();
   }, [userSection]); // Dependency: re-fetch if the userSection changes
+
+//live updates
+  useEffect(() => {
+    if (!userSection) return;
+
+    const eventSource = new EventSource(`${process.env.REACT_APP_BACKEND_URL}/events`);
+
+    eventSource.onmessage = (event) => {
+      const newUnit = JSON.parse(event.data);
+
+      if (newUnit.section_id !== userSection) {
+        return; // Ignore units from other sections
+      }
+
+      if (newUnit.is_friendly) {
+      // Update friendly units
+        setFriendlyUnits(prev => {
+        // Avoid duplicates
+          const exists = prev.some(unit => unit.unit_id === newUnit.unit_id);
+          return exists ? prev : [...prev, newUnit];
+        });
+      } else {
+      // Update enemy units
+        setEnemyUnits(prev => {
+          const exists = prev.some(unit => unit.unit_id === newUnit.unit_id);
+          return exists ? prev : [...prev, newUnit];
+        });
+      }
+    };
+
+    eventSource.onerror = (err) => {
+      console.error('SSE connection error:', err);
+      eventSource.close();
+    };
+
+    return () => {
+      eventSource.close();
+    };
+  }, [userSection]);
+
+    
+
+
 
   const handleViewChange = (value: SetStateAction<string>) => {
     setView(value);

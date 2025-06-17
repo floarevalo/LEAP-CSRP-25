@@ -62,8 +62,12 @@ function BattlePage() {
   const [unitTactics, setUnitTactics] = useState<UnitTactics | null>(null);
   const [enemyBaseValue, setEnemyBaseValue] = useState<number>(0); // Sets and gets the state for the enemy base value 
   const [enemyWithinWEZ, setEnemeyWithinWEZ] =  useState<Unit[]>([]); //array of strings that tracks enemies within the WEZ
+<<<<<<< HEAD
+  // Fetches data of the units(friendly units) based on class section
+=======
   
   // Fetches data of the units based on class section
+>>>>>>> 4903b259c97153f92175ff129ec203001e2314c9
   useEffect(() => {
     const fetchData = async () => {
       try {

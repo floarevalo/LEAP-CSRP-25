@@ -16,6 +16,80 @@ const pool = new Pool({
   port: 5432,
 });
 
+// gets live updates from database
+let clients = [];
+app.get('/events',(req, res) => {
+  res.setHeader('Content-Type','text/event-stream');
+  res.setHeader('Cache-Control','no-cache');
+  res.setHeader('Connection','keep-alive');
+  res.setHeader('Access-Control-Allow-Origin','*');
+  res.flushHeaders();
+
+  clients.push(res);
+  console.log('client connected');
+
+  req.on('close',() => {
+    clients = clients.filter(c => c !==res);
+    console.log('Client disconnected');
+  });
+});
+function notifyClients(newunit) {
+  console.log('sending SSE');
+  const data = JSON.stringify({
+    unit_name: newunit.unit_name, 
+    unit_id: newunit.unit_id,
+    unit_type: newunit.unit_type, 
+    unit_health: newunit.unit_health, 
+    is_friendly: newunit.is_friendly, 
+    unit_role: newunit.unit_role, 
+    unit_size: newunit.unit_size, 
+    unit_posture: newunit.unit_posture, 
+    unit_mobility: newunit.unit_mobility, 
+    unit_readiness: newunit.unit_readiness,
+    unit_skill: newunit.unit_readiness,
+    section_id: newunit.section_id
+  });
+  clients.forEach(res=> res.write(`data:${data}\n\n`));
+}
+async function sendunitdata(unitID){
+  try {
+    const result = await pool.query('SELECT * FROM units WHERE unit_id = $1',[unitID]);
+    const newunit = result.rows[0];
+    if (newunit) {
+      notifyClients(newunit);
+      console.log('the package has been sent');
+    } else {
+      console.log('no matching unit found')
+    }
+  } catch (err) {
+    console.log('error querying unit', err.message);
+    
+  }
+
+}
+
+(async() => {
+  listenClient = await pool.connect();
+  await listenClient.query('LISTEN unit_added');
+  console.log('Listening for unit_added events');
+
+  listenClient.on('notification',async (msg) => {
+    const payload = JSON.parse(msg.payload);
+    console.log('The eagle has landed');
+    const unitName = payload.unit_name;
+    const unitID = payload.unit_id;
+    sendunitdata(unitID);
+    console.log('It is done')
+  });
+})();
+
+
+
+
+
+
+
+
 // Endpoint to fetch data from 'sections' table
 app.get('/api/sections', async (req, res) => {
   try {
