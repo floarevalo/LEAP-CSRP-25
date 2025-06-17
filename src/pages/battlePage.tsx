@@ -62,12 +62,7 @@ function BattlePage() {
   const [unitTactics, setUnitTactics] = useState<UnitTactics | null>(null);
   const [enemyBaseValue, setEnemyBaseValue] = useState<number>(0); // Sets and gets the state for the enemy base value 
   const [enemyWithinWEZ, setEnemeyWithinWEZ] =  useState<Unit[]>([]); //array of strings that tracks enemies within the WEZ
-<<<<<<< HEAD
-  // Fetches data of the units(friendly units) based on class section
-=======
-  
-  // Fetches data of the units based on class section
->>>>>>> 4903b259c97153f92175ff129ec203001e2314c9
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -246,7 +241,7 @@ function BattlePage() {
     const unitTypeValues: Record<string, number> = {
       "Command and Control": 20, "Infantry": 30, "Reconnaissance": 10, "Armored Mechanized": 40,
       "Combined Arms": 50, "Armored Mechanized Tracked": 60, "Field Artillery": 30, "Self-propelled": 40,
-      "Electronic Warfare": 10, "Signal": 5, "Special Operations Forces": 40, "Ammunition": 5,
+      "Electronic Warfare": 10, "Signal": 5, "Special Operations Forces": 40, "Special Operations Forces - EZO": 40, "Ammunition": 5,
       "Air Defense": 30, "Engineer": 5, "Air Assault": 50, "Medical Treatment Facility": 5,
       "Aviation Rotary Wing": 60, "Combat Support": 20, "Sustainment": 10, "Unmanned Aerial Systems": 10,
       "Combat Service Support": 20, "Petroleum, Oil and Lubricants": 10, "Sea Port": 5, "Railhead": 5
