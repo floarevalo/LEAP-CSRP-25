@@ -4,46 +4,92 @@
 import '../App.css';
 import { AppShell, Image, Button, MantineProvider, Grid } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useUserRole } from '../context/UserContext';
 import { FaArrowAltCircleLeft } from "react-icons/fa";
-import Hierarchy from '../components/HierarchyBuilder';
-import logo from '../images/logo/Tr_FullColor_NoSlogan.png'
+import { StatsSegments } from '../components/StatsSegments'; // Import the new component
+import { StatsRingCard } from '../components/StatsRing';
+import logo from '../images/logo/Tr_FullColor_NoSlogan.png';
+import axios from 'axios';
+import { Unit } from '../components/Cards';
 
 // Function where the page renders
 function ObserverPage() {
   const [mobileOpened] = useDisclosure(false);
   const [desktopOpened] = useDisclosure(false);
   const navigate = useNavigate();
-  const { sectionId } = useParams(); // Retrieve sectionId from route parameters
+  const { sectionId } = useParams();
   const { userRole, userSection } = useUserRole();
 
-  // Redirects to the home page if the user is not a 'Student' or if their section ID does not match the current section ID.
+  // State to hold the counts
+  const [friendlyCount, setFriendlyCount] = useState(0);
+  const [enemyCount, setEnemyCount] = useState(0);
+  const [killedCount, setKilledCount] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+
   useEffect(() => {
     if (userRole !== 'Observer' || userSection !== sectionId) {
-      console.log(`user Role: ${userRole}`);
-      console.log(`user section: ${sectionId}`);
       navigate('/');
     }
-  }, [navigate, userRole]);
+  }, [navigate, userRole, userSection, sectionId]);
 
-  // Navigate to the main login page
+  // useEffect to fetch data when the component mounts or sectionId changes
+  useEffect(() => {
+    const fetchUnitData = async () => {
+      if (!sectionId) return;
+
+      try {
+        // Fetch friendly and enemy units in parallel
+        const [friendlyRes, enemyRes] = await Promise.all([
+          axios.get<Unit[]>(`${process.env.REACT_APP_BACKEND_URL}/api/units/sectionSort`, {params: { sectionid: userSection }}),
+          axios.get<Unit[]>(`${process.env.REACT_APP_BACKEND_URL}/api/units/allEnemyUnits`, {params: { sectionid: userSection }})
+        ]);
+        
+        const allFriendlies = friendlyRes.data;
+        const allEnemies = enemyRes.data;
+        console.log("ALL FRIENDLIES RECEIVED:", allFriendlies);
+        console.log("ALL ENEMIES RECEIVED:", allEnemies);
+
+        // 2. Calculate active units by filtering the results on the frontend.
+        const activeFriendlies = allFriendlies.filter(unit => unit.unit_health > 0).length;
+        const activeEnemies = allEnemies.filter(unit => unit.unit_health > 0).length;
+        console.log("Active Friendly Count:", activeFriendlies);
+        console.log("Active Enemy Count:", activeEnemies);
+
+        // 3. Calculate killed units by subtracting active from total.
+        const killedFriendlies = allFriendlies.length - activeFriendlies;
+        const killedEnemies = allEnemies.length - activeEnemies;
+        const totalKilled = killedFriendlies + killedEnemies;
+        console.log("Killed Friendly Count:", killedFriendlies);
+        console.log("Killed Enemy Count:", killedEnemies);
+        console.log("TOTAL KILLED:", totalKilled);
+
+        // 4. Set the state with the calculated values.
+        setFriendlyCount(activeFriendlies);
+        setEnemyCount(activeEnemies);
+        setKilledCount(totalKilled);
+
+      } catch (error) {
+        console.error("Error fetching unit data:", error);
+      }
+    };
+
+    fetchUnitData();
+  }, [sectionId]);
+
   const handleLogoClick = () => {
     navigate('/'); // Navigate to the main login page
   };
 
-  // Navigate to the main login page
   const handleArrowClick = () => {
     navigate('/');
   };
 
-  // Navigate to the After Action Reviews page for the current section
   const handleAARClick = () => {
-    navigate(`/AAR/${sectionId}`)
-  }
+    navigate(`/AAR/${sectionId}`);
+  };
 
-  // Where student page renders
   return (
     <MantineProvider defaultColorScheme='dark'>
       <AppShell
@@ -55,15 +101,12 @@ function ObserverPage() {
         }}
         padding="md"
       >
-        {/* Header / Nav bar  */}
         <AppShell.Header>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
-              {/* Back button */}
               <Button size='sm' variant='link' onClick={handleArrowClick} style={{ margin: '10px' }}>
                 <FaArrowAltCircleLeft />
               </Button>
-              {/* Clickable logo that takes user back to homepage */}
               <Image
                 src={logo}
                 radius="md"
@@ -76,40 +119,38 @@ function ObserverPage() {
           </div>
         </AppShell.Header>
 
-        {/* Everything that isn't the header / nav bar */}
         <AppShell.Main>
           <div style={{ justifyContent: 'right', display: 'flex' }}>
-            {/* After action report Button where user can switch views */}
             <Button size='sm' variant='link' onClick={handleAARClick} style={{ margin: '10px ' }}>After Action Reports</Button>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-
               {sectionId && (
                 <p>
                   You are observing: <strong>{sectionId}</strong>
                 </p>
               )}
-
             </div>
-
           </div>
           <Grid>
-            <Grid.Col span={6} style={{ justifyContent: 'center', alignItems: 'center' }}>
-              <div className="App">
-                <Hierarchy is_friendly={true} hierarchyRefresh={0} xCoord={650} yCoord={70}/>
-              </div>
-            </Grid.Col>
-            <Grid.Col span={6} style={{justifyContent: 'center', alignItems: 'center' }}>
-              <div className="App">
-                <Hierarchy is_friendly={false} hierarchyRefresh={0} xCoord={650} yCoord={70} />
-              </div>
+            <Grid.Col span={12}>
+              {/* Render the new component with the fetched data */}
+              <StatsSegments
+                friendlyCount={friendlyCount}
+                enemyCount={enemyCount}
+                killedCount={killedCount}
+              />
+               <StatsRingCard
+                friendlyCount={friendlyCount}
+                enemyCount={enemyCount}
+                killedCount={killedCount}
+              />
             </Grid.Col>
           </Grid>
         </AppShell.Main>
       </AppShell>
     </MantineProvider >
-  ); // End of return statement
+  );
 }
 
 export default ObserverPage;
