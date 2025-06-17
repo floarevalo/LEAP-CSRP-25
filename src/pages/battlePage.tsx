@@ -33,6 +33,11 @@ interface UnitTactics {
   pattern: number;
 }
 
+// define PresetTacticsResponse interface to be used when calling backend to populate preset enemy tactics
+interface PresetTacticsResponse {
+  tactics: UnitTactics;
+}
+
 function BattlePage() {
   //Initializes global variables
   const navigate = useNavigate(); // A way to navigate to different pages
@@ -56,9 +61,13 @@ function BattlePage() {
   const [enemyUnits, setEnemyUnits] = useState<Unit[]>([]);
   const [unitTactics, setUnitTactics] = useState<UnitTactics | null>(null);
   const [enemyBaseValue, setEnemyBaseValue] = useState<number>(0); // Sets and gets the state for the enemy base value 
-
   const [enemyWithinWEZ, setEnemeyWithinWEZ] =  useState<Unit[]>([]); //array of strings that tracks enemies within the WEZ
+<<<<<<< HEAD
   // Fetches data of the units(friendly units) based on class section
+=======
+  
+  // Fetches data of the units based on class section
+>>>>>>> 4903b259c97153f92175ff129ec203001e2314c9
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -117,14 +126,26 @@ function BattlePage() {
     fetchData();
   }, []);
 
-
+// fetches enemy tactics from preset tactics
   useEffect(() => {
     const fetchUnitTactics = async () => {
+      // Make sure there is an enemyUnit and it has a name before fetching
+      if (!enemyUnit?.unit_name) {
+        return; 
+      }
+      // call backend to get enemy tactics from preset_tactics
       try {
-        const response = await axios.get<UnitTactics>(`${process.env.REACT_APP_BACKEND_URL}/api/unitTactics/${enemyUnit?.unit_id}`);
-        setUnitTactics(response.data);
+        const response = await axios.get<PresetTacticsResponse>(`${process.env.REACT_APP_BACKEND_URL}/api/preset_tactics/`,
+          {
+            params: {
+              unit_name: enemyUnit?.unit_name
+            }
+          }
+        );
+        setUnitTactics(response.data.tactics);
       } catch (error) {
         console.error('Error fetching unit tactics:', error);
+        setUnitTactics(null); 
       }
     };
 
@@ -136,7 +157,7 @@ function BattlePage() {
 
 
 
-//initializes the characteristics of each enemy unit
+//initializes the characteristics of each friendly unit
   const unit = units.find((u) => u.unit_id === selectedUnit);
   const {
     unit_type,
@@ -756,25 +777,25 @@ function BattlePage() {
   }
 
   //check to see if the enemy with a specific enemy id is in the FriendlyForce WEZ
-  const   checkWEZ = async (enemyID : number): Promise<boolean> => {
+  const checkWEZ = async (enemyID : number): Promise<boolean> => {
     try {
       // Send a GET request to the backend API endpoint /api/withinWEZ
       // Pass enemyID and friendlyID as query parameters
+      let enemyInWEZ = false;
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/withinWEZ`,{
-          params: {
-            enemyid: enemyID, // ID of the enemy unit being checked
-            friendlyid: selectedUnit  // ID of the friendly unit
-          }
-    });
-    let isWEZ = false;
-
-    // Destructure the isWEZ property from the response data
-    ({isWEZ} = response.data);  
-    return isWEZ;
-    }catch (error) {
-        console.error('Error calculating WEZ:', error);
-        // If there's an error, return false as a fallback
-        return false;
+        params: {
+          enemyid: enemyID, // ID of the enemy unit being checked
+          friendlyid: selectedUnit  // ID of the friendly unit
+        }
+      });
+      // Destructure the enemyInWEZ property from the response data
+      ({enemyInWEZ} = response.data);  
+      return enemyInWEZ;
+      
+    } catch (error) {
+      console.error('Error calculating WEZ:', error);
+      // If there's an error, return false as a fallback
+      return false;
     }
     };
   

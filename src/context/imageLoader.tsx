@@ -77,7 +77,7 @@ interface UnitImage {
   blue: string;
   red: string;
 }
-
+// must edit in imageScr as well
 function unitTypeToKey(unitType: string): keyof typeof unitImages | undefined {
     switch (unitType) {
       case 'Command and Control':

@@ -16,6 +16,80 @@ const pool = new Pool({
   port: 5432,
 });
 
+// gets live updates from database
+let clients = [];
+app.get('/events',(req, res) => {
+  res.setHeader('Content-Type','text/event-stream');
+  res.setHeader('Cache-Control','no-cache');
+  res.setHeader('Connection','keep-alive');
+  res.setHeader('Access-Control-Allow-Origin','*');
+  res.flushHeaders();
+
+  clients.push(res);
+  console.log('client connected');
+
+  req.on('close',() => {
+    clients = clients.filter(c => c !==res);
+    console.log('Client disconnected');
+  });
+});
+function notifyClients(newunit) {
+  console.log('sending SSE');
+  const data = JSON.stringify({
+    unit_name: newunit.unit_name, 
+    unit_id: newunit.unit_id,
+    unit_type: newunit.unit_type, 
+    unit_health: newunit.unit_health, 
+    is_friendly: newunit.is_friendly, 
+    unit_role: newunit.unit_role, 
+    unit_size: newunit.unit_size, 
+    unit_posture: newunit.unit_posture, 
+    unit_mobility: newunit.unit_mobility, 
+    unit_readiness: newunit.unit_readiness,
+    unit_skill: newunit.unit_readiness,
+    section_id: newunit.section_id
+  });
+  clients.forEach(res=> res.write(`data:${data}\n\n`));
+}
+async function sendunitdata(unitID){
+  try {
+    const result = await pool.query('SELECT * FROM units WHERE unit_id = $1',[unitID]);
+    const newunit = result.rows[0];
+    if (newunit) {
+      notifyClients(newunit);
+      console.log('the package has been sent');
+    } else {
+      console.log('no matching unit found')
+    }
+  } catch (err) {
+    console.log('error querying unit', err.message);
+    
+  }
+
+}
+
+(async() => {
+  listenClient = await pool.connect();
+  await listenClient.query('LISTEN unit_added');
+  console.log('Listening for unit_added events');
+
+  listenClient.on('notification',async (msg) => {
+    const payload = JSON.parse(msg.payload);
+    console.log('The eagle has landed');
+    const unitName = payload.unit_name;
+    const unitID = payload.unit_id;
+    sendunitdata(unitID);
+    console.log('It is done')
+  });
+})();
+
+
+
+
+
+
+
+
 // Endpoint to fetch data from 'sections' table
 app.get('/api/sections', async (req, res) => {
   try {
@@ -98,7 +172,7 @@ app.get('/api/units/sectionSort', async (req, res) => {
 app.get('/api/units/enemyUnits', async (req, res) => {
   const sectionid = req.query.sectionid;
   try {
-    const result = await pool.query('SELECT * FROM units WHERE section = $1 AND "isFriendly" = false AND "unit_health" != 0', [sectionid]);
+    const result = await pool.query('SELECT * FROM units WHERE section_id = $1 AND "is_friendly" = false AND "unit_health" != 0', [sectionid]);
     res.json(result.rows);
   } catch (err) {
     console.error('sectionid: ', [sectionid]);
@@ -283,7 +357,7 @@ app.post('/api/engagements', async (req, res) => {
 // Endpoint to make record tactics
 app.post('/api/tactics', async (req, res) => {
 
-  console.log("Attempting to store tactics record")
+  console.log("Attempting to store tactics record in tactics")
   const {
     FriendlyAwareness, EnemyAwareness,
     FriendlyLogistics, EnemyLogistics, FriendlyCoverage, EnemyCoverage,
@@ -521,7 +595,7 @@ app.put('/api/units/remove', async (req, res) => {
 app.put('/api/units/health', async (req, res) => {
   const { id, newHealth } = req.body; // Ensure request body contains id and newHealth
   try {
-    const result = await pool.query('UPDATE section_units SET unit_health = $1 WHERE unit_id = $2 RETURNING *', [
+    const result = await pool.query('UPDATE units SET unit_health = $1 WHERE unit_id = $2 RETURNING *', [
       newHealth,
       id,
     ]);
@@ -677,48 +751,41 @@ app.get('/api/sectionunits/enemyUnits', async (req, res) => {
 
 
 // Define an API endpoint to check if an enemy unit is within the Weapon Engagement Zone (WEZ) of a friendly unit
-app.get('/api/withinWEZ', async(req, res) => {
-  // Extract enemyid and friendlyid from query parameters
-  const {enemyid, friendlyid} = req.query;
+app.get('/api/withinWEZ', async (req, res) => {
+  const { enemyid, friendlyid } = req.query;
   try {
-    // Query database to get enemy unit's coordinates
-    const enemyCoordinates = await pool.query('SELECT xcord, ycord, zcord FROM units WHERE id = $1', [enemyid]);
-
-    // Extract enemy coordinates from query result
-    const enemyXcord  = enemyCoordinates.rows[0].xcord;
-    const enemyYcord  = enemyCoordinates.rows[0].ycord;
-    const enemyZcord  = enemyCoordinates.rows[0].zcord;
-
+    // Query database to get enemy unit's coordinates and WEZ
+    const enemyResult = await pool.query('SELECT xcord, ycord, zcord, unit_wez FROM units WHERE unit_id = $1', [enemyid]);
+    
     // Query database to get friendly unit's coordinates
-    const friendlyCoordinates = await pool.query('SELECT xcord, ycord, zcord FROM units WHERE id = $1', [friendlyid]);
-
-    // Extract friendly coordinates from query result
-    const  friendlyXcord = friendlyCoordinates.rows[0].xcord;
-    const  friendlyYcord = friendlyCoordinates.rows[0].ycord;
-    const  friendlyZcord = friendlyCoordinates.rows[0].zcord;
+    const friendlyResult = await pool.query('SELECT xcord, ycord, zcord, unit_wez FROM units WHERE unit_id = $1', [friendlyid]);
 
     // If either enemy or friendly unit is not found, return 404 error
-    if (enemyCoordinates.rowCount === 0 || friendlyCoordinates.rowCount === 0) {
+    if (enemyResult.rowCount === 0 || friendlyResult.rowCount === 0) {
       return res.status(404).send("One or both units not found.");
     }
 
+    // Extract coordinates and WEZ from query results
+    const { xcord: enemyXcord, ycord: enemyYcord, zcord: enemyZcord, unit_wez: enemyWEZ } = enemyResult.rows[0];
+    const { xcord: friendlyXcord, ycord: friendlyYcord, zcord: friendlyZcord, unit_wez: friendlyWEZ } = friendlyResult.rows[0];
+
     // Calculate 3D Euclidean distance between enemy and friendly units
-    const distance = Math.sqrt((friendlyXcord - enemyXcord) ** 2 + (friendlyYcord - enemyYcord) ** 2 + (friendlyZcord - enemyZcord) ** 2);
+    const distanceMeters = Math.sqrt((friendlyXcord - enemyXcord) ** 2 + (friendlyYcord - enemyYcord) ** 2 + (friendlyZcord - enemyZcord) ** 2);
+    const distanceNM = distanceMeters / 1852; // Conversion from meters to nautical miles (NM), rep dist of enemy from friendly
+    
+    // Check if the distance is less than the enemy's WEZ
+    const enemyInWEZ = distanceNM < friendlyWEZ;
 
-    //will be changed later
-    //pull from units--add wez to the last column
-    const isWEZ = distance < 10;
-
-    //for debugging purposes
-    isWEZ?console.log("enemyid in backend: " + enemyid +  "friendly id: " + friendlyid +  "distance = " + distance): console.log("not in the WEZ. enemyid in backend: " + enemyid +  "friendly id: " + friendlyid +  "distance = " + distance);
+    // For debugging purposes, use the defined variable 'distanceNM'
+    console.log(`Enemy: ${enemyid}, Friendly: ${friendlyid}, Distance: ${distanceNM.toFixed(2)} NM, In WEZ: ${enemyInWEZ}`);
 
     // Return the result as JSON
-    res.json({isWEZ});
-  } catch(err) {
-    const fallBack = false;
-    res.json({fallBack});
+    res.json({ enemyInWEZ });
+
+  } catch (err) {
     console.error(err.message);
-    res.status(500).send('Server Error');
+    // Send only ONE response in the catch block
+    res.status(500).json({ message: 'Server Error', fallBack: false });
   }
 });
 
@@ -737,7 +804,7 @@ app.get('/api/units/sectionNullandAllianceSort', async (req, res) => {
 
 // Endpoint to make record tactics
 app.post('/api/newpresetunit/tactics', async (req, res) => {
-  console.log("Attempting to store tactics record");
+  console.log("Attempting to store tactics record in preset_tactics");
 
   const {
     unit_name, // Added unit_name for referencing the unit
@@ -898,7 +965,7 @@ app.put('/api/section_units/:parentId/addChild', async (req, res) => {
 
 // Endpoint to make record tactics
 app.post('/api/newsectionunit/tactics', async (req, res) => {
-  console.log("Attempting to store tactics record");
+  console.log("Attempting to store tactics record in section_tactics");
 
   const {
     unit_id,

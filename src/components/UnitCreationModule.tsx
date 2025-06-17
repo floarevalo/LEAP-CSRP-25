@@ -131,12 +131,11 @@ export default function UnitCreationModule({ isOpen, onClose }: UnitCreationProp
               error={form.errors.unitName}
               {...form.getInputProps('unitName')}
             />
-
-            {/* Unit Type */}
+            {/* Unit Type */} 
             <Select
               label="Unit Type"
               placeholder="Select unit type"
-              error={form.errors.unitType}
+              error={form.errors.unitType} 
               data={[
                 { value: 'Command and Control', label: 'Command + Control' },
                 { value: 'Infantry', label: 'Infantry' },
@@ -165,7 +164,7 @@ export default function UnitCreationModule({ isOpen, onClose }: UnitCreationProp
                 { value: 'Railhead', label: 'Railhead' },
                 { value: 'Special Operations Forces - EZO', label: 'Special Operations Forces - EZO'},
                 
-              ]}
+              ]} //edit in NodeEditModal!!!
               {...form.getInputProps('unitType')}
             />
 

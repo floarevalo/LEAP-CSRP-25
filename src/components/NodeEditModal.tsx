@@ -616,8 +616,8 @@ export default function NodeEditModal({ isOpen, onClose, nodeID, is_friendly, us
                                     { value: 'Railhead', label: 'Railhead' },
                                     { value: 'Special Operations Forces - EZO', label: 'Special Operations Forces - EZO'},
                                     { value: 'Armor Company', label: 'Armor Company'}
-                                ]}
-                            />
+                                ]} // this one actually changes the GUI
+                            /> 
 
                             <TextInput
                                 label="Unit Health"
