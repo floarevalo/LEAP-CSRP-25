@@ -64,6 +64,7 @@ function App() {
 
   // Redirects to the home page if the user is not a 'Student' or if their section ID does not match the current section ID.
   useEffect(() => {
+    if (!userRole || !userSection || !sectionId) return; //waits for user data before authenticating
     if (userRole !== 'Student' || userSection !== sectionId) {
       console.log(`user Role: ${userRole}`);
       console.log(`user section: ${sectionId}`);
