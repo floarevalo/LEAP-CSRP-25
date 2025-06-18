@@ -241,7 +241,7 @@ function BattlePage() {
   const calculateBaseValue = (unit: Unit) => {
     const unitTypeValues: Record<string, number> = {
       "Command and Control": 20, "Infantry": 30, "Reconnaissance": 10, "Armored Mechanized": 40,
-      "Combined Arms": 50, "Armored Mechanized Tracked": 60, "Field Artillery": 30, "Self-propelled": 40,
+      "Combined Arms": 50, "Armored Mechanized Tracked": 60, "Armor Company": 60, "Field Artillery": 30, "Self-propelled": 40,
       "Electronic Warfare": 10, "Signal": 5, "Special Operations Forces": 40, "Special Operations Forces - EZO": 40, "Ammunition": 5,
       "Air Defense": 30, "Engineer": 5, "Air Assault": 50, "Medical Treatment Facility": 5,
       "Aviation Rotary Wing": 60, "Combat Support": 20, "Sustainment": 10, "Unmanned Aerial Systems": 10,
@@ -373,7 +373,7 @@ function BattlePage() {
       b_enemy = 10;
     }
     // add armor company
-    else if (enemyUnit?.unit_type === 'Armored Company') {
+    else if (enemyUnit?.unit_type === 'Armor Company') {
       b_enemy=10;
     }
     else if (enemyUnit?.unit_type === 'Air Defense') {
