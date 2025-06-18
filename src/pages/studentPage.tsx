@@ -68,6 +68,7 @@ function App() {
     if (userRole !== 'Student' || userSection !== sectionId) {
       console.log(`user Role: ${userRole}`);
       console.log(`user section: ${sectionId}`);
+      console.trace('redirect to landing page');
       navigate('/');
     }
   }, [navigate, userRole, userSection, sectionId]);

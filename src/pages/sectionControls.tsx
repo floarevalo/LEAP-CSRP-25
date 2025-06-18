@@ -35,6 +35,7 @@ function SectionControls() {
 
   useEffect(() => {
     if (userRole !== 'Administrator') {
+      console.trace('redirect to ladning page');
       navigate('/');
     }
   }, [navigate, userRole]);

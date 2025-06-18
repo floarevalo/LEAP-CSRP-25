@@ -1403,6 +1403,7 @@ function BattlePage() {
   // Deals with an issue with the refresh button
   else {
     console.log('Selected Unit: ', selectedUnit);
+    console.trace('redirect to landingpage')
     navigate('/')
     return (
       <Text> Error. Rerouting. </Text>
