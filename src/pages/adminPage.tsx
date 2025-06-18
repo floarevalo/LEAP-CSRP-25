@@ -7,6 +7,7 @@ import {
   Box,
   Table,
   Button,
+  Switch,
   Modal,
   TextInput,
   useMantineTheme,
@@ -31,6 +32,8 @@ import UnitCreationModule from '../components/UnitCreationModule';
 import UnitDeleteModule from '../components/UnitDeleteModule';
 import SectionCopyModule from '../components/sectionCopyModule';
 import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
+import { IconCheck, IconX} from '@tabler/icons-react';
+
 
 
 function AdminPage() {
@@ -40,14 +43,15 @@ function AdminPage() {
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
   const theme = useMantineTheme();
   const [newSectionName, setNewSectionName] = useState('');
-  const [modalOpened, setModalOpened] = useState(false);
+  // const [modalOpened, setModalOpened] = useState(false);
   const { userRole, setUserSection } = useUserRole();
   const [unitModalOpened, setUnitModalOpened] = useState(false);
-  const [deleteModalOpened, setDeleteModalOpened] = useState(false);
+  //const [deleteModalOpened, setDeleteModalOpened] = useState(false);
   const [copyModalOpened, setCopyModalOpened] = useState(false);
   const [sectionToCopy, setSectionToCopy] = useState<string | null>(null);
   const [sectionDeleteOpen, setSectionDeleteOpen] = useState(false);
-  const [opened, { open, close }] = useDisclosure(false);
+  const [opened, { open, close }] = useDisclosure(false);  // Controls delete modal visibility
+  const [sections, setSections] = useState<Section[]>([]); // Stores all section records
 
 
 
@@ -60,17 +64,17 @@ function AdminPage() {
 
 
   // Function to open copy modal
-  const openCopyModal = (sectionid: string) => {
-    setSectionToCopy(sectionid);
-    setCopyModalOpened(true);
-  };
+  // const openCopyModal = (sectionid: string) => {
+  //   setSectionToCopy(sectionid);
+  //   setCopyModalOpened(true);
+  // };
 
   // Function to close copy modal
-  const closeCopyModal = () => {
-    setCopyModalOpened(false);
-    setSectionToCopy(null);
-    fetchData();
-  };
+  // const closeCopyModal = () => {
+  //   setCopyModalOpened(false);
+  //   setSectionToCopy(null);
+  //   fetchData();
+  // };
 
   const handleLogoClick = () => {
     navigate('/');
@@ -80,8 +84,8 @@ function AdminPage() {
     navigate('/');
   };
 
-  const [sections, setSections] = useState<Section[]>([]);
 
+  // Fetch all sections from the backend
   const fetchData = async () => {
     try {
       const response = await axios.get<Section[]>(`${process.env.REACT_APP_BACKEND_URL}/api/sections`);
@@ -90,7 +94,7 @@ function AdminPage() {
       console.error('Error fetching data:', error);
     }
   };
-
+  // Load section data on component mount
   useEffect(() => {
     fetchData();
   }, []);
@@ -105,41 +109,73 @@ function AdminPage() {
   }, []);
 
 
-  const handleCreateNewSection = async () => {
-    if (newSectionName.trim()) {
-      try {
-        // Make POST request to backend
-        const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/sections`, {
-          sectionid: newSectionName.trim(),
-          isonline: false, // Default to offline
-        });
+  // const handleCreateNewSection = async () => {
+  //   if (newSectionName.trim()) {
+  //     try {
+  //       // Make POST request to backend
+  //       const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/sections`, {
+  //         sectionid: newSectionName.trim(),
+  //         isonline: false, // Default to offline
+  //       });
 
-        // Assuming successful creation, update frontend state
-        setSections((prevSections) => [
-          ...prevSections,
-          { sectionid: newSectionName.trim(), isonline: false },
-        ]);
-        setNewSectionName('');
-        closeModal();
-      } catch (error) {
-        console.error('Error creating new section:', error);
-        // Add any error handling for the frontend here
+  //       // Assuming successful creation, update frontend state
+  //       setSections((prevSections) => [
+  //         ...prevSections,
+  //         { sectionid: newSectionName.trim(), isonline: false },
+  //       ]);
+  //       setNewSectionName('');
+  //       closeModal();
+  //     } catch (error) {
+  //       console.error('Error creating new section:', error);
+  //       // Add any error handling for the frontend here
+  //     }
+  //   }
+  // };
+
+// This function updates the "isonline" status of a section when the toggle is clicked
+  const toggleSectionOnline = async (sectionID: string, isOnline: boolean): Promise<void> => {
+    try {
+      // Send a PUT request to the backend to update the section's online status
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/sections/${sectionID}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isonline: !isOnline }), // Flip the current online status
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update section status');
       }
+
+      // Update the local sections state in the frontend
+      setSections(
+        (prevSections) => prevSections.map((section) =>
+        // If the section matches the updated one, return a new object with updated status
+         section.sectionid === sectionID
+         ? { ...section , isonline : !isOnline}
+         : section // Otherwise, return the section unchanged
+         )
+      );
+    } catch (error) {
+      console.error('Error toggling section online status:', error);
     }
   };
 
-  const handleLaunchSession = (sectionid: string) => {
-    setUserSection(selectedSection);
-    navigate(`/sectionControls/${sectionid}`);
-  }
+  // const handleLaunchSession = (sectionid: string) => {
+  //   setUserSection(selectedSection);
+  //   navigate(`/sectionControls/${sectionid}`);
+  // }
 
-  const openModal = () => {
-    setModalOpened(true);
-  };
+  // // Open delete modal
+  // const openModal = () => {
+  //   setModalOpened(true);
+  // };
 
-  const closeModal = () => {
-    setModalOpened(false);
-  };
+  // // Close delete modal
+  // const closeModal = () => {
+  //   setModalOpened(false);
+  // };
 
 
   // const handleDeleteSection = async (sectionId: string) => {
@@ -170,7 +206,7 @@ function AdminPage() {
     open();
   };
 
-  // Handle successful deletion and update state
+  // After successful deletion, update frontend state
   const handleDeleteSectionSuccess = () => {
     if (selectedSection) {
       setSections((prevSections) =>
@@ -178,14 +214,14 @@ function AdminPage() {
       );
       setSelectedSection(null);
     }
-    setDeleteModalOpened(false);
+   // setDeleteModalOpened(false);
     fetchData();
   };
 
-  const handleRowDoubleClick = (sectionid: string) => {
-    setUserSection(sectionid);
-    navigate(`/sectionControls/${sectionid}`);
-  };
+  // const handleRowDoubleClick = (sectionid: string) => {
+  //   setUserSection(sectionid);
+  //   navigate(`/sectionControls/${sectionid}`);
+  // };
 
   // Function to render the sections table
   const renderSectionsTable = () => (
@@ -202,7 +238,7 @@ function AdminPage() {
             <Table.Tr
               key={section.sectionid}
               onClick={() => setSelectedSection(section.sectionid)}
-              onDoubleClick={() => handleRowDoubleClick(section.sectionid)}
+              // onDoubleClick={() => handleRowDoubleClick(section.sectionid)}
               style={{
                 cursor: 'pointer',
                 backgroundColor: selectedSection === section.sectionid ? 'rgba(128, 128, 128, 0.5)' : '',
@@ -212,6 +248,7 @@ function AdminPage() {
               <td>{section.sectionid}</td>
               <td>
                 <Box
+                  onClick ={() => toggleSectionOnline(section.sectionid, section.isonline)}
                   style={{
                     backgroundColor: section.isonline ? theme.colors.green[0] : theme.colors.red[0],
                     color: section.isonline ? theme.colors.green[9] : theme.colors.red[9],
@@ -225,9 +262,32 @@ function AdminPage() {
                 >
                   {section.isonline ? 'Online' : 'Offline'}
                 </Box>
+              {/* <Switch
+                checked={section.isonline}
+                onChange={() => toggleSectionOnline(section.sectionid, section.isonline)}
+                color={section.isonline ? 'teal' : 'red'}
+                size="md"
+                label={section.isonline ? 'Section Online' : 'Section Offline'}
+                thumbIcon={
+                  section.isonline ? (
+                    <IconCheck
+                      style={{ width: rem(12), height: rem(12) }}
+                      color={theme.colors.teal[6]}
+                      stroke={3}
+                    />
+                  ) : (
+                    <IconX
+                      style={{ width: rem(12), height: rem(12) }}
+                      color={theme.colors.red[6]}
+                      stroke={3}
+                    />
+                  )
+                }
+              /> */}
+
               </td>
               <td>
-                <SectionCopyModule
+                {/* <SectionCopyModule
                   isOpen={copyModalOpened}
                   onClose={closeCopyModal}
                   sectionToCopy={sectionToCopy}  // Pass the section to copy
@@ -235,7 +295,7 @@ function AdminPage() {
                     // Optional: You can update sections state here if needed after successful copy
                     console.log("Section copied successfully with new ID:", newSectionId);
                   }}
-                />
+                /> */}
 
                 <Group justify="flex-end">
                   <Menu
@@ -250,12 +310,12 @@ function AdminPage() {
                       </ActionIcon>
                     </Menu.Target>
                     <Menu.Dropdown>
-                      <Menu.Item
+                      {/* <Menu.Item
                         leftSection={<IconCopy style={{ width: rem(16), height: rem(16) }} stroke={1.5} />}
                         onClick={() => openCopyModal(section.sectionid)}  // Open copy modal with section ID
                       >
                         Copy Scenerio
-                      </Menu.Item>
+                      </Menu.Item> */}
 
                       <Menu.Item
                         leftSection={<IconTrash style={{ width: rem(16), height: rem(16) }} stroke={1.5} />}
@@ -275,21 +335,21 @@ function AdminPage() {
     </Box>
   );
 
-  function handleCreateUnit() {
-    setUnitModalOpened(true); // Open the modal when the button is clicked
-  }
+  // function handleCreateUnit() {
+  //   setUnitModalOpened(true); // Open the modal when the button is clicked
+  // }
 
-  const closeUnitModal = () => {
-    setUnitModalOpened(false); // Close the modal
-  };
+  // const closeUnitModal = () => {
+  //   setUnitModalOpened(false); // Close the modal
+  // };
 
-  function handleDeleteUnit() {
-    setDeleteModalOpened(true); // Open the modal when the button is clicked
-  }
+  // function handleDeleteUnit() {
+  //   setDeleteModalOpened(true); // Open the modal when the button is clicked
+  // }
 
-  const closeDeleteModal = () => {
-    setDeleteModalOpened(false); // Close the modal
-  };
+  // const closeDeleteModal = () => {
+  //   setDeleteModalOpened(false); // Close the modal
+  // };
 
   return (
     <MantineProvider defaultColorScheme='dark'>
@@ -321,7 +381,7 @@ function AdminPage() {
           <div className="App">
             <h1>Admin Page</h1>
             {renderSectionsTable()}
-            <div style={{ display: "flex", justifyContent: "center", textAlign: "center" }}>
+            {/* <div style={{ display: "flex", justifyContent: "center", textAlign: "center" }}>
               <Button
                 style={{ height: '40px', width: '225px', textAlign: "center" }}
                 mt="xl"
@@ -344,11 +404,11 @@ function AdminPage() {
               <Button color="red" onClick={handleDeleteUnit} style={{ width: '150px', marginTop: 20 }}>
                 <IconCubeOff /><Space w="10" />Delete Units
               </Button>
-            </Group>
+            </Group> */}
           </div>
         </AppShell.Main>
 
-        <UnitCreationModule isOpen={unitModalOpened} onClose={closeUnitModal} />
+        {/* <UnitCreationModule isOpen={unitModalOpened} onClose={closeUnitModal} />
         <UnitDeleteModule isOpen={deleteModalOpened} onClose={closeDeleteModal} />
 
         <Modal opened={modalOpened} onClose={closeModal} title="New Scenerio" centered>
@@ -372,7 +432,7 @@ function AdminPage() {
               </Button>
             </div>
           </FocusTrap>
-        </Modal>
+        </Modal> */}
 
         {selectedSection && (
           <DeleteConfirmationModal

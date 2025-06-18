@@ -204,6 +204,51 @@ app.get('/api/units', async (req, res) => {
   }
 });
 
+//A helper function to delette all units associated with sectionID
+async function deleteUnitsBySection(sectionId) {
+  try {
+    const result = await pool.query(
+      'DELETE FROM units WHERE section_id = $1',
+      [sectionId]
+    );
+    return result;
+    console.log(`Units for section ${sectionId} deleted.`);
+  } catch (err) {
+    console.error(`Error deleting units for section ${sectionId}:`, err);
+    throw err; // rethrow so the main handler can catch it
+  };
+
+}
+
+//Delete section name and all its units
+app.delete('/api/sections/:sectionId', async (req, res) => {
+  const sectionId = req.params.sectionId;
+
+  try {
+    // Step 1: Delete all units
+    const resultUnits = await deleteUnitsBySection(sectionId);
+    console.log(`[DEBUG] deleteUnitsBySection → rowCount = ${resultUnits.rowCount}`);
+
+    // Step 2: Delete the section
+    const result = await pool.query(
+      'DELETE FROM sections WHERE sectionid = $1',
+      [sectionId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'Section not found' });
+    }
+
+    console.log(`Section ${sectionId} deleted.`);
+    res.status(200).json({ message: 'Section and its units deleted successfully.' });
+
+  } catch (error) {
+    console.error('Error deleting section and/or units:', error);
+    res.status(500).json({ message: 'Failed to delete section and its units.' });
+  }
+});
+
+
 async function deleteNodeAndDescendants(nodeId) {
   // Step 1: Find all descendants of the node
   const descendantIds = await findAllDescendants(nodeId);
@@ -222,42 +267,8 @@ async function deleteNodeAndDescendants(nodeId) {
 }
 
 
-app.delete('/api/sections/:sectionId', async (req, res) => {
-  const sectionId = req.params.sectionId;
 
-  try {
-    // Step 1: Find the root nodes for is_friendly = true and false
-    const rootNodesResult = await pool.query(
-      `SELECT unit_id, is_friendly 
-       FROM section_units 
-       WHERE section_id = $1 AND is_root = true`,
-      [sectionId]
-    );
 
-    const rootNodes = rootNodesResult.rows;
-
-    // Step 2: Delete all root nodes and their descendants
-    for (const node of rootNodes) {
-      await deleteNodeAndDescendants(node.unit_id);
-    }
-
-    // Step 3: Delete the section itself from the sections table
-    const deleteResult = await pool.query(
-      'DELETE FROM sections WHERE sectionid = $1',
-      [sectionId]
-    );
-
-    if (deleteResult.rowCount === 0) {
-      return res.status(404).json({ message: 'Section not found' });
-    }
-
-    // Step 4: Return a success message
-    res.status(200).json({ message: 'Section and its nodes deleted successfully.' });
-  } catch (error) {
-    console.error('Error deleting section:', error);
-    res.status(500).json({ message: 'Failed to delete section and its nodes.' });
-  }
-});
 
 
 app.post('/api/sections', async (req, res) => {
