@@ -58,6 +58,7 @@ function AdminPage() {
 
   useEffect(() => {
     if (userRole !== 'Administrator') {
+      console.trace('redirect to landing page')
       navigate('/');
     }
   }, [navigate, userRole]);

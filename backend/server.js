@@ -47,7 +47,8 @@ function notifyClients(newunit) {
     unit_mobility: newunit.unit_mobility, 
     unit_readiness: newunit.unit_readiness,
     unit_skill: newunit.unit_readiness,
-    section_id: newunit.section_id
+    section_id: newunit.section_id,
+    unit_wez: newunit.unit_wez
   });
   clients.forEach(res=> res.write(`data:${data}\n\n`));
 }
