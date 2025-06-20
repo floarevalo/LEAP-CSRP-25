@@ -17,7 +17,7 @@ const pool = new Pool({
 });
 
 // gets live updates from database
-let clients = [];
+let unitClients = [];
 app.get('/events',(req, res) => {
   res.setHeader('Content-Type','text/event-stream');
   res.setHeader('Cache-Control','no-cache');
@@ -25,15 +25,15 @@ app.get('/events',(req, res) => {
   res.setHeader('Access-Control-Allow-Origin','*');
   res.flushHeaders();
 
-  clients.push(res);
+  unitClients.push(res);
   console.log('client connected');
 
   req.on('close',() => {
-    clients = clients.filter(c => c !==res);
+    unitClients = unitClients.filter(c => c !==res);
     console.log('Client disconnected');
   });
 });
-function notifyClients(newunit) {
+function notifyunitClients(newunit) {
   console.log('sending SSE');
   const data = JSON.stringify({
     unit_name: newunit.unit_name, 
@@ -50,14 +50,14 @@ function notifyClients(newunit) {
     section_id: newunit.section_id,
     unit_wez: newunit.unit_wez
   });
-  clients.forEach(res=> res.write(`data:${data}\n\n`));
+  unitClients.forEach(res=> res.write(`data: ${data}\n\n`));
 }
 async function sendunitdata(unitID){
   try {
     const result = await pool.query('SELECT * FROM units WHERE unit_id = $1',[unitID]);
     const newunit = result.rows[0];
     if (newunit) {
-      notifyClients(newunit);
+      notifyunitClients(newunit);
       console.log('the package has been sent');
     } else {
       console.log('no matching unit found')
@@ -84,11 +84,47 @@ async function sendunitdata(unitID){
   });
 })();
 
+let sectionClients = [];
+app.get('/sectionevents',(req, res) => {
+  res.setHeader('Content-Type','text/event-stream');
+  res.setHeader('Cache-Control','no-cache');
+  res.setHeader('Connection','keep-alive');
+  res.setHeader('Access-Control-Allow-Origin','*');
+  res.flushHeaders();
+  res.write('retry: 10000\n\n'); // client will retry after 10s if disconnected
 
 
+  sectionClients.push(res);
+  console.log('client connected');
 
+  req.on('close',() => {
+    sectionClients = sectionClients.filter(c => c !==res);
+    console.log('Client disconnected');
+  });
+});
+function notifySectionClients(newsection, isOnline) {
+  console.log('sending SSE');
+  const data = JSON.stringify({
+    sectionid: newsection,
+    isonline: isOnline
+  });
+  sectionClients.forEach(res=> res.write(`data: ${data}\n\n`));
+}
 
+(async() => {
+  listenClient = await pool.connect();
+  await listenClient.query('LISTEN new_section_channel');
+  console.log('Listening for new_section_channel events');
 
+  listenClient.on('notification',async (msg) => {
+    const payload = JSON.parse(msg.payload);
+    console.log('another eagle has landed');
+    const newsection = payload.section_id;
+    const isOnline = payload.isonline;
+    notifySectionClients(newsection, isOnline);
+    console.log('Its over');
+  });
+})();
 
 
 // Endpoint to fetch data from 'sections' table
@@ -108,7 +144,26 @@ app.get('/api/engagements/:id', async (req, res) => {
   console.log('Attempting to engagements')
   const { id } = req.params;
   try {
-    const result = await pool.query('SELECT * FROM engagements WHERE sectionid = $1', [id]);
+    const result = await pool.query(`
+      SELECT
+        e.engagementid,
+        e.sectionid,
+        e.friendlyid,
+        fu.unit_name AS friendlyname,
+        e.enemyid,
+        eu.unit_name AS enemyname,
+        e.friendlybasescore,
+        e.enemybasescore,
+        e.friendlytacticsscore,
+        e.enemytacticsscore,
+        e.friendlytotalscore,
+        e.enemytotalscore,
+        e.iswin
+      FROM engagements e
+      JOIN units fu ON CAST(e.friendlyid AS INTEGER) = fu.unit_id
+      JOIN units eu ON CAST(e.enemyid AS INTEGER) = eu.unit_id
+      WHERE e.sectionid = $1
+      `, [id]);
     res.json(result.rows);
   } catch (err) {
     console.error(err.message);

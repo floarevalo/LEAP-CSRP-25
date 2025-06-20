@@ -77,6 +77,34 @@ export default function LandingPage() {
       }
     };
     fetchData();
+    const eventSource = new EventSource(`${process.env.REACT_APP_BACKEND_URL}/sectionevents`);
+
+    eventSource.onopen = () => {
+      console.log('Connected to /sectionevents');
+    };
+
+    eventSource.onerror = (err) => {
+      console.error('SSE connection error:', err);
+    };
+
+    eventSource.onmessage = (event) => {
+      try {
+        const newSection = JSON.parse(event.data); // expects { sectionid: "...", isonline: false }
+
+        setSections(prevSections => {
+          const exists = prevSections.some(sec => sec.sectionid === newSection.sectionid);
+          if (exists) return prevSections;
+          return [...prevSections, newSection];
+        });
+      } catch (err) {
+        console.error('Error parsing SSE section data:', err);
+      }
+    };
+
+    // 💡 Cleanup on unmount
+    return () => {
+      eventSource.close();
+    };
   }, []);
 
   // Function to render the table that displays each function and whether or not it is online
