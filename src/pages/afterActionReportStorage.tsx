@@ -11,7 +11,8 @@ import {
   Card,
   Collapse,
   Tooltip,
-  Text
+  Text,
+  Title
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -19,6 +20,8 @@ import { FaArrowAltCircleLeft } from "react-icons/fa";
 import classes from './TableReviews.module.css';
 import axios from 'axios';
 import logo from '../images/logo/Tr_FullColor_NoSlogan.png'
+import { useUserRole } from '../context/UserContext';
+
 
 export interface recentEngagementData {
   unit_type: string;
@@ -72,19 +75,32 @@ export default function AAR() {
   const { sectionId } = useParams(); // Retrieve sectionId from route parameters
   const [engagements, setEngagements] = useState<Engagement[]>([]);
   const [tacticsMap, setTacticsMap] = useState<Map<string, Tactics[]>>(new Map()); // Changed: Added `tacticsMap` state for storing tactics data
-
+  const { userRole, userSection } = useUserRole();
+  const [selectedEngagement, setSelectedEngagement] = useState<Engagement | null>(null); //Tracks when the user selects an engagement
 
   const handleLogoClick = () => {
     navigate('/'); // Navigate to the main login page
   };
 
+
+  //Question: Where does this route to
   const handleArrowClick = () => {
-    navigate(`/studentPage/${sectionId}`);
+    if (userRole == 'Student') {
+      navigate(`/studentPage/${sectionId}`);
+    }
+    else if (userRole == 'Observer') {
+      navigate(`/observerPage/${sectionId}`);
+    }
   };
 
   const handleAARClick = () => {
-    navigate(`/studentPage/${sectionId}`)
-  }
+    if (userRole == 'Student') {
+      navigate(`/studentPage/${sectionId}`);
+    }
+    else if (userRole == 'Observer') {
+      navigate(`/observerPage/${sectionId}`);
+    }
+  };
 
 
   useEffect(() => {
@@ -125,53 +141,75 @@ export default function AAR() {
   }, [sectionId]);
 
   const renderTacticsRows = (tactics: Tactics[] | undefined) => { // Changed: Added `renderTacticsRows` function for rendering tactics rows
-    if (!tactics || tactics.length === 0) {
+    // Case 1: No engagements at all
+    if (engagements.length === 0) {
       return (
         <Table.Tr>
-          <Table.Td colSpan={3} align="center">No tactics data available</Table.Td>
+          <Table.Td colSpan={3} align="center">No engagements found</Table.Td>
         </Table.Tr>
       );
     }
- // Helper function to convert score to Yes/No
- const scoreToYesNo = (score: number | undefined) => (score && score > 0 ? 'Yes' : 'No');
 
- return tactics.map((tactic, index) => (
-   <React.Fragment key={index}>
-     <Table.Tr key={`tactic-${index}-awareness`}>
-       <Table.Td>Aware of OPFOR?</Table.Td>
-       <Table.Td>{scoreToYesNo(tactic.friendlyawareness)}</Table.Td>
-       <Table.Td>{scoreToYesNo(tactic.enemyawareness)}</Table.Td>
-     </Table.Tr>
-     <Table.Tr key={`tactic-${index}-logistics`}>
-       <Table.Td>Within Logistics Support Range?</Table.Td>
-       <Table.Td>{scoreToYesNo(tactic.friendlylogistics)}</Table.Td>
-       <Table.Td>{scoreToYesNo(tactic.enemylogistics)}</Table.Td>
-     </Table.Tr>
-     <Table.Tr key={`tactic-${index}-coverage`}>
-       <Table.Td>Within RPA/ISR Coverage?</Table.Td>
-       <Table.Td>{scoreToYesNo(tactic.friendlycoverage)}</Table.Td>
-       <Table.Td>{scoreToYesNo(tactic.enemycoverage)}</Table.Td>
-     </Table.Tr>
-     <Table.Tr key={`tactic-${index}-gps`}>
-       <Table.Td>Working GPS?</Table.Td>
-       <Table.Td>{scoreToYesNo(tactic.friendlygps)}</Table.Td>
-       <Table.Td>{scoreToYesNo(tactic.enemygps)}</Table.Td>
-     </Table.Tr>
-     <Table.Tr key={`tactic-${index}-comms`}>
-       <Table.Td>Within Communications Range?</Table.Td>
-       <Table.Td>{scoreToYesNo(tactic.friendlycomms)}</Table.Td>
-       <Table.Td>{scoreToYesNo(tactic.enemycomms)}</Table.Td>
-     </Table.Tr>
-     <Table.Tr key={`tactic-${index}-fire`}>
-       <Table.Td>Within Fire Support Range?</Table.Td>
-       <Table.Td>{scoreToYesNo(tactic.friendlyfire)}</Table.Td>
-       <Table.Td>{scoreToYesNo(tactic.enemyfire)}</Table.Td>
-     </Table.Tr>
-     <Table.Tr key={`tactic-${index}-pattern`}>
-       <Table.Td>Within Range of a Pattern Force?</Table.Td>
-       <Table.Td>{scoreToYesNo(tactic.friendlypattern)}</Table.Td>
-       <Table.Td>{scoreToYesNo(tactic.enemypattern)}</Table.Td>
-     </Table.Tr>
+    // Case 2: Engagements exist but none selected
+    if (!selectedEngagement) {
+      return (
+        <Table.Tr>
+          <Table.Td colSpan={3} align="center">Select an engagement to view tactics</Table.Td>
+        </Table.Tr>
+      );
+    }
+
+    // Case 3: Engagement selected but tactics data not available
+    if (!tactics || tactics.length === 0) {
+      return (
+        <Table.Tr>
+          <Table.Td colSpan={3} align="center">No tactics data available for this engagement</Table.Td>
+        </Table.Tr>
+      );
+    }
+
+
+    // Helper function to convert score to Yes/No 
+    //Pulled from tactics
+    const scoreToYesNo = (score: number | undefined) => (score && score > 0 ? 'Yes' : 'No');
+
+    return tactics.map((tactic, index) => (
+      <React.Fragment key={index}>
+        <Table.Tr key={`tactic-${index}-awareness`}>
+          <Table.Td>Aware of OPFOR?</Table.Td>
+          <Table.Td>{scoreToYesNo(tactic.friendlyawareness)}</Table.Td>
+          <Table.Td>{scoreToYesNo(tactic.enemyawareness)}</Table.Td>
+        </Table.Tr>
+        <Table.Tr key={`tactic-${index}-logistics`}>
+          <Table.Td>Within Logistics Support Range?</Table.Td>
+          <Table.Td>{scoreToYesNo(tactic.friendlylogistics)}</Table.Td>
+          <Table.Td>{scoreToYesNo(tactic.enemylogistics)}</Table.Td>
+        </Table.Tr>
+        <Table.Tr key={`tactic-${index}-coverage`}>
+          <Table.Td>Within RPA/ISR Coverage?</Table.Td>
+          <Table.Td>{scoreToYesNo(tactic.friendlycoverage)}</Table.Td>
+          <Table.Td>{scoreToYesNo(tactic.enemycoverage)}</Table.Td>
+        </Table.Tr>
+        <Table.Tr key={`tactic-${index}-gps`}>
+          <Table.Td>Working GPS?</Table.Td>
+          <Table.Td>{scoreToYesNo(tactic.friendlygps)}</Table.Td>
+          <Table.Td>{scoreToYesNo(tactic.enemygps)}</Table.Td>
+        </Table.Tr>
+        <Table.Tr key={`tactic-${index}-comms`}>
+          <Table.Td>Within Communications Range?</Table.Td>
+          <Table.Td>{scoreToYesNo(tactic.friendlycomms)}</Table.Td>
+          <Table.Td>{scoreToYesNo(tactic.enemycomms)}</Table.Td>
+        </Table.Tr>
+        <Table.Tr key={`tactic-${index}-fire`}>
+          <Table.Td>Within Fire Support Range?</Table.Td>
+          <Table.Td>{scoreToYesNo(tactic.friendlyfire)}</Table.Td>
+          <Table.Td>{scoreToYesNo(tactic.enemyfire)}</Table.Td>
+        </Table.Tr>
+        <Table.Tr key={`tactic-${index}-pattern`}>
+          <Table.Td>Within Range of a Pattern Force?</Table.Td>
+          <Table.Td>{scoreToYesNo(tactic.friendlypattern)}</Table.Td>
+          <Table.Td>{scoreToYesNo(tactic.enemypattern)}</Table.Td>
+        </Table.Tr>
 
       </React.Fragment>
 
@@ -252,64 +290,75 @@ export default function AAR() {
           <h2 style={{ justifyContent: 'center', alignItems: 'center', display: 'flex' }}>Scenerio: {sectionId}</h2>
           <AppShell>
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '45vh' }}>
-              <Card shadow="sm" radius="md" withBorder style={{ display: 'grid', height: '40vh', width: '600px', placeItems: 'center', marginBottom: '125px', marginTop: '100px', textAlign: 'center' }}>
-                <Card.Section >
-                  <div style={{ textAlign: 'center'}}>
-                    <h2 style={{ marginTop: 10 }}>Most Recent Round</h2>
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: 30}}>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      <Text>{engagements[engagements.length - 1]?.friendlyid}</Text>
-                      <Tooltip
-                        position="bottom"
-                        color="gray"
-                        transitionProps={{ transition: 'fade-up', duration: 300 }}
-                        label="Overall Score Out of 100"
-                      >
-                        <Progress.Root style={{ width: '200px', height: '25px' }}>
-                          <Progress.Section
-                            className={classes.progressSection}
-                            value={Number(engagements[engagements.length - 1]?.friendlytotalscore)}
-                            color='#3d85c6'>
-                            {Number(engagements[engagements.length - 1]?.friendlytotalscore).toFixed(0)}
-                          </Progress.Section>
-                        </Progress.Root>
-                      </Tooltip>
+              {engagements.length === 0 ? (<Title order={3} ta="center" c="gray">
+                No engagements available for this section
+              </Title>) : !selectedEngagement ? (<Title order={3} ta="center" c="gray">
+                Select an engagement to view tactics
+              </Title>) : (
+                <Card shadow="sm" radius="md" withBorder style={{ display: 'grid', height: '40vh', width: '600px', placeItems: 'center', marginBottom: '125px', marginTop: '100px', textAlign: 'center' }}>
+                  <Card.Section >
+                    <div style={{ textAlign: 'center' }}>
+                      <h2 style={{ marginTop: 10 }}>Selected Engagement</h2>
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      <Text>{engagements[engagements.length - 1]?.enemyid}</Text>
-                      <Tooltip
-                        position="bottom"
-                        color="gray"
-                        transitionProps={{ transition: 'fade-up', duration: 300 }}
-                        label="Overall Score Out of 100"
-                      >
-                        <Progress.Root style={{ width: '200px', height: '25px' }}>
-                          <Progress.Section
-                            className={classes.progressSection}
-                            value={Number(engagements[engagements.length - 1]?.enemytotalscore)}
-                            color='#c1432d'>
-                            {Number(engagements[engagements.length - 1]?.enemytotalscore).toFixed(0)}
-                          </Progress.Section>
-                        </Progress.Root>
-                      </Tooltip>
+                    <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: 30 }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <Text>{selectedEngagement?.friendlyid}</Text>
+                        <Tooltip
+                          position="bottom"
+                          color="gray"
+                          transitionProps={{ transition: 'fade-up', duration: 300 }}
+                          label="Overall Score Out of 100"
+                        >
+                          <Progress.Root style={{ width: '200px', height: '25px' }}>
+                            <Progress.Section
+                              className={classes.progressSection}
+                              value={Number(selectedEngagement?.friendlytotalscore)}
+                              color='#3d85c6'>
+                              {Number(selectedEngagement?.friendlytotalscore).toFixed(0)}
+                            </Progress.Section>
+                          </Progress.Root>
+                        </Tooltip>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <Text>{selectedEngagement?.enemyid}</Text>
+                        <Tooltip
+                          position="bottom"
+                          color="gray"
+                          transitionProps={{ transition: 'fade-up', duration: 300 }}
+                          label="Overall Score Out of 100"
+                        >
+                          <Progress.Root style={{ width: '200px', height: '25px' }}>
+                            <Progress.Section
+                              className={classes.progressSection}
+                              value={Number(selectedEngagement?.enemytotalscore)}
+                              color='#c1432d'>
+                              {Number(selectedEngagement?.enemytotalscore).toFixed(0)}
+                            </Progress.Section>
+                          </Progress.Root>
+                        </Tooltip>
+                      </div>
                     </div>
-                  </div>
-                  <Table verticalSpacing={'xs'} style={{ width: '600px', justifyContent: 'center'}}>
-                    <Table.Thead>
-                      <Table.Tr>
-                        <Table.Th>Tactic</Table.Th>
-                        <Table.Th>Friendly Score</Table.Th>
-                        <Table.Th>Enemy Score</Table.Th>
-                      </Table.Tr>
-                    </Table.Thead>
-                    <Table.Tbody>{(engagements.length > 0) && renderTacticsRows(tacticsMap.get(engagements[engagements.length - 1].engagementid))}
-                    </Table.Tbody>
-                  </Table>
-                </Card.Section>
-              </Card>
+                    <Table verticalSpacing={'xs'} style={{ width: '600px', justifyContent: 'center' }}>
+                      <Table.Thead>
+                        <Table.Tr>
+                          <Table.Th>Tactic</Table.Th>
+                          <Table.Th>Friendly Score</Table.Th>
+                          <Table.Th>Enemy Score</Table.Th>
+                        </Table.Tr>
+                      </Table.Thead>
+                      <Table.Tbody>{renderTacticsRows(
+                        selectedEngagement?.engagementid
+                          ? tacticsMap.get(selectedEngagement.engagementid)
+                          : undefined
+                      )}
+                      </Table.Tbody>
+                    </Table>
+                  </Card.Section>
+                </Card>
+              )
+              }
             </div>
             <Table verticalSpacing={'xs'} style={{ width: '100%', tableLayout: 'fixed', justifyContent: 'space-between' }}>
               <Table.Thead>
@@ -367,8 +416,8 @@ export default function AAR() {
                     </Table.Td>
 
                     <Table.Td style={{ display: 'flex' }}>
-                      <Button className='.toggle-details' size="xs" onClick={() => handleToggle(index)}>
-                        {isOpen[index] ? 'Collapse' : 'Expand'}
+                      <Button className='.toggle-details' size="xs" onClick={() => setSelectedEngagement(row)}>
+                        Show Engagement {/* {isOpen[index] ? 'Collapse' : 'Expand'} */}
                       </Button>
                     </Table.Td>
                   </Table.Tr>
