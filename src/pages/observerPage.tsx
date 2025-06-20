@@ -8,7 +8,8 @@ import '../App.css';
 import { AppShell, Image, Button, MantineProvider, SimpleGrid, Container, Text, Group, ThemeIcon, Box } from '@mantine/core';
 // Import hooks from React and Mantine for state management and side effects
 // import { useDisclosure } from '@mantine/hooks';
-import { useEffect, useState } from 'react';
+// Import useCallback along with other React hooks
+import { useEffect, useState, useCallback } from 'react';
 // Import tools for page navigation and accessing URL parameters
 import { useNavigate, useParams } from 'react-router-dom';
 // Import custom context to get user role and section information
@@ -45,6 +46,8 @@ function ObserverPage() {
   const [totalStats, setTotalStats] = useState<UnitStats>({ friendlyCount: 0, enemyCount: 0, friendlyKilled: 0, enemyKilled: 0 });
   // State to hold an object where keys are unit types (e.g., 'infantry') and values are their corresponding stats.
   const [statsByType, setStatsByType] = useState<Record<string, UnitStats>>({});
+  // State to manage the countdown timer
+  const [countdown, setCountdown] = useState(10);
 
   // --- SIDE EFFECTS (HOOKS) ---
 
@@ -66,58 +69,71 @@ function ObserverPage() {
     return { friendlyCount: activeFriendlies, enemyCount: activeEnemies, friendlyKilled: killedFriendlies, enemyKilled: killedEnemies };
   };
   
-  // Main data fetching and processing effect. Runs once on mount or if the section changes.
-  useEffect(() => {
-    const fetchUnitData = async () => {
-      if (!sectionId) return;
+  // Wraped the data fetching logic in useCallback to prevent it from being redefined on every render.
+  // This allows it to be used safely inside other useEffect hooks.
+  const fetchUnitData = useCallback(async () => {
+    if (!sectionId) return;
 
-      try {
-        // Fetches all friendly and all enemy units for the section in parallel for efficiency.
-        const [friendlyRes, enemyRes] = await Promise.all([
-          axios.get<Unit[]>(`${process.env.REACT_APP_BACKEND_URL}/api/units/sectionSort`, {params: { sectionid: userSection }}),
-          axios.get<Unit[]>(`${process.env.REACT_APP_BACKEND_URL}/api/units/allEnemyUnits`, {params: { sectionid: userSection }})
-        ]);
-        const allFriendlies = friendlyRes.data;
-        const allEnemies = enemyRes.data;
+    try {
+      const [friendlyRes, enemyRes] = await Promise.all([
+        axios.get<Unit[]>(`${process.env.REACT_APP_BACKEND_URL}/api/units/sectionSort`, {params: { sectionid: userSection }}),
+        axios.get<Unit[]>(`${process.env.REACT_APP_BACKEND_URL}/api/units/allEnemyUnits`, {params: { sectionid: userSection }})
+      ]);
+      const allFriendlies = friendlyRes.data;
+      const allEnemies = enemyRes.data;
 
-        // Configuration array to define which unit types to process and how to categorize them.
-        // This makes the code scalable and easy to update.
-        const unitTypesToProcess = [
-            { key: 'infantry', names: ['Infantry', 'Combined Arms'] },
-            { key: 'armor', names: ['Armor Company'] },
-            { key: 'specOps', names: ['Special Operations Forces', 'Special Operations Forces - EZO'] },
-            { key: 'artillery', names: ['Field Artillery'] },
-        ];
-        
-        // This object will be populated with the stats for each unit type.
-        const newStats: Record<string, UnitStats> = {};
+      const unitTypesToProcess = [
+          { key: 'infantry', names: ['Infantry', 'Combined Arms'] },
+          { key: 'armor', names: ['Armor Company'] },
+          { key: 'specOps', names: ['Special Operations Forces', 'Special Operations Forces - EZO'] },
+          { key: 'artillery', names: ['Field Artillery'] },
+      ];
+      
+      const newStats: Record<string, UnitStats> = {};
 
-        // Loop through each defined unit type to filter and calculate its specific stats.
-        for (const typeInfo of unitTypesToProcess) {
-          // The filter logic here uses the 'names' array, allowing a category to include multiple unit_type strings.
-          const friendliesOfType = allFriendlies.filter(u => typeInfo.names.includes(u.unit_type));
-          const enemiesOfType = allEnemies.filter(u => typeInfo.names.includes(u.unit_type));
-          newStats[typeInfo.key] = getStatsFromLists(friendliesOfType, enemiesOfType);
-        }
-
-        // After looping, calculate stats for the 'logistics' category by finding all units NOT in the defined types.
-        const definedTypes = unitTypesToProcess.flatMap(t => t.names);
-        const logisticsFriendlies = allFriendlies.filter(u => !definedTypes.includes(u.unit_type));
-        const logisticsEnemies = allEnemies.filter(u => !definedTypes.includes(u.unit_type));
-        newStats['logistics'] = getStatsFromLists(logisticsFriendlies, logisticsEnemies);
-
-        // Update the component's state with the newly calculated stats.
-        // This triggers a re-render to display the new data.
-        setTotalStats(getStatsFromLists(allFriendlies, allEnemies));
-        setStatsByType(newStats);
-
-      } catch (error) {
-        console.error("Error fetching unit data:", error);
+      for (const typeInfo of unitTypesToProcess) {
+        const friendliesOfType = allFriendlies.filter(u => typeInfo.names.includes(u.unit_type));
+        const enemiesOfType = allEnemies.filter(u => typeInfo.names.includes(u.unit_type));
+        newStats[typeInfo.key] = getStatsFromLists(friendliesOfType, enemiesOfType);
       }
-    };
 
+      const definedTypes = unitTypesToProcess.flatMap(t => t.names);
+      const logisticsFriendlies = allFriendlies.filter(u => !definedTypes.includes(u.unit_type));
+      const logisticsEnemies = allEnemies.filter(u => !definedTypes.includes(u.unit_type));
+      newStats['logistics'] = getStatsFromLists(logisticsFriendlies, logisticsEnemies);
+
+      setTotalStats(getStatsFromLists(allFriendlies, allEnemies));
+      setStatsByType(newStats);
+
+    } catch (error) {
+      console.error("Error fetching unit data:", error);
+    }
+  }, [sectionId, userSection]); // Dependencies for useCallback
+  
+  // This effect runs the initial data fetch when the component mounts.
+  useEffect(() => {
     fetchUnitData();
-  }, [sectionId, userSection]);
+  }, [fetchUnitData]);
+
+  // Effect to manage the 15-second countdown timer.
+  useEffect(() => {
+    // Create an interval that runs every 1000 milliseconds (1 second).
+    const interval = setInterval(() => {
+      setCountdown(prevCountdown => {
+        // When the countdown reaches 1, trigger a data fetch and reset to 10.
+        if (prevCountdown <= 1) {
+          fetchUnitData();
+          return 10;
+        }
+        // Otherwise, just decrement the counter.
+        return prevCountdown - 1;
+      });
+    }, 1000);
+
+    // Cleanup function: This is crucial to prevent memory leaks.
+    // It clears the interval when the component is unmounted.
+    return () => clearInterval(interval);
+  }, [fetchUnitData]); // This effect depends on fetchUnitData.
 
   // --- EVENT HANDLERS ---
   const handleLogoClick = () => navigate('/');
@@ -145,8 +161,9 @@ function ObserverPage() {
 
         {/* Render everything other than header */}
         <AppShell.Main>
-          {/* AAR button */}
-          <div style={{ justifyContent: 'right', display: 'flex' }}>
+          {/* Use a Group with justify="space-between" to position update and AAR button on opposite ends */}
+          <Group justify="space-between">
+            <Text c="dimmed">Updating data in {countdown} seconds</Text>
             <Button 
               size='sm' 
               variant='link' 
@@ -154,7 +171,7 @@ function ObserverPage() {
               style={{ margin: '10px ' }}>
                 After Action Reports
             </Button>
-          </div>
+          </Group>
           
           {/* Observing section label */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
