@@ -367,7 +367,7 @@ export default function AAR() {
                   <Table.Th>Enemy Total Score</Table.Th>
                 </Table.Tr>
               </Table.Thead>
-              {engagements.map((row, index) => (
+              {engagements.map((row, index) => ( //this is were table rows are rendered unitid must change to unit name, find where to pull unitname
                 <Table.Tbody key={index}>
                   <Table.Tr key={row.engagementid} >
                     <Table.Td>{row.engagementid}</Table.Td>
