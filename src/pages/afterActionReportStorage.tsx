@@ -107,7 +107,7 @@ export default function AAR() {
     const fetchEngagementData = async () => {
       try {
         console.log('Fetching data for engagement:', sectionId);
-        const response = await axios.get<Engagement[]>(`${process.env.REACT_APP_BACKEND_URL}/api/engagements/${sectionId}`, {
+        const response = await axios.get<Engagement[]>(`${process.env.REACT_APP_BACKEND_URL}/api/ordered_engagements/${sectionId}`, {
           params: {
             sectionid: sectionId  // Pass userSection as a query parameter
           }
