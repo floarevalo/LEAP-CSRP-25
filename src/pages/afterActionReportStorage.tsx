@@ -53,6 +53,8 @@ export interface Tactics {
 export interface Engagement {
   friendlyid: string;
   enemyid: string;
+  friendlyname: string;
+  enemyname: string;
   engagementid: string;
   friendlybasescore: string;
   enemybasescore: string;
@@ -95,6 +97,7 @@ export default function AAR() {
           }
         });
         setEngagements(response.data);
+        console.log(response.data[0])
 
 
 
@@ -318,11 +321,11 @@ export default function AAR() {
                   <Table.Th>Enemy Total Score</Table.Th>
                 </Table.Tr>
               </Table.Thead>
-              {engagements.map((row, index) => ( //this is were table rows are rendered unitid must change to unit name, find where to pull unitname
+              {engagements.map((row, index) => ( 
                 <Table.Tbody key={index}>
                   <Table.Tr key={row.engagementid} >
                     <Table.Td>{row.engagementid}</Table.Td>
-                    <Table.Td>{row.friendlyid}</Table.Td>
+                    <Table.Td>{row.friendlyname}</Table.Td>
                     <Table.Td>
                       <Tooltip
                         position="bottom"
@@ -342,7 +345,7 @@ export default function AAR() {
                         </Progress.Root>
                       </Tooltip>
                     </Table.Td>
-                    <Table.Td>{row.enemyid}</Table.Td>
+                    <Table.Td>{row.enemyname}</Table.Td>
                     <Table.Td>
                       <Tooltip
                         position="bottom"

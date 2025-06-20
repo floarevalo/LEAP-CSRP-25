@@ -144,7 +144,26 @@ app.get('/api/engagements/:id', async (req, res) => {
   console.log('Attempting to engagements')
   const { id } = req.params;
   try {
-    const result = await pool.query('SELECT * FROM engagements WHERE sectionid = $1', [id]);
+    const result = await pool.query(`
+      SELECT
+        e.engagementid,
+        e.sectionid,
+        e.friendlyid,
+        fu.unit_name AS friendlyname,
+        e.enemyid,
+        eu.unit_name AS enemyname,
+        e.friendlybasescore,
+        e.enemybasescore,
+        e.friendlytacticsscore,
+        e.enemytacticsscore,
+        e.friendlytotalscore,
+        e.enemytotalscore,
+        e.iswin
+      FROM engagements e
+      JOIN units fu ON CAST(e.friendlyid AS INTEGER) = fu.unit_id
+      JOIN units eu ON CAST(e.enemyid AS INTEGER) = eu.unit_id
+      WHERE e.sectionid = $1
+      `, [id]);
     res.json(result.rows);
   } catch (err) {
     console.error(err.message);
