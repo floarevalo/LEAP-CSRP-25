@@ -32,7 +32,7 @@ import UnitCreationModule from '../components/UnitCreationModule';
 import UnitDeleteModule from '../components/UnitDeleteModule';
 import SectionCopyModule from '../components/sectionCopyModule';
 import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
-import { IconCheck, IconX} from '@tabler/icons-react';
+import { IconCheck, IconX } from '@tabler/icons-react';
 
 
 
@@ -98,6 +98,35 @@ function AdminPage() {
   // Load section data on component mount
   useEffect(() => {
     fetchData();
+
+    const eventSource = new EventSource(`${process.env.REACT_APP_BACKEND_URL}/sectionevents`);
+
+    eventSource.onopen = () => {
+      console.log('Connected to /sectionevents');
+    };
+
+    eventSource.onerror = (err) => {
+      console.error('SSE error:', err);
+    };
+
+    eventSource.onmessage = async (event) => {
+      console.log('frontend has recieved the section');
+      try {
+        const newSection = JSON.parse(event.data); // { sectionid: "..." }
+        console.log(newSection);
+
+        setSections(prev => {
+          if (prev.some(s => s.sectionid === newSection)) return prev;
+          return [...prev, newSection];
+        });
+      } catch (err) {
+        console.error('Error handling section event', err);
+      }
+    };
+
+    return () => {
+      eventSource.close();
+    };
   }, []);
 
 
@@ -133,7 +162,7 @@ function AdminPage() {
   //   }
   // };
 
-// This function updates the "isonline" status of a section when the toggle is clicked
+  // This function updates the "isonline" status of a section when the toggle is clicked
   const toggleSectionOnline = async (sectionID: string, isOnline: boolean): Promise<void> => {
     try {
       // Send a PUT request to the backend to update the section's online status
@@ -152,11 +181,11 @@ function AdminPage() {
       // Update the local sections state in the frontend
       setSections(
         (prevSections) => prevSections.map((section) =>
-        // If the section matches the updated one, return a new object with updated status
-         section.sectionid === sectionID
-         ? { ...section , isonline : !isOnline}
-         : section // Otherwise, return the section unchanged
-         )
+          // If the section matches the updated one, return a new object with updated status
+          section.sectionid === sectionID
+            ? { ...section, isonline: !isOnline }
+            : section // Otherwise, return the section unchanged
+        )
       );
     } catch (error) {
       console.error('Error toggling section online status:', error);
@@ -215,7 +244,7 @@ function AdminPage() {
       );
       setSelectedSection(null);
     }
-   // setDeleteModalOpened(false);
+    // setDeleteModalOpened(false);
     fetchData();
   };
 
@@ -249,7 +278,7 @@ function AdminPage() {
               <td>{section.sectionid}</td>
               <td>
                 <Box
-                  onClick ={() => toggleSectionOnline(section.sectionid, section.isonline)}
+                  onClick={() => toggleSectionOnline(section.sectionid, section.isonline)}
                   style={{
                     backgroundColor: section.isonline ? theme.colors.green[0] : theme.colors.red[0],
                     color: section.isonline ? theme.colors.green[9] : theme.colors.red[9],
@@ -263,7 +292,7 @@ function AdminPage() {
                 >
                   {section.isonline ? 'Online' : 'Offline'}
                 </Box>
-              {/* <Switch
+                {/* <Switch
                 checked={section.isonline}
                 onChange={() => toggleSectionOnline(section.sectionid, section.isonline)}
                 color={section.isonline ? 'teal' : 'red'}
