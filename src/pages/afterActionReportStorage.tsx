@@ -303,7 +303,7 @@ export default function AAR() {
 
                     <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: 30 }}>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <Text>{selectedEngagement?.friendlyid}</Text>
+                        <Text>{selectedEngagement?.friendlyname}</Text>
                         <Tooltip
                           position="bottom"
                           color="gray"
@@ -322,7 +322,7 @@ export default function AAR() {
                       </div>
 
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <Text>{selectedEngagement?.enemyid}</Text>
+                        <Text>{selectedEngagement?.enemyname}</Text>
                         <Tooltip
                           position="bottom"
                           color="gray"
