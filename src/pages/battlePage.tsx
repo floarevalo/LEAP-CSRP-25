@@ -49,7 +49,7 @@ function BattlePage() {
   const [realTimeScore, setRealTimeScore] = useState<number | null>(null); // State to track the real time (tactics) score of a unit
   const [units, setUnits] = useState<Unit[]>([]);
   const [progress, setProgress] = useState(0); // Used to calculate the progress of the animation for the finalize tactics button
-  const [loaded, setLoaded] = useState(false);
+  const [loaded, setLoaded] = useState(false); // creates variable to wait for after conflict calculations to be done
   const theme = useMantineTheme();
   const [friendlyHealth, setFriendlyHealth] = useState<number>(0); // Variables for setting and getting the friendly unit health
   const [enemyHealth, setEnemyHealth] = useState<number>(0); // Variables for setting and getting the enemy unit health
@@ -61,7 +61,8 @@ function BattlePage() {
   const [enemyUnits, setEnemyUnits] = useState<Unit[]>([]);
   const [unitTactics, setUnitTactics] = useState<UnitTactics | null>(null);
   const [enemyBaseValue, setEnemyBaseValue] = useState<number>(0); // Sets and gets the state for the enemy base value 
-  const [enemyWithinWEZ, setEnemeyWithinWEZ] =  useState<Unit[]>([]); //array of strings that tracks enemies within the WEZ
+  const [enemyWithinWEZ, setEnemeyWithinWEZ] = useState<Unit[]>([]); //array of strings that tracks enemies within the WEZ
+  const [isLoadingUnits, setisLoadingUnits] = useState(true); //creates variable to check that data for units has loaded before the engagement can start
 
   // Fetches data of the units(friendly units) based on class section
   useEffect(() => {
@@ -75,6 +76,8 @@ function BattlePage() {
         setUnits(response.data);
       } catch (error) {
         console.error('Error fetching data:', error);
+      } finally {
+        setisLoadingUnits(false);
       }
     };
     fetchData();
@@ -82,7 +85,7 @@ function BattlePage() {
 
   // Fetches data of the enemy units based on class section
   useEffect(() => {
-    
+
     // const fetchEnemyWithinWEZ = async () => {
     //   let enemyWithinWEZ: Unit[] = [];  // ✅ initialize the array
     //   console.log(enemyUnitsLocal);
@@ -103,7 +106,7 @@ function BattlePage() {
           }
         });
         setEnemyUnits(response.data);
-        let enemyUnitsLocal : Unit[] = [];
+        let enemyUnitsLocal: Unit[] = [];
         for (const eUnit of response.data) {
           const isInWEZ = await checkWEZ(eUnit.unit_id);
           if (isInWEZ) {
@@ -115,19 +118,19 @@ function BattlePage() {
       } catch (error) {
         console.error('Error fetching data:', error);
       }
-  
-    //fetchEnemyWithinWEZ();
-    console.log(enemyWithinWEZ);
+
+      //fetchEnemyWithinWEZ();
+      console.log(enemyWithinWEZ);
     }
     fetchData();
   }, []);
 
-// fetches enemy tactics from preset tactics
+  // fetches enemy tactics from preset tactics
   useEffect(() => {
     const fetchUnitTactics = async () => {
       // Make sure there is an enemyUnit and it has a name before fetching
       if (!enemyUnit?.unit_name) {
-        return; 
+        return;
       }
       // call backend to get enemy tactics from preset_tactics
       try {
@@ -141,7 +144,7 @@ function BattlePage() {
         setUnitTactics(response.data.tactics);
       } catch (error) {
         console.error('Error fetching unit tactics:', error);
-        setUnitTactics(null); 
+        setUnitTactics(null);
       }
     };
 
@@ -153,7 +156,7 @@ function BattlePage() {
 
 
 
-//initializes the characteristics of each friendly unit
+  //initializes the characteristics of each friendly unit
   const unit = units.find((u) => u.unit_id === selectedUnit);
   const {
     unit_type,
@@ -340,7 +343,7 @@ function BattlePage() {
       b = 20;
     } // add Armor Company b=10
     else if (unit_type === 'Armor Company') {
-      b=10
+      b = 10
     }
     else if (unit_type === 'Air Defense') {
       b = 50;
@@ -358,11 +361,11 @@ function BattlePage() {
       b = 15;
     }
     else if (unit_type === 'Signal' || unit_type === 'Special Operations Forces') {
-      b=10;
+      b = 10;
 
     } // add multiple special forces types some are b=10 and some are b=15 add MEU and MLR
     else if (unit_type === 'Special Operations Forces - EZO') {
-      b=15;
+      b = 15;
     }
     else {
       b = 0;
@@ -374,7 +377,7 @@ function BattlePage() {
     }
     // add armor company
     else if (enemyUnit?.unit_type === 'Armor Company') {
-      b_enemy=10;
+      b_enemy = 10;
     }
     else if (enemyUnit?.unit_type === 'Air Defense') {
       b_enemy = 10;
@@ -532,9 +535,9 @@ function BattlePage() {
     }
 
     // Save health
-    console.log("Saving health: ", Math.round(friendlyHealth-friendlyDamage), " ", Math.round(enemyHealth-enemyDamage) )
-    updateUnitHealth(Number(unit_id), Math.round(friendlyHealth-friendlyDamage));
-    updateUnitHealth(Number(enemyUnit?.unit_id), Math.round(enemyHealth-enemyDamage));
+    console.log("Saving health: ", Math.round(friendlyHealth - friendlyDamage), " ", Math.round(enemyHealth - enemyDamage))
+    updateUnitHealth(Number(unit_id), Math.round(friendlyHealth - friendlyDamage));
+    updateUnitHealth(Number(enemyUnit?.unit_id), Math.round(enemyHealth - enemyDamage));
 
   }; // End of finalize tactics
 
@@ -773,576 +776,584 @@ function BattlePage() {
   }
 
   //check to see if the enemy with a specific enemy id is in the FriendlyForce WEZ
-  const checkWEZ = async (enemyID : number): Promise<boolean> => {
+  const checkWEZ = async (enemyID: number): Promise<boolean> => {
     try {
       // Send a GET request to the backend API endpoint /api/withinWEZ
       // Pass enemyID and friendlyID as query parameters
       let enemyInWEZ = false;
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/withinWEZ`,{
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/withinWEZ`, {
         params: {
           enemyid: enemyID, // ID of the enemy unit being checked
           friendlyid: selectedUnit  // ID of the friendly unit
         }
       });
       // Destructure the enemyInWEZ property from the response data
-      ({enemyInWEZ} = response.data);  
+      ({ enemyInWEZ } = response.data);
       return enemyInWEZ;
-      
+
     } catch (error) {
       console.error('Error calculating WEZ:', error);
       // If there's an error, return false as a fallback
       return false;
     }
-    };
-  
+  };
+
   // Starts the battle page if a unit has been selected
-  if (unitNull()) {
-    return (
-      <MantineProvider defaultColorScheme='dark'>
-        <Stepper active={active} onStepClick={setActive} allowNextStepsSelect={false} style={{ padding: '20px' }}>
-          <Stepper.Step allowStepSelect={false} icon={<IconSwords stroke={1.5} style={{ width: rem(27), height: rem(27) }} />}>
-            <h1 style={{ justifyContent: 'center', display: 'flex', alignItems: 'center' }}>Round {round}</h1>
-            <div>
-              <Grid justify='center' align='flex-start' gutter={100}>
-                <Grid.Col span={4}>
+  if (isLoadingUnits) {
+    return <Text>loading...</Text>
+    
+  }
+  if (!unit) {
+    navigate('/')
+    return <Text>redirected due to fetching error</Text>
+  }
+
+  return (
+    <MantineProvider defaultColorScheme='dark'>
+      <Stepper active={active} onStepClick={setActive} allowNextStepsSelect={false} style={{ padding: '20px' }}>
+        <Stepper.Step allowStepSelect={false} icon={<IconSwords stroke={1.5} style={{ width: rem(27), height: rem(27) }} />}>
+          <h1 style={{ justifyContent: 'center', display: 'flex', alignItems: 'center' }}>Round {round}</h1>
+          <div>
+            <Grid justify='center' align='flex-start' gutter={100}>
+              <Grid.Col span={4}>
+                <Card withBorder radius="md" className={classes.card} >
+                  <Card.Section className={classes.imageSection} mt="md" >
+                    {/* Military icon for the selected friendly unit */}
+                    <Group>
+                      <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center' }}>
+                        <Image
+                          src={getImageSRC((unit_type ?? '').toString(), true)}
+                          height={160}
+                          style={{ width: 'auto', maxHeight: '100%', objectFit: 'contain' }}
+                        />
+                      </div>
+                    </Group>
+                  </Card.Section>
+
+                  {/* Displays a card that contains pertinent information about the selected friendly unit */}
+                  <Card.Section><Center><h2>{unit_name}</h2></Center></Card.Section>
+                  {unit ? (
+                    <Text size="xl" style={{ whiteSpace: 'pre-line' }}>
+                      <strong>Type:</strong> {unit_type}<br />
+                      <Space mb="5px" />
+                      <strong>Unit Size:</strong> {unit_size}<br />
+                      <Space mb="5px" />
+                      <strong>Force Mobility:</strong> {unit_mobility}<br />
+                      <Space mb="5px" />
+
+                      <strong>Force Readiness:</strong> {unit_readiness}<br />
+                      <CustomProgressBarReadiness value={Number(getReadinessProgress(unit_readiness))} />
+
+                      <strong>Force Skill:</strong> {unit_skill}<br />
+                      <CustomProgressBarSkill value={Number(getForceSkill((unit_skill)))} />
+
+                      <strong>Health:</strong> {friendlyHealth}<br />
+                      <CustomProgressBarHealth value={Number(friendlyHealth)} />
+                    </Text>
+                  ) : (
+                    <Text size="sm">Unit not found</Text>
+                  )}
+                </Card>
+              </Grid.Col>
+
+
+              {/* Displays a card that contains pertinent information about the selected enemy unit */}
+              <Grid.Col span={4}>
+                {enemyUnit ? (
                   <Card withBorder radius="md" className={classes.card} >
-                    <Card.Section className={classes.imageSection} mt="md" >
-                      {/* Military icon for the selected friendly unit */}
-                      <Group>
-                        <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center' }}>
-                          <Image
-                            src={getImageSRC((unit_type ?? '').toString(), true)}
-                            height={160}
-                            style={{ width: 'auto', maxHeight: '100%', objectFit: 'contain' }}
-                          />
-                        </div>
-                      </Group>
+                    <Card.Section className={classes.imageSection} mt="md">
+                      {/* Military icon for the selected enemy unit */}
+
+                      <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center' }}>
+                        <Image
+                          src={getImageSRC((enemyUnit?.unit_type ?? '').toString(), false)}
+                          height={160}
+                          style={{ width: 'auto', maxHeight: '100%', objectFit: 'contain' }}
+                        />
+                      </div>
+
                     </Card.Section>
 
-                    {/* Displays a card that contains pertinent information about the selected friendly unit */}
-                    <Card.Section><Center><h2>{unit_name}</h2></Center></Card.Section>
+                    <Card.Section><Center><h2>{enemyUnit.unit_name}</h2></Center></Card.Section>
                     {unit ? (
-                      <Text size="xl" style={{ whiteSpace: 'pre-line' }}>
-                        <strong>Type:</strong> {unit_type}<br />
+                      <Text size="xl">
+                        <strong>Type:</strong> {enemyUnit.unit_type}<br />
                         <Space mb="5px" />
-                        <strong>Unit Size:</strong> {unit_size}<br />
+                        <strong>Unit Size:</strong> {enemyUnit.unit_size}<br />
                         <Space mb="5px" />
-                        <strong>Force Mobility:</strong> {unit_mobility}<br />
+                        <strong>Force Mobility:</strong> {enemyUnit.unit_mobility}<br />
                         <Space mb="5px" />
 
-                        <strong>Force Readiness:</strong> {unit_readiness}<br />
-                        <CustomProgressBarReadiness value={Number(getReadinessProgress(unit_readiness))} />
+                        <strong>Force Readiness:</strong> {enemyUnit.unit_readiness}<br />
+                        <CustomProgressBarReadiness value={Number(getReadinessProgress(enemyUnit.unit_readiness))} />
 
-                        <strong>Force Skill:</strong> {unit_skill}<br />
-                        <CustomProgressBarSkill value={Number(getForceSkill((unit_skill)))} />
+                        <strong>Force Skill:</strong> {enemyUnit.unit_skill}<br />
+                        <CustomProgressBarSkill value={Number(getForceSkill((enemyUnit.unit_skill)))} />
 
-                        <strong>Health:</strong> {friendlyHealth}<br />
-                        <CustomProgressBarHealth value={Number(friendlyHealth)} />
+                        <strong>Health:</strong> {enemyHealth}<br />
+                        <CustomProgressBarHealth value={Number(enemyHealth)} />
+
                       </Text>
                     ) : (
                       <Text size="sm">Unit not found</Text>
                     )}
                   </Card>
-                </Grid.Col>
+                )
+                  :
+                  // Drop down menu to select the proper enemy unit to begin an engagement with
+                  (
+                    enemyWithinWEZ.length === 0 ? (
+                      <h2>No enemy units to select</h2>
+                    ) : (
+                      <Select
+                        label="Select Enemy Unit"
+                        placeholder="Select Enemy Unit"
+                        data={enemyWithinWEZ.map(eUnit => ({ value: eUnit.unit_id.toString(), label: eUnit.unit_name }))}
+                        searchable
+                        value={enemyUnit}
+                        onChange={handleSelectEnemy}
+                      />
+                    )
+                  )}
+              </Grid.Col>
+            </Grid>
 
+            {/* Buttons to start and engagement or deselect the previously selected enemy unit */}
+            <Group justify="center" mt="xl">
+              {(!inEngagement && enemyUnit) ?
+                (<Button onClick={handleDeselectEnemy} disabled={enemyUnit ? false : true} color='red'>Deselect Enemy Unit</Button>) :
+                (<></>)
+              }
+              <Button onClick={handleStartEngagement} disabled={enemyUnit ? false : true}>{inEngagement ? 'Start Round' : 'Start Engagement'}</Button>
+            </Group>
+          </div>
+        </Stepper.Step>
 
-                {/* Displays a card that contains pertinent information about the selected enemy unit */}
-                <Grid.Col span={4}>
-                  {enemyUnit ? (
-                    <Card withBorder radius="md" className={classes.card} >
-                      <Card.Section className={classes.imageSection} mt="md">
-                        {/* Military icon for the selected enemy unit */}
+        {/* This begins the yes/no pages for the students to answer about individual tactics*/}
+        {/* Phase 1 questions about OPFOR and logistics support */}
+        <Stepper.Step allowStepSelect={false} label="Force Strength" icon={<IconNumber1Small stroke={1.5} style={{ width: rem(80), height: rem(80) }} />}>
+          <div>
+            <p>Phase 1: Force Strength</p>
+            <Grid>
+              <Grid.Col span={4}>
+                <h1>Friendly: {unit_name}</h1>
+                <p>Aware of OPFOR presence?</p>
+                <SegmentedControl value={question1} onChange={setQuestion1} size='xl' radius='xs' color="gray" data={['Yes', 'No']} />
+                <p>Within logistics support range?</p>
+                <SegmentedControl value={question2} onChange={setQuestion2} size='xl' radius='xs' color="gray" data={['Yes', 'No']} />
+              </Grid.Col>
+              <Grid.Col span={6}>
+                <h1>Enemy: {enemyUnit?.unit_name}</h1>
+                <p>Aware of OPFOR presence?</p>
+                <SegmentedControl
+                  size='xl'
+                  radius='xs'
+                  color="gray"
+                  data={['Yes', 'No']}
+                  value={unitTactics?.awareness ? 'Yes' : 'No'} // Assuming awareness is a boolean in unitTactics
+                  disabled
+                />
+                <p>Within logistics support range?</p>
+                <SegmentedControl
+                  size='xl'
+                  radius='xs'
+                  color="gray"
+                  data={['Yes', 'No']}
+                  value={unitTactics?.logistics ? 'Yes' : 'No'}
+                  disabled
+                />
+              </Grid.Col>
+            </Grid>
 
-                        <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center' }}>
-                          <Image
-                            src={getImageSRC((enemyUnit?.unit_type ?? '').toString(), false)}
-                            height={160}
-                            style={{ width: 'auto', maxHeight: '100%', objectFit: 'contain' }}
-                          />
-                        </div>
+            {/* Button to continue to the next page */}
+            <Group justify="center" mt="xl">
+              <Button onClick={nextStep}>Continue</Button>
+            </Group>
 
-                      </Card.Section>
+          </div>
+        </Stepper.Step>
 
-                      <Card.Section><Center><h2>{enemyUnit.unit_name}</h2></Center></Card.Section>
-                      {unit ? (
-                        <Text size="xl">
-                          <strong>Type:</strong> {enemyUnit.unit_type}<br />
-                          <Space mb="5px" />
-                          <strong>Unit Size:</strong> {enemyUnit.unit_size}<br />
-                          <Space mb="5px" />
-                          <strong>Force Mobility:</strong> {enemyUnit.unit_mobility}<br />
-                          <Space mb="5px" />
+        {/* Phase 2 questions about ISR coverage and GPS*/}
+        <Stepper.Step allowStepSelect={false} label="Tactical Advantage" icon={<IconNumber2Small stroke={1.5} style={{ width: rem(80), height: rem(80) }} />}>
+          <div>
+            <p>Phase 2: Tactical Advantage</p>
+            <Grid>
+              <Grid.Col span={6}>
+                <h1>Friendly: {unit_name}</h1>
+                <p>Under ISR coverage?</p>
+                <SegmentedControl value={question3} onChange={setQuestion3} size='xl' radius='xs' color="gray" data={['Yes', 'No']} />
+                <p>Working GPS?</p>
+                <SegmentedControl value={question4} onChange={setQuestion4} size='xl' radius='xs' color="gray" data={['Yes', 'No']} />
+              </Grid.Col>
+              <Grid.Col span={6}>
+                <h1>Enemy: {enemyUnit?.unit_name}</h1>
+                <p>Under ISR coverage?</p>
+                <SegmentedControl
+                  size='xl'
+                  radius='xs'
+                  color="gray"
+                  data={['Yes', 'No']}
+                  value={unitTactics?.coverage ? 'Yes' : 'No'}
+                  disabled
+                />
+                <p>Working GPS?</p>
+                <SegmentedControl
+                  size='xl'
+                  radius='xs'
+                  color="gray"
+                  data={['Yes', 'No']}
+                  value={unitTactics?.gps ? 'Yes' : 'No'}
+                  disabled
+                />
+              </Grid.Col>
+            </Grid>
 
-                          <strong>Force Readiness:</strong> {enemyUnit.unit_readiness}<br />
-                          <CustomProgressBarReadiness value={Number(getReadinessProgress(enemyUnit.unit_readiness))} />
+            {/* Separate buttons to continue or return to previous page */}
+            <Group justify="center" mt="xl">
+              <Button onClick={prevStep}>Go Back</Button>
+              <Button onClick={nextStep}>Next Phase</Button>
+            </Group>
+          </div>
+        </Stepper.Step>
 
-                          <strong>Force Skill:</strong> {enemyUnit.unit_skill}<br />
-                          <CustomProgressBarSkill value={Number(getForceSkill((enemyUnit.unit_skill)))} />
+        {/* Phase 3 questions about communications and fire support range */}
+        <Stepper.Step allowStepSelect={false} label="Fire Support" icon={<IconNumber3Small stroke={1.5} style={{ width: rem(80), height: rem(80) }} />} >
+          <div>
+            <p>Phase 3: Fire Support</p>
+            <Grid>
+              <Grid.Col span={6}>
+                <h1>Friendly: {unit_name}</h1>
+                <p>Working communications?</p>
+                <SegmentedControl value={question5} onChange={setQuestion5} size='xl' radius='xs' color="gray" data={['Yes', 'No']} />
+                <p>Within fire support range?</p>
+                <SegmentedControl value={question6} onChange={setQuestion6} size='xl' radius='xs' color="gray" data={['Yes', 'No']} />
+              </Grid.Col>
+              <Grid.Col span={6}>
+                <h1>Enemy: {enemyUnit?.unit_name}</h1>
+                <p>Working communications?</p>
+                <SegmentedControl
+                  size='xl'
+                  radius='xs'
+                  color="gray"
+                  data={['Yes', 'No']}
+                  value={unitTactics?.comms ? 'Yes' : 'No'}
+                  disabled
+                />
+                <p>Within fire support range?</p>
+                <SegmentedControl
+                  size='xl'
+                  radius='xs'
+                  color="gray"
+                  data={['Yes', 'No']}
+                  value={unitTactics?.fire ? 'Yes' : 'No'}
+                  disabled
+                />
+              </Grid.Col>
+            </Grid>
 
-                          <strong>Health:</strong> {enemyHealth}<br />
-                          <CustomProgressBarHealth value={Number(enemyHealth)} />
+            {/* Separate buttons to go back or continue to the next page */}
+            <Group justify="center" mt="xl">
+              <Button onClick={prevStep}>Go Back</Button>
+              <Button onClick={nextStep}>Next Phase</Button>
+            </Group>
+          </div>
+        </Stepper.Step>
 
-                        </Text>
-                      ) : (
-                        <Text size="sm">Unit not found</Text>
-                      )}
-                    </Card>
-                  )
-                    :
-                    // Drop down menu to select the proper enemy unit to begin an engagement with
-                    (
-                      enemyWithinWEZ.length === 0 ? (
-                        <h2>No enemy units to select</h2>
-                      ) : (
-                        <Select
-                          label="Select Enemy Unit"
-                          placeholder="Select Enemy Unit"
-                          data={enemyWithinWEZ.map(eUnit => ({ value: eUnit.unit_id.toString(), label: eUnit.unit_name }))}
-                          searchable
-                          value={enemyUnit}
-                          onChange={handleSelectEnemy}
-                        />
-                      )
-                    )}
-                </Grid.Col>
-              </Grid>
+        {/* Phase 4 question about the unit being accessible by a pattern force */}
+        <Stepper.Step allowStepSelect={false} label="Terrain" icon={<IconNumber4Small stroke={1.5} style={{ width: rem(80), height: rem(80) }} />}>
+          <div>
+            <p>Phase 4: Terrain</p>
+            <Grid>
+              <Grid.Col span={6}>
+                <h1>Friendly: {unit_name}</h1>
+                <p>Accessible by pattern force?</p>
+                <SegmentedControl value={question7} onChange={setQuestion7} size='xl' radius='xs' color="gray" data={['Yes', 'No']} disabled={progress !== 0} />
+              </Grid.Col>
+              <Grid.Col span={6}>
+                <h1>Enemy: {enemyUnit?.unit_name}</h1>
+                <p>Accessible by pattern force?</p>
+                <SegmentedControl
+                  size='xl'
+                  radius='xs'
+                  color="gray"
+                  data={['Yes', 'No']}
+                  value={unitTactics?.pattern ? 'Yes' : 'No'}
+                  disabled
+                />
+              </Grid.Col>
+            </Grid>
+            <Group justify="center" mt="xl">
 
-              {/* Buttons to start and engagement or deselect the previously selected enemy unit */}
-              <Group justify="center" mt="xl">
-                {(!inEngagement && enemyUnit) ?
-                  (<Button onClick={handleDeselectEnemy} disabled={enemyUnit ? false : true} color='red'>Deselect Enemy Unit</Button>) :
-                  (<></>)
-                }
-                <Button onClick={handleStartEngagement} disabled={enemyUnit ? false : true}>{inEngagement ? 'Start Round' : 'Start Engagement'}</Button>
-              </Group>
-            </div>
-          </Stepper.Step>
+              {/* Button to go back */}
+              <Button onClick={prevStep} disabled={progress !== 0}>Go Back</Button>
 
-          {/* This begins the yes/no pages for the students to answer about individual tactics*/}
-          {/* Phase 1 questions about OPFOR and logistics support */}
-          <Stepper.Step allowStepSelect={false} label="Force Strength" icon={<IconNumber1Small stroke={1.5} style={{ width: rem(80), height: rem(80) }} />}>
-            <div>
-              <p>Phase 1: Force Strength</p>
-              <Grid>
-                <Grid.Col span={4}>
-                  <h1>Friendly: {unit_name}</h1>
-                  <p>Aware of OPFOR presence?</p>
-                  <SegmentedControl value={question1} onChange={setQuestion1} size='xl' radius='xs' color="gray" data={['Yes', 'No']} />
-                  <p>Within logistics support range?</p>
-                  <SegmentedControl value={question2} onChange={setQuestion2} size='xl' radius='xs' color="gray" data={['Yes', 'No']} />
-                </Grid.Col>
-                <Grid.Col span={6}>
-                  <h1>Enemy: {enemyUnit?.unit_name}</h1>
-                  <p>Aware of OPFOR presence?</p>
-                  <SegmentedControl
-                    size='xl'
-                    radius='xs'
-                    color="gray"
-                    data={['Yes', 'No']}
-                    value={unitTactics?.awareness ? 'Yes' : 'No'} // Assuming awareness is a boolean in unitTactics
-                    disabled
+              {/* Finalize Score button that includes a animated progress bar to visually slow down the calculations to the cadet*/}
+              <Button
+                className={classes.button}
+                onClick={() => {
+                  if (!interval.active) {
+                    interval.start();
+                  }
+                  finalizeTactics();
+                  console.log("total friendly damage: ", totalFriendlyDamage);
+                }}
+                color={theme.primaryColor}
+                disabled={progress !== 0} // Disable the button during loading
+              >
+                <div className={classes.label}>
+                  {progress !== 0 ? 'Calculating Scores...' : loaded ? 'Complete' : 'Finalize Tactics'}
+                </div>
+
+                {progress !== 0 && (
+                  <Progress
+                    style={{ height: '100px', width: '200px' }}
+                    value={progress}
+                    className={classes.progress}
+                    color={rgba(theme.colors.blue[2], 0.35)}
+                    radius="0px"
                   />
-                  <p>Within logistics support range?</p>
-                  <SegmentedControl
-                    size='xl'
-                    radius='xs'
-                    color="gray"
-                    data={['Yes', 'No']}
-                    value={unitTactics?.logistics ? 'Yes' : 'No'}
-                    disabled
-                  />
-                </Grid.Col>
-              </Grid>
+                )}
+              </Button>
 
-              {/* Button to continue to the next page */}
-              <Group justify="center" mt="xl">
-                <Button onClick={nextStep}>Continue</Button>
-              </Group>
+            </Group>
+          </div>
+        </Stepper.Step>
+        {/* Dnd of yes/no questions for cadets */}
 
-            </div>
-          </Stepper.Step>
+        {/* AAR PAGE */}
+        {/* Displays the round summary page with comparisons between friendly and enemy units */}
+        <Stepper.Step allowStepSelect={false} icon={<IconHeartbeat stroke={1.5} style={{ width: rem(35), height: rem(35) }} />}>
+          <div>
+            {/*  style={{backgroundColor: 'yellow'}} */}
+            {/* <h1 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{((Number(friendlyHealth) <= 0) || (Number(enemyHealth) <= 0)) ? displayWinner(Number(friendlyHealth), Number(enemyHealth)) : 'Round ' + (round - 1) + ' After Action Review'}</h1> */}
 
-          {/* Phase 2 questions about ISR coverage and GPS*/}
-          <Stepper.Step allowStepSelect={false} label="Tactical Advantage" icon={<IconNumber2Small stroke={1.5} style={{ width: rem(80), height: rem(80) }} />}>
-            <div>
-              <p>Phase 2: Tactical Advantage</p>
-              <Grid>
-                <Grid.Col span={6}>
-                  <h1>Friendly: {unit_name}</h1>
-                  <p>Under ISR coverage?</p>
-                  <SegmentedControl value={question3} onChange={setQuestion3} size='xl' radius='xs' color="gray" data={['Yes', 'No']} />
-                  <p>Working GPS?</p>
-                  <SegmentedControl value={question4} onChange={setQuestion4} size='xl' radius='xs' color="gray" data={['Yes', 'No']} />
-                </Grid.Col>
-                <Grid.Col span={6}>
-                  <h1>Enemy: {enemyUnit?.unit_name}</h1>
-                  <p>Under ISR coverage?</p>
-                  <SegmentedControl
-                    size='xl'
-                    radius='xs'
-                    color="gray"
-                    data={['Yes', 'No']}
-                    value={unitTactics?.coverage ? 'Yes' : 'No'}
-                    disabled
-                  />
-                  <p>Working GPS?</p>
-                  <SegmentedControl
-                    size='xl'
-                    radius='xs'
-                    color="gray"
-                    data={['Yes', 'No']}
-                    value={unitTactics?.gps ? 'Yes' : 'No'}
-                    disabled
-                  />
-                </Grid.Col>
-              </Grid>
+            <Group justify="center" mt="xl" display={'flex'}>
+              <Card shadow="sm" padding="md" radius="md" withBorder style={{ width: '600px', textAlign: 'center' }} display={'flex'}>
+                <Card.Section withBorder inheritPadding py="xs">
+                  <div style={{ textAlign: 'center' }}>
+                    <h2>{((Number(friendlyHealth) <= 0) || (Number(enemyHealth) <= 0)) ? 'Final After Action Review' : 'Round After Action Review'}</h2>
+                  </div>
+                </Card.Section>
 
-              {/* Separate buttons to continue or return to previous page */}
-              <Group justify="center" mt="xl">
-                <Button onClick={prevStep}>Go Back</Button>
-                <Button onClick={nextStep}>Next Phase</Button>
-              </Group>
-            </div>
-          </Stepper.Step>
+                <Card.Section withBorder inheritPadding py="xs">
+                  <Container>
+                    <Text size="xl" fw={700}>Damage</Text>
+                  </Container>
 
-          {/* Phase 3 questions about communications and fire support range */}
-          <Stepper.Step allowStepSelect={false} label="Fire Support" icon={<IconNumber3Small stroke={1.5} style={{ width: rem(80), height: rem(80) }} />} >
-            <div>
-              <p>Phase 3: Fire Support</p>
-              <Grid>
-                <Grid.Col span={6}>
-                  <h1>Friendly: {unit_name}</h1>
-                  <p>Working communications?</p>
-                  <SegmentedControl value={question5} onChange={setQuestion5} size='xl' radius='xs' color="gray" data={['Yes', 'No']} />
-                  <p>Within fire support range?</p>
-                  <SegmentedControl value={question6} onChange={setQuestion6} size='xl' radius='xs' color="gray" data={['Yes', 'No']} />
-                </Grid.Col>
-                <Grid.Col span={6}>
-                  <h1>Enemy: {enemyUnit?.unit_name}</h1>
-                  <p>Working communications?</p>
-                  <SegmentedControl
-                    size='xl'
-                    radius='xs'
-                    color="gray"
-                    data={['Yes', 'No']}
-                    value={unitTactics?.comms ? 'Yes' : 'No'}
-                    disabled
-                  />
-                  <p>Within fire support range?</p>
-                  <SegmentedControl
-                    size='xl'
-                    radius='xs'
-                    color="gray"
-                    data={['Yes', 'No']}
-                    value={unitTactics?.fire ? 'Yes' : 'No'}
-                    disabled
-                  />
-                </Grid.Col>
-              </Grid>
+                  {/* Friendly Damage Bar */}
+                  <Grid >
+                    <Grid.Col span={2} style={{ display: 'flex', alignItems: 'center' }}>
+                      <Text size="sm">{unit_name}</Text>
+                    </Grid.Col>
 
-              {/* Separate buttons to go back or continue to the next page */}
-              <Group justify="center" mt="xl">
-                <Button onClick={prevStep}>Go Back</Button>
-                <Button onClick={nextStep}>Next Phase</Button>
-              </Group>
-            </div>
-          </Stepper.Step>
+                    <Grid.Col span={10}>
+                      <Tooltip
+                        color="gray"
+                        position="bottom"
+                        transitionProps={{ transition: 'fade-up', duration: 400 }}
+                        label={"Damage: " + Math.round(Number(totalFriendlyDamage)) + ", Remaining: " + friendlyHealth}
+                      >
+                        <Progress.Root size={30} classNames={{ label: classes.progressLabel }} m={10}>
+                          {friendlyHealth > 0 ? (
+                            <>
+                              <Progress.Section value={friendlyHealth} color={'#3d85c6'} key={'remaining'}>
+                                {(totalFriendlyDamage === 0 || !totalFriendlyDamage) ? 'No Damage' : ''}
+                              </Progress.Section>
 
-          {/* Phase 4 question about the unit being accessible by a pattern force */}
-          <Stepper.Step allowStepSelect={false} label="Terrain" icon={<IconNumber4Small stroke={1.5} style={{ width: rem(80), height: rem(80) }} />}>
-            <div>
-              <p>Phase 4: Terrain</p>
-              <Grid>
-                <Grid.Col span={6}>
-                  <h1>Friendly: {unit_name}</h1>
-                  <p>Accessible by pattern force?</p>
-                  <SegmentedControl value={question7} onChange={setQuestion7} size='xl' radius='xs' color="gray" data={['Yes', 'No']} disabled={progress !== 0} />
-                </Grid.Col>
-                <Grid.Col span={6}>
-                  <h1>Enemy: {enemyUnit?.unit_name}</h1>
-                  <p>Accessible by pattern force?</p>
-                  <SegmentedControl
-                    size='xl'
-                    radius='xs'
-                    color="gray"
-                    data={['Yes', 'No']}
-                    value={unitTactics?.pattern ? 'Yes' : 'No'}
-                    disabled
-                  />
-                </Grid.Col>
-              </Grid>
-              <Group justify="center" mt="xl">
+                              <Progress.Section value={Number(totalFriendlyDamage)} color={'#2b5d8b'} key={'taken'}>
+                                {'-' + Number(totalFriendlyDamage).toFixed(0)}
+                              </Progress.Section>
+                            </>
+                          ) : (
+                            <div
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                height: '100%',
+                                width: '100%',
+                              }}
+                            >
+                              FATAL
+                            </div>
+                          )}
+                        </Progress.Root>
 
-                {/* Button to go back */}
-                <Button onClick={prevStep} disabled={progress !== 0}>Go Back</Button>
+                      </Tooltip>
+                    </Grid.Col>
 
-                {/* Finalize Score button that includes a animated progress bar to visually slow down the calculations to the cadet*/}
-                <Button
-  className={classes.button}
-  onClick={() => {
-    if (!interval.active) {
-      interval.start();
-    }
-    finalizeTactics();
-    console.log("total friendly damage: ", totalFriendlyDamage);
-  }}
-  color={theme.primaryColor}
-  disabled={progress !== 0} // Disable the button during loading
->
-  <div className={classes.label}>
-    {progress !== 0 ? 'Calculating Scores...' : loaded ? 'Complete' : 'Finalize Tactics'}
-  </div>
+                  </Grid>
 
-  {progress !== 0 && (
-    <Progress
-      style={{ height: '100px', width: '200px' }}
-      value={progress}
-      className={classes.progress}
-      color={rgba(theme.colors.blue[2], 0.35)}
-      radius="0px"
-    />
-  )}
-</Button>
+                  {/* Enemy Damage Bar */}
+                  <Grid >
+                    <Grid.Col span={2} style={{ display: 'flex', alignItems: 'center' }}>
+                      <Text size="sm">{enemyUnit?.unit_name}</Text>
+                    </Grid.Col>
 
-              </Group>
-            </div>
-          </Stepper.Step>
-          {/* Dnd of yes/no questions for cadets */}
+                    <Grid.Col span={10}>
+                      <Tooltip
+                        color="gray"
+                        position="bottom"
+                        transitionProps={{ transition: 'fade-up', duration: 400 }}
+                        label={"Damage: " + Math.round(totalEnemyDamage) + ", Remaining: " + enemyHealth}
+                      >
+                        <Progress.Root size={30} classNames={{ label: classes.progressLabel }} m={10}>
+                          {enemyHealth > 0 ? (
+                            <>
+                              <Progress.Section value={enemyHealth} color={'#c1432d'} key={'remaining'}>
+                                {totalEnemyDamage === 0 ? 'No Damage' : ''}
+                              </Progress.Section>
 
-          {/* AAR PAGE */}
-          {/* Displays the round summary page with comparisons between friendly and enemy units */}
-          <Stepper.Step allowStepSelect={false} icon={<IconHeartbeat stroke={1.5} style={{ width: rem(35), height: rem(35) }} />}>
-            <div>
-              {/*  style={{backgroundColor: 'yellow'}} */}
-              {/* <h1 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{((Number(friendlyHealth) <= 0) || (Number(enemyHealth) <= 0)) ? displayWinner(Number(friendlyHealth), Number(enemyHealth)) : 'Round ' + (round - 1) + ' After Action Review'}</h1> */}
+                              <Progress.Section value={Number(totalEnemyDamage)} color={'#872f1f'} key={'taken'}>
+                                {'-' + Number(totalEnemyDamage).toFixed(0)}
+                              </Progress.Section>
+                            </>
+                          ) : (
+                            <div
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                height: '100%',
+                                width: '100%'
+                              }}
+                            >
+                              FATAL
+                            </div>
+                          )}
+                        </Progress.Root>
 
-              <Group justify="center" mt="xl" display={'flex'}>
-                <Card shadow="sm" padding="md" radius="md" withBorder style={{ width: '600px', textAlign: 'center' }} display={'flex'}>
-                  <Card.Section withBorder inheritPadding py="xs">
-                    <div style={{ textAlign: 'center' }}>
-                      <h2>{((Number(friendlyHealth) <= 0) || (Number(enemyHealth) <= 0)) ? 'Final After Action Review' : 'Round After Action Review'}</h2>
-                    </div>
-                  </Card.Section>
+                      </Tooltip>
+                    </Grid.Col>
+                  </Grid>
+                </Card.Section>
 
-                  <Card.Section withBorder inheritPadding py="xs">
-                    <Container>
-                      <Text size="xl" fw={700}>Damage</Text>
-                    </Container>
 
-                    {/* Friendly Damage Bar */}
-                    <Grid >
-                      <Grid.Col span={2} style={{ display: 'flex', alignItems: 'center' }}>
-                        <Text size="sm">{unit_name}</Text>
-                      </Grid.Col>
+                <Card.Section withBorder inheritPadding py="xs">
+                  <Container>
+                    <Text size="xl" fw={700}>Tactics</Text>
+                  </Container>
 
-                      <Grid.Col span={10}>
+                  {/* Displays a table with the scoring of each tactic of both friendly and enemy units */}
+                  <Table verticalSpacing={'xs'} style={{ justifyContent: 'center' }}>
+                    <Table.Thead>
+                      <Table.Tr>
+                        <Table.Th>Tactic</Table.Th>
+                        <Table.Th style={{ color: '#3d85c6' }}>Friendly Tactic</Table.Th>
+                        <Table.Th style={{ color: '#c1432d' }}>Enemy Tactic</Table.Th>
+                      </Table.Tr>
+                    </Table.Thead>
+                    <Table.Tbody>{tacticToRow(answers)}</Table.Tbody>
+                  </Table>
+                </Card.Section>
+
+
+                <Card.Section withBorder inheritPadding py="xs">
+
+
+                  <Text size="xl" fw={700}>Scores</Text>
+
+                  {/* This displays the round summary based on calculations for tactics and overall unit characteristics for the friendly units */}
+                  <Grid style={{ justifyContent: 'center', alignItems: 'center' }}>
+                    <Group style={{ flex: 1, textAlign: 'center' }}>
+                      <Grid.Col>
+                        <Text size="lg" fw={500}>Attributes</Text>
+
+                        {/* Friendly Attribute Score */}
                         <Tooltip
                           color="gray"
                           position="bottom"
                           transitionProps={{ transition: 'fade-up', duration: 400 }}
-                          label={"Damage: " + Math.round(Number(totalFriendlyDamage)) + ", Remaining: " + friendlyHealth}
+                          label="Friendly Attribute Score"
                         >
-                          <Progress.Root size={30} classNames={{ label: classes.progressLabel }} m={10}>
-                            {friendlyHealth > 0 ? (
-                              <>
-                                <Progress.Section value={friendlyHealth} color={'#3d85c6'} key={'remaining'}>
-                                  {(totalFriendlyDamage === 0 || !totalFriendlyDamage) ? 'No Damage' : ''}
-                                </Progress.Section>
+                          <Progress.Root m={10} style={{ height: '20px' }}>
 
-                                <Progress.Section value={Number(totalFriendlyDamage)} color={'#2b5d8b'} key={'taken'}>
-                                  {'-' + Number(totalFriendlyDamage).toFixed(0)}
-                                </Progress.Section>
-                              </>
-                            ) : (
-                              <div
-                                style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  height: '100%',
-                                  width: '100%',
-                                }}
-                              >
-                                FATAL
-                              </div>
-                            )}
+                            <Progress.Section
+                              className={classes.progressSection}
+                              value={baseValue}
+                              color='#3d85c6'>
+                              {baseValue.toFixed(0)}
+                            </Progress.Section>
+
                           </Progress.Root>
-
                         </Tooltip>
-                      </Grid.Col>
 
-                    </Grid>
-
-                    {/* Enemy Damage Bar */}
-                    <Grid >
-                      <Grid.Col span={2} style={{ display: 'flex', alignItems: 'center' }}>
-                        <Text size="sm">{enemyUnit?.unit_name}</Text>
-                      </Grid.Col>
-
-                      <Grid.Col span={10}>
+                        {/* Enemy Attribute Score */}
                         <Tooltip
                           color="gray"
                           position="bottom"
                           transitionProps={{ transition: 'fade-up', duration: 400 }}
-                          label={"Damage: " + Math.round(totalEnemyDamage) + ", Remaining: " + enemyHealth}
+                          label="Enemy Attribute Score"
                         >
-                          <Progress.Root size={30} classNames={{ label: classes.progressLabel }} m={10}>
-                            {enemyHealth > 0 ? (
-                              <>
-                                <Progress.Section value={enemyHealth} color={'#c1432d'} key={'remaining'}>
-                                  {totalEnemyDamage === 0 ? 'No Damage' : ''}
-                                </Progress.Section>
+                          <Progress.Root m={10} style={{ height: '20px' }}>
 
-                                <Progress.Section value={Number(totalEnemyDamage)} color={'#872f1f'} key={'taken'}>
-                                  {'-' + Number(totalEnemyDamage).toFixed(0)}
-                                </Progress.Section>
-                              </>
-                            ) : (
-                              <div
-                                style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  height: '100%',
-                                  width: '100%'
-                                }}
-                              >
-                                FATAL
-                              </div>
-                            )}
+                            <Progress.Section
+                              className={classes.progressSection}
+                              value={enemyBaseValue}
+                              color='#c1432d'>
+                              {enemyBaseValue.toFixed(0)}
+                            </Progress.Section>
+
                           </Progress.Root>
-
                         </Tooltip>
-                      </Grid.Col>
-                    </Grid>
-                  </Card.Section>
-
-
-                  <Card.Section withBorder inheritPadding py="xs">
-                    <Container>
-                      <Text size="xl" fw={700}>Tactics</Text>
-                    </Container>
-
-                    {/* Displays a table with the scoring of each tactic of both friendly and enemy units */}
-                    <Table verticalSpacing={'xs'} style={{ justifyContent: 'center' }}>
-                      <Table.Thead>
-                        <Table.Tr>
-                          <Table.Th>Tactic</Table.Th>
-                          <Table.Th style={{ color: '#3d85c6' }}>Friendly Tactic</Table.Th>
-                          <Table.Th style={{ color: '#c1432d' }}>Enemy Tactic</Table.Th>
-                        </Table.Tr>
-                      </Table.Thead>
-                      <Table.Tbody>{tacticToRow(answers)}</Table.Tbody>
-                    </Table>
-                  </Card.Section>
-
-
-                  <Card.Section withBorder inheritPadding py="xs">
-
-
-                    <Text size="xl" fw={700}>Scores</Text>
-
-                    {/* This displays the round summary based on calculations for tactics and overall unit characteristics for the friendly units */}
-                    <Grid style={{ justifyContent: 'center', alignItems: 'center' }}>
-                      <Group style={{ flex: 1, textAlign: 'center' }}>
-                        <Grid.Col>
-                          <Text size="lg" fw={500}>Attributes</Text>
-
-                          {/* Friendly Attribute Score */}
-                          <Tooltip
-                            color="gray"
-                            position="bottom"
-                            transitionProps={{ transition: 'fade-up', duration: 400 }}
-                            label="Friendly Attribute Score"
-                          >
-                            <Progress.Root m={10} style={{ height: '20px' }}>
-
-                              <Progress.Section
-                                className={classes.progressSection}
-                                value={baseValue}
-                                color='#3d85c6'>
-                                {baseValue.toFixed(0)}
-                              </Progress.Section>
-
-                            </Progress.Root>
-                          </Tooltip>
-
-                          {/* Enemy Attribute Score */}
-                          <Tooltip
-                            color="gray"
-                            position="bottom"
-                            transitionProps={{ transition: 'fade-up', duration: 400 }}
-                            label="Enemy Attribute Score"
-                          >
-                            <Progress.Root m={10} style={{ height: '20px' }}>
-
-                              <Progress.Section
-                                className={classes.progressSection}
-                                value={enemyBaseValue}
-                                color='#c1432d'>
-                                {enemyBaseValue.toFixed(0)}
-                              </Progress.Section>
-
-                            </Progress.Root>
-                          </Tooltip>
-                          {/* 
+                        {/* 
                           <Text size="lg">Friendly Damage Taken:</Text>
                           <Text> {Number(totalFriendlyDamage).toFixed(0)}</Text> */}
-                        </Grid.Col>
-                      </Group>
+                      </Grid.Col>
+                    </Group>
 
 
-                      {/* This displays the round summary based on calculations for tactics and overall unit characteristics for the enemy units */}
-                      <Group style={{ flex: 1, textAlign: 'center' }}>
-                        <Grid.Col>
-                          <Text size="lg" fw={500}>Tactics</Text>
+                    {/* This displays the round summary based on calculations for tactics and overall unit characteristics for the enemy units */}
+                    <Group style={{ flex: 1, textAlign: 'center' }}>
+                      <Grid.Col>
+                        <Text size="lg" fw={500}>Tactics</Text>
 
-                          {/* Friendly Tactics Score */}
-                          <Tooltip
-                            color="gray"
-                            position="bottom"
-                            transitionProps={{ transition: 'fade-up', duration: 400 }}
-                            label="Friendly Tactics Score"
-                          >
-                            <Progress.Root m={10} style={{ height: '20px' }}>
+                        {/* Friendly Tactics Score */}
+                        <Tooltip
+                          color="gray"
+                          position="bottom"
+                          transitionProps={{ transition: 'fade-up', duration: 400 }}
+                          label="Friendly Tactics Score"
+                        >
+                          <Progress.Root m={10} style={{ height: '20px' }}>
 
-                              <Progress.Section
-                                className={classes.progressSection}
-                                value={calculateRealTimeScore()}
-                                color='#3d85c6'>
-                                {calculateRealTimeScore()}
-                              </Progress.Section>
+                            <Progress.Section
+                              className={classes.progressSection}
+                              value={calculateRealTimeScore()}
+                              color='#3d85c6'>
+                              {calculateRealTimeScore()}
+                            </Progress.Section>
 
-                            </Progress.Root>
-                          </Tooltip>
+                          </Progress.Root>
+                        </Tooltip>
 
-                          {/* Enemy Tactics Score */}
-                          <Tooltip
-                            color="gray"
-                            position="bottom"
-                            transitionProps={{ transition: 'fade-up', duration: 400 }}
-                            label="Enemy Tactics Score"
-                          >
-                            <Progress.Root m={10} style={{ height: '20px' }}>
+                        {/* Enemy Tactics Score */}
+                        <Tooltip
+                          color="gray"
+                          position="bottom"
+                          transitionProps={{ transition: 'fade-up', duration: 400 }}
+                          label="Enemy Tactics Score"
+                        >
+                          <Progress.Root m={10} style={{ height: '20px' }}>
 
-                              <Progress.Section
-                                className={classes.progressSection}
-                                value={calculateEnemyRealTimeScore()}
-                                color='#c1432d'>
-                                {calculateEnemyRealTimeScore()}
-                              </Progress.Section>
+                            <Progress.Section
+                              className={classes.progressSection}
+                              value={calculateEnemyRealTimeScore()}
+                              color='#c1432d'>
+                              {calculateEnemyRealTimeScore()}
+                            </Progress.Section>
 
-                            </Progress.Root>
-                          </Tooltip>
+                          </Progress.Root>
+                        </Tooltip>
 
-                          {/* <Text size="lg">Enemy Damage Taken:</Text>
+                        {/* <Text size="lg">Enemy Damage Taken:</Text>
                           <Text> {totalEnemyDamage.toFixed(0)}</Text> */}
-                        </Grid.Col>
-                      </Group>
-                    </Grid>
+                      </Grid.Col>
+                    </Group>
+                  </Grid>
 
-                    {/* Displays a progress bar with the total score (overall characteristics and tactics) for the friendly unit */}
-                    {/* <div style={{ display: 'flex', justifyContent: 'space-between', padding: '30px' }}>
+                  {/* Displays a progress bar with the total score (overall characteristics and tactics) for the friendly unit */}
+                  {/* <div style={{ display: 'flex', justifyContent: 'space-between', padding: '30px' }}>
                       <Progress.Root style={{ width: '200px', height: '25px' }}>
                         <Tooltip
                           position="top"
@@ -1358,8 +1369,8 @@ function BattlePage() {
                         </Tooltip>
                       </Progress.Root> */}
 
-                    {/* Displays a progress bar with the total score (overall characteristics and tactics) for the enemy unit */}
-                    {/* <Progress.Root style={{ width: '200px', height: '25px' }}>
+                  {/* Displays a progress bar with the total score (overall characteristics and tactics) for the enemy unit */}
+                  {/* <Progress.Root style={{ width: '200px', height: '25px' }}>
                         <Tooltip
                           position="top"
                           transitionProps={{ transition: 'fade-up', duration: 300 }}
@@ -1375,40 +1386,29 @@ function BattlePage() {
                       </Progress.Root>
                     </div> */}
 
-                  </Card.Section>
+                </Card.Section>
 
 
 
 
 
-                </Card>
-              </Group>
+              </Card>
+            </Group>
 
 
-              {/* Button that either moves the engagement to the next round or ends the engagement based off of friendly and enemy health */}
-              <Group justify="center" mt="xl" display={'flex'}>
-                <Button display='flex' onClick={() => handleNextRound(Number(friendlyHealth), Number(enemyHealth))}>
-                  {((Number(friendlyHealth) <= 0) || (Number(enemyHealth) <= 0)) ? 'Exit' : 'Continue Enagement'}
-                </Button>
-              </Group>
-            </div>
-          </Stepper.Step>
-        </Stepper>
-      </MantineProvider>
-    );
-  }
+            {/* Button that either moves the engagement to the next round or ends the engagement based off of friendly and enemy health */}
+            <Group justify="center" mt="xl" display={'flex'}>
+              <Button display='flex' onClick={() => handleNextRound(Number(friendlyHealth), Number(enemyHealth))}>
+                {((Number(friendlyHealth) <= 0) || (Number(enemyHealth) <= 0)) ? 'Exit' : 'Continue Enagement'}
+              </Button>
+            </Group>
+          </div>
+        </Stepper.Step>
+      </Stepper>
+    </MantineProvider>
+  );
+
   // End of the rendering of the battle page
-
-  // If there is no selected unit, navigate back to the home page
-  // Deals with an issue with the refresh button
-  else {
-    console.log('Selected Unit: ', selectedUnit);
-    console.trace('redirect to landingpage')
-    navigate('/')
-    return (
-      <Text> Error. Rerouting. </Text>
-    );
-  }
 }
 
 export default BattlePage;
