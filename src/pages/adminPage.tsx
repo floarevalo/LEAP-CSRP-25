@@ -7,32 +7,37 @@ import {
   Box,
   Table,
   Button,
-  Switch,
-  Modal,
-  TextInput,
+  // Switch,
+  // Modal,
+  // TextInput,
   useMantineTheme,
   MantineProvider,
-  FocusTrap,
-  Center,
-  Space,
+  // FocusTrap,
+  // Center,
+  // Space,
   Menu,
   ActionIcon,
   rem
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { useNavigate } from 'react-router-dom';
-//import { sections as initialSections } from '../data/sections';
+// import { sections as initialSections } from '../data/sections';
 import { useUserRole } from '../context/UserContext';
 import { FaArrowAltCircleLeft } from "react-icons/fa";
 import axios from 'axios';
 import { Section } from './landingPage';
 import logo from '../images/logo/Tr_FullColor_NoSlogan.png'
-import { IconCopy, IconCubeOff, IconCubePlus, IconDots, IconMessages, IconNote, IconPencil, IconReportAnalytics, IconTrash } from '@tabler/icons-react';
-import UnitCreationModule from '../components/UnitCreationModule';
-import UnitDeleteModule from '../components/UnitDeleteModule';
-import SectionCopyModule from '../components/sectionCopyModule';
+import { 
+  // IconCopy, IconCubeOff, IconCubePlus, 
+  IconDots, 
+  // IconMessages, IconNote, IconPencil, IconReportAnalytics, 
+  IconTrash 
+} from '@tabler/icons-react';
+// import UnitCreationModule from '../components/UnitCreationModule';
+// import UnitDeleteModule from '../components/UnitDeleteModule';
+// import SectionCopyModule from '../components/sectionCopyModule';
 import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
-import { IconCheck, IconX } from '@tabler/icons-react';
+// import { IconCheck, IconX } from '@tabler/icons-react';
 
 
 
@@ -42,14 +47,14 @@ function AdminPage() {
   const navigate = useNavigate();
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
   const theme = useMantineTheme();
-  const [newSectionName, setNewSectionName] = useState('');
+  // const [newSectionName, setNewSectionName] = useState('');
   // const [modalOpened, setModalOpened] = useState(false);
-  const { userRole, setUserSection } = useUserRole();
-  const [unitModalOpened, setUnitModalOpened] = useState(false);
-  //const [deleteModalOpened, setDeleteModalOpened] = useState(false);
-  const [copyModalOpened, setCopyModalOpened] = useState(false);
-  const [sectionToCopy, setSectionToCopy] = useState<string | null>(null);
-  const [sectionDeleteOpen, setSectionDeleteOpen] = useState(false);
+  const { userRole } = useUserRole();
+  // const [unitModalOpened, setUnitModalOpened] = useState(false);
+  // const [deleteModalOpened, setDeleteModalOpened] = useState(false);
+  // const [copyModalOpened, setCopyModalOpened] = useState(false);
+  // const [sectionToCopy, setSectionToCopy] = useState<string | null>(null);
+  // const [sectionDeleteOpen, setSectionDeleteOpen] = useState(false);
   const [opened, { open, close }] = useDisclosure(false);  // Controls delete modal visibility
   const [sections, setSections] = useState<Section[]>([]); // Stores all section records
 

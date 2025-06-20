@@ -9,7 +9,7 @@ import {
   MantineProvider,
   Progress,
   Card,
-  Collapse,
+  // Collapse,
   Tooltip,
   Text,
   Title
@@ -75,7 +75,7 @@ export default function AAR() {
   const { sectionId } = useParams(); // Retrieve sectionId from route parameters
   const [engagements, setEngagements] = useState<Engagement[]>([]);
   const [tacticsMap, setTacticsMap] = useState<Map<string, Tactics[]>>(new Map()); // Changed: Added `tacticsMap` state for storing tactics data
-  const { userRole, userSection } = useUserRole();
+  const { userRole } = useUserRole();
   const [selectedEngagement, setSelectedEngagement] = useState<Engagement | null>(null); //Tracks when the user selects an engagement
 
   const handleLogoClick = () => {
@@ -85,19 +85,19 @@ export default function AAR() {
 
   //Question: Where does this route to
   const handleArrowClick = () => {
-    if (userRole == 'Student') {
+    if (userRole === 'Student') {
       navigate(`/studentPage/${sectionId}`);
     }
-    else if (userRole == 'Observer') {
+    else if (userRole === 'Observer') {
       navigate(`/observerPage/${sectionId}`);
     }
   };
 
   const handleAARClick = () => {
-    if (userRole == 'Student') {
+    if (userRole === 'Student') {
       navigate(`/studentPage/${sectionId}`);
     }
-    else if (userRole == 'Observer') {
+    else if (userRole === 'Observer') {
       navigate(`/observerPage/${sectionId}`);
     }
   };
@@ -216,15 +216,15 @@ export default function AAR() {
     ));
   };
 
-  const [isOpen, setIsOpen] = useState<boolean[]>(Array(engagements.length).fill(false));
+  // const [isOpen, setIsOpen] = useState<boolean[]>(Array(engagements.length).fill(false));
 
-  const handleToggle = (index: number) => {
-    setIsOpen(prev => {
-      const newState = [...prev]; // Create a copy of isOpen array
-      newState[index] = !newState[index]; // Toggle the state of the clicked row
-      return newState;
-    });
-  };
+  // const handleToggle = (index: number) => {
+  //   setIsOpen(prev => {
+  //     const newState = [...prev]; // Create a copy of isOpen array
+  //     newState[index] = !newState[index]; // Toggle the state of the clicked row
+  //     return newState;
+  //   });
+  // };
 
   // const row = engagements.map((rowData) => (
   //   <Table.Tr key={rowData.engagementid}>
@@ -423,7 +423,7 @@ export default function AAR() {
                   </Table.Tr>
 
                   <Table.Tr style={{ display: 'flex', justifyContent: 'center', width: '100%', marginLeft: '255%' }}>
-                    <Collapse in={isOpen[index]} style={{ width: '100%' }}>
+                    {/* <Collapse in={isOpen[index]} style={{ width: '100%' }}> */}
 
                       <Table verticalSpacing={'xs'} style={{ maxWidth: '100%', width: '1000px' }} display={'fixed'}>
                         <Table.Thead>
@@ -436,7 +436,7 @@ export default function AAR() {
                         <Table.Tbody>{renderTacticsRows(tacticsMap.get(row.engagementid))}</Table.Tbody>
                       </Table>
 
-                    </Collapse>
+                    {/* </Collapse> */}
                   </Table.Tr>
                 </Table.Tbody>
               ))}
