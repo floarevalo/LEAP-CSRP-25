@@ -101,7 +101,6 @@ function App() {
         setIsLoading(false);
       }
     };
-    
     fetchAllUnitData();
   }, [userSection]); // Dependency: re-fetch if the userSection changes
 
