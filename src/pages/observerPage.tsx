@@ -83,7 +83,7 @@ function ObserverPage() {
         // Configuration array to define which unit types to process and how to categorize them.
         // This makes the code scalable and easy to update.
         const unitTypesToProcess = [
-            { key: 'infantry', names: ['Infantry'] },
+            { key: 'infantry', names: ['Infantry', 'Combined Arms'] },
             { key: 'armor', names: ['Armor Company'] },
             { key: 'specOps', names: ['Special Operations Forces', 'Special Operations Forces - EZO'] },
             { key: 'artillery', names: ['Field Artillery'] },
@@ -100,11 +100,11 @@ function ObserverPage() {
           newStats[typeInfo.key] = getStatsFromLists(friendliesOfType, enemiesOfType);
         }
 
-        // After looping, calculate stats for the 'misc' category by finding all units NOT in the defined types.
+        // After looping, calculate stats for the 'logistics' category by finding all units NOT in the defined types.
         const definedTypes = unitTypesToProcess.flatMap(t => t.names);
-        const miscFriendlies = allFriendlies.filter(u => !definedTypes.includes(u.unit_type));
-        const miscEnemies = allEnemies.filter(u => !definedTypes.includes(u.unit_type));
-        newStats['misc'] = getStatsFromLists(miscFriendlies, miscEnemies);
+        const logisticsFriendlies = allFriendlies.filter(u => !definedTypes.includes(u.unit_type));
+        const logisticsEnemies = allEnemies.filter(u => !definedTypes.includes(u.unit_type));
+        newStats['logistics'] = getStatsFromLists(logisticsFriendlies, logisticsEnemies);
 
         // Update the component's state with the newly calculated stats.
         // This triggers a re-render to display the new data.
@@ -190,7 +190,7 @@ function ObserverPage() {
                   enemyCount={statsByType.infantry?.enemyCount ?? 0} 
                 />
                 <StatsRing 
-                  title="Armor" 
+                  title="Armor Company" 
                   icon="armor" 
                   friendlyCount={statsByType.armor?.friendlyCount ?? 0} 
                   enemyCount={statsByType.armor?.enemyCount ?? 0} 
@@ -208,10 +208,10 @@ function ObserverPage() {
                   enemyCount={statsByType.artillery?.enemyCount ?? 0} 
                 />
                 <StatsRing 
-                title="Other" 
-                icon="misc" 
-                friendlyCount={statsByType.misc?.friendlyCount ?? 0} 
-                enemyCount={statsByType.misc?.enemyCount ?? 0}
+                title="Logistics" 
+                icon="logistics" 
+                friendlyCount={statsByType.logistics?.friendlyCount ?? 0} 
+                enemyCount={statsByType.logistics?.enemyCount ?? 0}
                 />
               </SimpleGrid>
             

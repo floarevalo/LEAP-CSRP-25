@@ -6,7 +6,7 @@
 // Import Mantine components for UI layout and the chart itself
 import { RingProgress, Text, Paper, Center, Group, Box } from '@mantine/core';
 // Import specific icons from the Tabler library to be used in the chart
-import { IconChess, IconTank, IconSpade, IconBomb, IconSwords, IconError404 } from '@tabler/icons-react';
+import { IconChess, IconTank, IconSpade, IconBomb, IconWorldShare, IconError404 } from '@tabler/icons-react';
 
 // Defines the props (properties) that this component accepts when it's used.
 interface StatsRingProps {
@@ -24,7 +24,7 @@ const iconMap: Record<string, React.ElementType> = {
   armor: IconTank,
   specOps: IconSpade,
   artillery: IconBomb,
-  misc: IconSwords,
+  logistics: IconWorldShare,
 };
 
 // The main function for the StatsRing component. It receives props and returns the JSX to be rendered.
