@@ -1,120 +1,134 @@
 /**
- *  StatsSegments.tsx renders the stats segments component 
+ * StatsSegments.tsx renders a statistics card showing friendly vs. enemy 
+ * force composition with progress bars and an active/killed summary.
  */
 
-import { IconDeviceAnalytics } from '@tabler/icons-react';
+// Import Mantine components for UI layout and a specific icon from the Tabler library
+import { IconSwords } from '@tabler/icons-react';
 import { Box, Group, Paper, Progress, SimpleGrid, Text } from '@mantine/core';
 import classes from './StatsSegments.module.css';
 
-// Define the shape of the data objects for clarity
-interface StatItem {
-  label: string;
-  count: string;
-  part: number;
-  color: string;
-}
-
-// 1. Ensure the props interface includes the optional 'title'
+// Defines the props (properties) that this component accepts when it's used.
 interface StatsSegmentsProps {
-  title?: string;
-  size?: 'lg' | 'sm'; // 'lg' for large, 'sm' for small text 
-  showLabel?: boolean; // New prop to control bottom label visibility
   friendlyCount: number;
   enemyCount: number;
   friendlyKilled: number;
   enemyKilled: number;
 }
 
-// 2. Ensure the function accepts the 'title' prop and sets a default value
-export function StatsSegments({ title = "Engagement Statistics", size = 'lg', showLabel = true, friendlyCount, enemyCount, friendlyKilled, enemyKilled }: StatsSegmentsProps) {
-  // All calculation logic remains the same
+// The main function for the StatsSegments component.
+// It accepts props and returns the JSX to be rendered.
+export function StatsSegments({ friendlyCount, enemyCount, friendlyKilled, enemyKilled }: StatsSegmentsProps) {
+  
+  // --- CALCULATIONS ---
+  // These calculations determine the width of each segment in the progress bars.
+  
+  // Calculate total friendly units to determine percentages.
   const totalFriendly = friendlyCount + friendlyKilled;
   const activeFriendlyPercent = totalFriendly > 0 ? (friendlyCount / totalFriendly) * 100 : 0;
   const killedFriendlyPercent = totalFriendly > 0 ? (friendlyKilled / totalFriendly) * 100 : 0;
 
+  // Calculate total enemy units to determine percentages.
   const totalEnemy = enemyCount + enemyKilled;
   const activeEnemyPercent = totalEnemy > 0 ? (enemyCount / totalEnemy) * 100 : 0;
   const killedEnemyPercent = totalEnemy > 0 ? (enemyKilled / totalEnemy) * 100 : 0;
 
-  const friendlyData: StatItem[] = [
-    { label: 'Active Friendly', count: friendlyCount.toString(), part: activeFriendlyPercent, color: '#3d85c6' },
-    { label: 'Killed Friendly', count: friendlyKilled.toString(), part: killedFriendlyPercent, color: '#16283b' },
-  ];
+  // --- JSX HELPER FUNCTIONS ---
 
-  const enemyData: StatItem[] = [
-    { label: 'Active Enemy', count: enemyCount.toString(), part: activeEnemyPercent, color: '#c1432d' },
-    { label: 'Killed Enemy', count: enemyKilled.toString(), part: killedEnemyPercent, color: '#37150f' },
-  ];
-
-  const createDescription = (statsArray: StatItem[]) => statsArray.map((stat) => (
-    <Box key={stat.label} style={{ borderBottomColor: stat.color }} className={classes.stat}>
-      <Text tt="uppercase" fz="sm" c="dimmed" fw={700}>
-        {stat.label}
-      </Text>
-      <Group justify="space-between" align="flex-end" gap={0}>
-        <Text fw={700} className={classes.statCount}>{stat.count}</Text>
-        <Text c={stat.color} fw={700} size="xl">
-          {stat.part.toFixed(0)}%
+  // A helper function to create the JSX for the bottom description boxes.
+  const createDescription = () => (
+    <>
+      <Box style={{ borderBottomColor: '#60acf7' }} className={classes.stat}>
+        <Text c="dimmed" fz="lg">
+          Friendly: Active / Killed
         </Text>
-      </Group>
-    </Box>
-  ));
+        <Group justify="space-between" align="flex-end" gap={0}>
+          <Text c="#3d85c6" fz={30} fw={700} className={classes.statCount}>{`${friendlyCount} / ${friendlyKilled}`}</Text>
+        </Group>
+      </Box>
 
-  const friendlySegments = friendlyData.map((segment) => (
-    <Progress.Section value={segment.part} color={segment.color} key={segment.label}>
-      {segment.part > 10 && <Progress.Label className={classes.progressLabel}>{segment.part.toFixed(0)}%</Progress.Label>}
-    </Progress.Section>
-  ));
-  const friendlyDescriptions = createDescription(friendlyData);
-
-  const enemySegments = enemyData.map((segment) => (
-    <Progress.Section value={segment.part} color={segment.color} key={segment.label}>
-      {segment.part > 10 && <Progress.Label className={classes.progressLabel}>{segment.part.toFixed(0)}%</Progress.Label>}
-    </Progress.Section>
-  ));
-  const enemyDescriptions = createDescription(enemyData);
-
-
- return (
-    // 3. Use the size prop to conditionally change padding
-    <Paper withBorder p={size === 'lg' ? 'xl' : 'md'} radius="md">
-      <Group justify="space-between">
-        {/* 3. Use the size prop to conditionally change font size */}
-        <Text fz={size === 'lg' ? 30 : 20} fw={700}>
-          {title}
+      <Box style={{ borderBottomColor: '#f4888a' }} className={classes.stat}>
+        <Text c="dimmed" fz="lg">
+          Enemy: Active / Killed
         </Text>
-        <IconDeviceAnalytics size={28} className={classes.icon} stroke={1.5} />
-      </Group>
+        <Group justify="space-between" align="flex-end" gap={0}>
+          <Text c="red" fz={30} fw={700} className={classes.statCount}>{`${enemyCount} / ${enemyKilled}`}</Text>
+        </Group>
+      </Box>
+    </>
+  );
 
-      {size === 'lg' && (
-        <Text c="dimmed" fz="lg" mt="xl">
-          Friendly Force Composition
-        </Text>
+  // This variable holds the JSX for the two description boxes created by the helper function.
+  const combinedDescriptions = createDescription();
+
+  // Creates the JSX for the friendly progress bar's segments.
+  // The 'map' function iterates over the two data points (active and killed).
+  const friendlySegments = [
+    { value: activeFriendlyPercent, color: '#3d85c6' },
+    { value: killedFriendlyPercent, color: '#264363' },
+  ].map((segment, index) => (
+    <Progress.Section value={segment.value} color={segment.color} key={`friendly-${index}`}>
+      {/* The percentage label is only shown if the segment is wide enough (> 10%). */}
+      {segment.value > 10 && (
+        <Progress.Label>
+          {/* The text color is dimmed for the 'killed' segment (index 1) for visual clarity. */}
+          <Text size="lg" fw={500} c={index === 1 ? '#0f1b28' : 'white'}>
+            {segment.value.toFixed(0)}%
+          </Text>
+        </Progress.Label>
       )}
-      <Progress.Root
-        size={size === 'lg' ? 50 : 30}
-        mt='md'
-      >
+    </Progress.Section>
+  ));
+
+  // Creates the JSX for the enemy progress bar's segments, with the same logic as the friendly one.
+  const enemySegments = [
+    { value: activeEnemyPercent, color: '#c1432d' },
+    { value: killedEnemyPercent, color: '#5c231a' },
+  ].map((segment, index) => (
+    <Progress.Section value={segment.value} color={segment.color} key={`enemy-${index}`}>
+      {segment.value > 10 && (
+        <Progress.Label>
+          <Text size="lg" fw={500} c={index === 1 ? '#250e0a' : 'white'}>
+            {segment.value.toFixed(0)}%
+          </Text>
+        </Progress.Label>
+      )}
+    </Progress.Section>
+  ));
+
+
+ // --- RENDERED COMPONENT (JSX) ---
+ return (
+    <Paper withBorder p= 'xl' radius="md">
+      {/* The main title section of the card. */}
+      <Group justify="space-between">
+        <Text fz={35} fw={700}>
+          Engagement Statistics
+        </Text>
+        <IconSwords size={28} stroke={1.5} />
+      </Group>
+
+      {/* Renders the friendly progress bar using the segments created above. */}
+      <Text c="dimmed" fz="lg" mt="lg">
+        Friendly Force Composition
+      </Text>
+      <Progress.Root size={50} mt='md'>
         {friendlySegments}
       </Progress.Root>
 
-      {/* Conditionally render the "Enemy Force Composition" label only for the large version */}
-      {size === 'lg' && (
-        <Text c="dimmed" fz="lg" mt="xl">
-          Enemy Force Composition
-        </Text>
-      )}
-      <Progress.Root size={size === 'lg' ? 50 : 30} mt="md">
+      {/* Renders the enemy progress bar using the segments created above. */}
+      <Text c="dimmed" fz="lg" mt="lg">
+        Enemy Force Composition
+      </Text>
+      <Progress.Root size={50} mt="md">
         {enemySegments}
       </Progress.Root>
 
-      {/* 2. All four description boxes are now in a single grid below */}
-      {showLabel && (
-        <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} mt="xl">
-          {friendlyDescriptions}
-          {enemyDescriptions}
-        </SimpleGrid>
-      )}
+      {/* Renders the "Active / Killed" summary in a 2-column grid at the bottom. */}
+      <SimpleGrid cols={2} mt="xl">
+        {combinedDescriptions}
+      </SimpleGrid>
+
     </Paper>
   );
 }
