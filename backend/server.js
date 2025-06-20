@@ -171,6 +171,39 @@ app.get('/api/engagements/:id', async (req, res) => {
   }
 });
 
+app.get('/api/ordered_engagements/:id', async (req, res) => {
+
+  console.log('Attempting to ordered_engagements')
+  const { id } = req.params;
+  try {
+    const result = await pool.query(`
+      SELECT
+        e.engagementid,
+        e.sectionid,
+        e.friendlyid,
+        fu.unit_name AS friendlyname,
+        e.enemyid,
+        eu.unit_name AS enemyname,
+        e.friendlybasescore,
+        e.enemybasescore,
+        e.friendlytacticsscore,
+        e.enemytacticsscore,
+        e.friendlytotalscore,
+        e.enemytotalscore,
+        e.iswin
+      FROM ordered_engagements e
+      JOIN units fu ON CAST(e.friendlyid AS INTEGER) = fu.unit_id
+      JOIN units eu ON CAST(e.enemyid AS INTEGER) = eu.unit_id
+      WHERE e.sectionid = $1
+      ORDER BY e.engagementid DESC;
+      `, [id]);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('error fetching ordered engagements' ,err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
 // General Engagement Endpoint 
 app.get('/api/engagements', async (req, res) => {
 
