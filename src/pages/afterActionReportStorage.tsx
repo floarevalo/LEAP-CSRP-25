@@ -321,7 +321,7 @@ export default function AAR() {
                 <Card shadow="sm" radius="md" withBorder style={{ overflow: 'visible', display: 'grid', height: '40vh', width: '600px', placeItems: 'center', marginBottom: '125px', marginTop: '100px', textAlign: 'center' }}>
                   <Card.Section >
                     <div style={{ textAlign: 'center' }}>
-                      <h2 style={{ marginTop: 10 }}>Selected Engagement</h2>
+                      <h2 style={{ marginTop: 10 }}>Round ID: {selectedEngagement.engagementid}</h2>
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: 30 }}>
@@ -366,10 +366,10 @@ export default function AAR() {
                     <Table verticalSpacing={'xs'} style={{ width: '600px', justifyContent: 'center' }}>
                       <Table.Thead>
                         <Table.Tr>
-                          <Table.Th>Tactic</Table.Th>
-                          <Table.Th>Friendly Score</Table.Th>
-                          <Table.Th>Enemy Score</Table.Th>
-                          <Table.Th>More Info</Table.Th>
+                          <Table.Th style={{ textAlign: 'center' }}>Tactic</Table.Th>
+                          <Table.Th style={{ textAlign: 'center' }}>Friendly Score</Table.Th>
+                          <Table.Th style={{ textAlign: 'center' }}>Enemy Score</Table.Th>
+                          <Table.Th style={{ textAlign: 'center' }}>More Info</Table.Th>
                         </Table.Tr>
                       </Table.Thead>
                       <Table.Tbody>{renderTacticsRows(
