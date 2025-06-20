@@ -16,7 +16,7 @@ import {
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FaArrowAltCircleLeft } from "react-icons/fa";
+import { FaArrowAltCircleLeft, FaInfoCircle } from "react-icons/fa";
 import classes from './TableReviews.module.css';
 import axios from 'axios';
 import logo from '../images/logo/Tr_FullColor_NoSlogan.png'
@@ -140,12 +140,15 @@ export default function AAR() {
     fetchEngagementData();
   }, [sectionId]);
 
-  const renderTacticsRows = (tactics: Tactics[] | undefined) => { // Changed: Added `renderTacticsRows` function for rendering tactics rows
+  const renderTacticsRows = (tactics: Tactics[] | undefined) => {
+    // Helper function to convert score to Yes/No
+    const scoreToYesNo = (score: number | undefined) => (score && score > 0 ? 'Yes' : 'No');
+
     // Case 1: No engagements at all
     if (engagements.length === 0) {
       return (
         <Table.Tr>
-          <Table.Td colSpan={3} align="center">No engagements found</Table.Td>
+          <Table.Td colSpan={4} align="center">No engagements found</Table.Td>
         </Table.Tr>
       );
     }
@@ -154,7 +157,7 @@ export default function AAR() {
     if (!selectedEngagement) {
       return (
         <Table.Tr>
-          <Table.Td colSpan={3} align="center">Select an engagement to view tactics</Table.Td>
+          <Table.Td colSpan={4} align="center">Select an engagement to view tactics</Table.Td>
         </Table.Tr>
       );
     }
@@ -163,57 +166,77 @@ export default function AAR() {
     if (!tactics || tactics.length === 0) {
       return (
         <Table.Tr>
-          <Table.Td colSpan={3} align="center">No tactics data available for this engagement</Table.Td>
+          <Table.Td colSpan={4} align="center">No tactics data available for this engagement</Table.Td>
         </Table.Tr>
       );
     }
+    
+    const tacticQuestions = [
+      { question: 'Aware of OPFOR?', friendlyKey: 'friendlyawareness', enemyKey: 'enemyawareness' },
+      { question: 'Within Logistics Support Range?', friendlyKey: 'friendlylogistics', enemyKey: 'enemylogistics' },
+      { question: 'Within RPA/ISR Coverage?', friendlyKey: 'friendlycoverage', enemyKey: 'enemycoverage' },
+      { question: 'Working GPS?', friendlyKey: 'friendlygps', enemyKey: 'enemygps' },
+      { question: 'Within Communications Range?', friendlyKey: 'friendlycomms', enemyKey: 'enemycomms' },
+      { question: 'Within Fire Support Range?', friendlyKey: 'friendlyfire', enemyKey: 'enemyfire' },
+      { question: 'Within Range of a Pattern Force?', friendlyKey: 'friendlypattern', enemyKey: 'enemypattern' },
+    ];
+    
+    const tacticData = tactics[0]; 
 
+    const getTooltipLabel = (friendly: string, enemy: string): string => {
+      if (friendly === 'Yes' && enemy === 'Yes') {
+        return "No advantage. Both sides succeeded in this tactic. This indicates a potential stalemate or equal advantage in this area.";
+      } else if (friendly === 'Yes' && enemy === 'No') {
+        return "Blue advantage. Friendly forces succeeded while the enemy failed. This is a key friendly advantage.";
+      } else if (friendly === 'No' && enemy === 'Yes') {
+        return "Red advantage. Enemy forces succeeded while friendlies failed. This is a critical friendly vulnerability.";
+      } else { // This covers the (friendly === 'No' && enemy === 'No') case
+        return "No advantage. Both sides failed in this tactic. This may indicate difficult conditions or mutual failure to execute.";
+      }
+    };
 
-    // Helper function to convert score to Yes/No 
-    //Pulled from tactics
-    const scoreToYesNo = (score: number | undefined) => (score && score > 0 ? 'Yes' : 'No');
+    const getAdvantageColor = (friendly: string, enemy: string): string => {
+      if (friendly === 'Yes' && enemy === 'Yes') {
+        return "grey";
+      } else if (friendly === 'Yes' && enemy === 'No') {
+        return "#3d85c6";
+      } else if (friendly === 'No' && enemy === 'Yes') {
+        return "#c1432d";
+      } else { // This covers the (friendly === 'No' && enemy === 'No') case
+        return "grey";
+      }
+    };
 
-    return tactics.map((tactic, index) => (
-      <React.Fragment key={index}>
-        <Table.Tr key={`tactic-${index}-awareness`}>
-          <Table.Td>Aware of OPFOR?</Table.Td>
-          <Table.Td>{scoreToYesNo(tactic.friendlyawareness)}</Table.Td>
-          <Table.Td>{scoreToYesNo(tactic.enemyawareness)}</Table.Td>
-        </Table.Tr>
-        <Table.Tr key={`tactic-${index}-logistics`}>
-          <Table.Td>Within Logistics Support Range?</Table.Td>
-          <Table.Td>{scoreToYesNo(tactic.friendlylogistics)}</Table.Td>
-          <Table.Td>{scoreToYesNo(tactic.enemylogistics)}</Table.Td>
-        </Table.Tr>
-        <Table.Tr key={`tactic-${index}-coverage`}>
-          <Table.Td>Within RPA/ISR Coverage?</Table.Td>
-          <Table.Td>{scoreToYesNo(tactic.friendlycoverage)}</Table.Td>
-          <Table.Td>{scoreToYesNo(tactic.enemycoverage)}</Table.Td>
-        </Table.Tr>
-        <Table.Tr key={`tactic-${index}-gps`}>
-          <Table.Td>Working GPS?</Table.Td>
-          <Table.Td>{scoreToYesNo(tactic.friendlygps)}</Table.Td>
-          <Table.Td>{scoreToYesNo(tactic.enemygps)}</Table.Td>
-        </Table.Tr>
-        <Table.Tr key={`tactic-${index}-comms`}>
-          <Table.Td>Within Communications Range?</Table.Td>
-          <Table.Td>{scoreToYesNo(tactic.friendlycomms)}</Table.Td>
-          <Table.Td>{scoreToYesNo(tactic.enemycomms)}</Table.Td>
-        </Table.Tr>
-        <Table.Tr key={`tactic-${index}-fire`}>
-          <Table.Td>Within Fire Support Range?</Table.Td>
-          <Table.Td>{scoreToYesNo(tactic.friendlyfire)}</Table.Td>
-          <Table.Td>{scoreToYesNo(tactic.enemyfire)}</Table.Td>
-        </Table.Tr>
-        <Table.Tr key={`tactic-${index}-pattern`}>
-          <Table.Td>Within Range of a Pattern Force?</Table.Td>
-          <Table.Td>{scoreToYesNo(tactic.friendlypattern)}</Table.Td>
-          <Table.Td>{scoreToYesNo(tactic.enemypattern)}</Table.Td>
-        </Table.Tr>
+    return tacticQuestions.map((tactic, index) => {
+      const friendlyAnswer = scoreToYesNo(tacticData[tactic.friendlyKey as keyof Tactics] as number);
+      const enemyAnswer = scoreToYesNo(tacticData[tactic.enemyKey as keyof Tactics] as number);
+      const tooltipLabel = getTooltipLabel(friendlyAnswer, enemyAnswer);
+      const advantageColor = getAdvantageColor(friendlyAnswer, enemyAnswer);
 
-      </React.Fragment>
-
-    ));
+      return (
+        <Table.Tr key={`tactic-row-${index}`}>
+          <Table.Td>{tactic.question}</Table.Td>
+          <Table.Td>{friendlyAnswer}</Table.Td>
+          <Table.Td>{enemyAnswer}</Table.Td>
+          <Table.Td>
+            <Tooltip
+              label={tooltipLabel}
+              withArrow
+              position="right"
+              color={advantageColor}
+              z-index={200} 
+              multiline // This enables the multiline feature
+              w={220}
+            >
+              {/* This div is the critical fix for the ref warning */}
+              <div>
+                <FaInfoCircle style={{ cursor: 'pointer' }} color = {advantageColor}/>
+              </div>
+            </Tooltip>
+          </Table.Td>
+        </Table.Tr>
+      );
+    });
   };
 
   // const [isOpen, setIsOpen] = useState<boolean[]>(Array(engagements.length).fill(false));
@@ -295,7 +318,7 @@ export default function AAR() {
               </Title>) : !selectedEngagement ? (<Title order={3} ta="center" c="gray">
                 Select an engagement to view tactics
               </Title>) : (
-                <Card shadow="sm" radius="md" withBorder style={{ display: 'grid', height: '40vh', width: '600px', placeItems: 'center', marginBottom: '125px', marginTop: '100px', textAlign: 'center' }}>
+                <Card shadow="sm" radius="md" withBorder style={{ overflow: 'visible', display: 'grid', height: '40vh', width: '600px', placeItems: 'center', marginBottom: '125px', marginTop: '100px', textAlign: 'center' }}>
                   <Card.Section >
                     <div style={{ textAlign: 'center' }}>
                       <h2 style={{ marginTop: 10 }}>Selected Engagement</h2>
@@ -346,6 +369,7 @@ export default function AAR() {
                           <Table.Th>Tactic</Table.Th>
                           <Table.Th>Friendly Score</Table.Th>
                           <Table.Th>Enemy Score</Table.Th>
+                          <Table.Th>More Info</Table.Th>
                         </Table.Tr>
                       </Table.Thead>
                       <Table.Tbody>{renderTacticsRows(
@@ -423,7 +447,7 @@ export default function AAR() {
                   </Table.Tr>
 
                   <Table.Tr style={{ display: 'flex', justifyContent: 'center', width: '100%', marginLeft: '255%' }}>
-                    {/* <Collapse in={isOpen[index]} style={{ width: '100%' }}> */}
+                    {/* <Collapse in={isOpen[index]} style={{ width: '100%' }}>
 
                       <Table verticalSpacing={'xs'} style={{ maxWidth: '100%', width: '1000px' }} display={'fixed'}>
                         <Table.Thead>
@@ -436,7 +460,7 @@ export default function AAR() {
                         <Table.Tbody>{renderTacticsRows(tacticsMap.get(row.engagementid))}</Table.Tbody>
                       </Table>
 
-                    {/* </Collapse> */}
+                    </Collapse> */}
                   </Table.Tr>
                 </Table.Tbody>
               ))}
