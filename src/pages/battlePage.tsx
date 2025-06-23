@@ -125,33 +125,33 @@ function BattlePage() {
     fetchData();
   }, []);
 
-  // fetches enemy tactics from preset tactics
-  useEffect(() => {
-    const fetchUnitTactics = async () => {
-      // Make sure there is an enemyUnit and it has a name before fetching
-      if (!enemyUnit?.unit_name) {
-        return;
-      }
-      // call backend to get enemy tactics from preset_tactics
-      try {
-        const response = await axios.get<PresetTacticsResponse>(`${process.env.REACT_APP_BACKEND_URL}/api/preset_tactics/`,
-          {
-            params: {
-              unit_name: enemyUnit?.unit_name
-            }
-          }
-        );
-        setUnitTactics(response.data.tactics);
-      } catch (error) {
-        console.error('Error fetching unit tactics:', error);
-        setUnitTactics(null);
-      }
-    };
+  // // fetches enemy tactics from preset tactics
+  // useEffect(() => {
+  //   const fetchUnitTactics = async () => {
+  //     // Make sure there is an enemyUnit and it has a name before fetching
+  //     if (!enemyUnit?.unit_name) {
+  //       return;
+  //     }
+  //     // call backend to get enemy tactics from preset_tactics
+  //     try {
+  //       const response = await axios.get<PresetTacticsResponse>(`${process.env.REACT_APP_BACKEND_URL}/api/preset_tactics/`,
+  //         {
+  //           params: {
+  //             unit_name: enemyUnit?.unit_name
+  //           }
+  //         }
+  //       );
+  //       setUnitTactics(response.data.tactics);
+  //     } catch (error) {
+  //       console.error('Error fetching unit tactics:', error);
+  //       setUnitTactics(null);
+  //     }
+  //   };
 
-    if (enemyUnit) {
-      fetchUnitTactics();
-    }
-  }, [enemyUnit]);
+  //   if (enemyUnit) {
+  //     fetchUnitTactics();
+  //   }
+  // }, [enemyUnit]);
 
 
 
@@ -315,6 +315,14 @@ function BattlePage() {
   const [question5, setQuestion5] = useState('Yes')
   const [question6, setQuestion6] = useState('Yes')
   const [question7, setQuestion7] = useState('Yes')
+
+  const [enemyquestion1, setEnemyQuestion1] = useState('Yes')
+  const [enemyquestion2, setEnemyQuestion2] = useState('Yes')
+  const [enemyquestion3, setEnemyQuestion3] = useState('Yes')
+  const [enemyquestion4, setEnemyQuestion4] = useState('Yes')
+  const [enemyquestion5, setEnemyQuestion5] = useState('Yes')
+  const [enemyquestion6, setEnemyQuestion6] = useState('Yes')
+  const [enemyquestion7, setEnemyQuestion7] = useState('Yes')
 
   // This function handles the engagement tactics form submission
   const finalizeTactics = async () => {
@@ -481,19 +489,19 @@ function BattlePage() {
 
     const tacticsData = {
       FriendlyAwareness: question1 === "Yes" ? 1 : 0,
-      EnemyAwareness: unitTactics?.awareness,
+      EnemyAwareness: enemyquestion1 === "Yes" ? 1 : 0,
       FriendlyLogistics: question2 === "Yes" ? 1 : 0,
-      EnemyLogistics: unitTactics?.logistics,
+      EnemyLogistics: enemyquestion2 === "Yes" ? 1 : 0,
       FriendlyCoverage: question3 === "Yes" ? 1 : 0,
-      EnemyCoverage: unitTactics?.coverage,
+      EnemyCoverage: enemyquestion3 === "Yes" ? 1 : 0,
       FriendlyGPS: question4 === "Yes" ? 1 : 0,
-      EnemyGPS: unitTactics?.gps,
+      EnemyGPS: enemyquestion4 === "Yes" ? 1 : 0,
       FriendlyComms: question5 === "Yes" ? 1 : 0,
-      EnemyComms: unitTactics?.comms,
+      EnemyComms: enemyquestion5 === "Yes" ? 1 : 0,
       FriendlyFire: question6 === "Yes" ? 1 : 0,
-      EnemyFire: unitTactics?.fire,
+      EnemyFire: enemyquestion6 === "Yes" ? 1 : 0,
       FriendlyPattern: question7 === "Yes" ? 1 : 0,
-      EnemyPattern: unitTactics?.pattern,
+      EnemyPattern: enemyquestion7 === "Yes" ? 1 : 0,
     };
 
     // Submit answers to backend
@@ -604,22 +612,40 @@ function BattlePage() {
   const calculateEnemyRealTimeScore = () => {
     let score = 0;
 
-    score = ((20 * Number(unitTactics?.awareness)) + (25 * Number(unitTactics?.logistics) + (10 * Number(unitTactics?.coverage)) + (10 * Number(unitTactics?.gps)) +
-      (10 * Number(unitTactics?.comms)) + (15 * Number(unitTactics?.fire)) + (10 * Number(unitTactics?.pattern))));
+      const weights: Record<WeightKeys, { yes: number; no: number }> = {
+      awareOfPresence: { yes: 20, no: 0 },
+      logisticsSupportRange: { yes: 25, no: 0 },
+      isrCoverage: { yes: 10, no: 0 },
+      gpsWorking: { yes: 10, no: 0 },
+      communicationsWorking: { yes: 10, no: 0 },
+      fireSupportRange: { yes: 15, no: 0 },
+      patternForceRange: { yes: 10, no: 0 }
+    };
 
+    // Calculate score based on current state values of questions
+    score += weights.awareOfPresence[enemyquestion1.toLowerCase() as 'yes' | 'no'];
+    score += weights.logisticsSupportRange[enemyquestion2.toLowerCase() as 'yes' | 'no'];
+    score += weights.isrCoverage[enemyquestion3.toLowerCase() as 'yes' | 'no'];
+    score += weights.gpsWorking[enemyquestion4.toLowerCase() as 'yes' | 'no'];
+    score += weights.communicationsWorking[enemyquestion5.toLowerCase() as 'yes' | 'no'];
+    score += weights.fireSupportRange[enemyquestion6.toLowerCase() as 'yes' | 'no'];
+    score += weights.patternForceRange[enemyquestion7.toLowerCase() as 'yes' | 'no'];
+
+    //score = ((20 * Number(unitTactics?.awareness)) + (25 * Number(unitTactics?.logistics) + (10 * Number(unitTactics?.coverage)) + (10 * Number(unitTactics?.gps)) +
+      //(10 * Number(unitTactics?.comms)) + (15 * Number(unitTactics?.fire)) + (10 * Number(unitTactics?.pattern))));
     return score;
   };
 
 
   // Printing scores into the Engagement Data card in AAR
   const answers: Form[] = [
-    { ID: 'Aware of OPFOR?', friendlyScore: weights.awareOfPresence[question1.toLowerCase() as 'yes' | 'no'], enemyScore: 20 * Number(unitTactics?.awareness) },
-    { ID: 'Within Logistics Support Range?', friendlyScore: weights.logisticsSupportRange[question2.toLowerCase() as 'yes' | 'no'], enemyScore: 25 * Number(unitTactics?.logistics) },
-    { ID: 'Within RPA/ISR Coverage?', friendlyScore: weights.isrCoverage[question3.toLowerCase() as 'yes' | 'no'], enemyScore: 10 * Number(unitTactics?.coverage) },
-    { ID: 'Working GPS?', friendlyScore: weights.gpsWorking[question4.toLowerCase() as 'yes' | 'no'], enemyScore: 10 * Number(unitTactics?.gps) },
-    { ID: 'Working Communications?', friendlyScore: weights.communicationsWorking[question5.toLowerCase() as 'yes' | 'no'], enemyScore: 10 * Number(unitTactics?.comms) },
-    { ID: 'Within Fire Support Range?', friendlyScore: weights.fireSupportRange[question6.toLowerCase() as 'yes' | 'no'], enemyScore: 15 * Number(unitTactics?.fire) },
-    { ID: 'Within Range of a Pattern Force?', friendlyScore: weights.patternForceRange[question7.toLowerCase() as 'yes' | 'no'], enemyScore: 10 * Number(unitTactics?.pattern) }
+    { ID: 'Aware of OPFOR?', friendlyScore: weights.awareOfPresence[question1.toLowerCase() as 'yes' | 'no'], enemyScore: weights.awareOfPresence[enemyquestion1.toLowerCase() as 'yes' | 'no']},
+    { ID: 'Within Logistics Support Range?', friendlyScore: weights.logisticsSupportRange[question2.toLowerCase() as 'yes' | 'no'], enemyScore: weights.logisticsSupportRange[enemyquestion2.toLowerCase() as 'yes' | 'no'] },
+    { ID: 'Within RPA/ISR Coverage?', friendlyScore: weights.isrCoverage[question3.toLowerCase() as 'yes' | 'no'], enemyScore: weights.isrCoverage[enemyquestion3.toLowerCase() as 'yes' | 'no'] },
+    { ID: 'Working GPS?', friendlyScore: weights.gpsWorking[question4.toLowerCase() as 'yes' | 'no'], enemyScore: weights.gpsWorking[enemyquestion4.toLowerCase() as 'yes' | 'no'] },
+    { ID: 'Working Communications?', friendlyScore: weights.communicationsWorking[question5.toLowerCase() as 'yes' | 'no'], enemyScore: weights.communicationsWorking[enemyquestion5.toLowerCase() as 'yes' | 'no'] },
+    { ID: 'Within Fire Support Range?', friendlyScore: weights.fireSupportRange[question6.toLowerCase() as 'yes' | 'no'], enemyScore: weights.fireSupportRange[enemyquestion6.toLowerCase() as 'yes' | 'no'] },
+    { ID: 'Within Range of a Pattern Force?', friendlyScore: weights.patternForceRange[question7.toLowerCase() as 'yes' | 'no'], enemyScore: weights.patternForceRange[enemyquestion7.toLowerCase() as 'yes' | 'no'] }
   ]
 
 
@@ -946,21 +972,21 @@ function BattlePage() {
                 <h1>Enemy: {enemyUnit?.unit_name}</h1>
                 <p>Aware of OPFOR presence?</p>
                 <SegmentedControl
+                  value={enemyquestion1}
+                  onChange={setEnemyQuestion1}
                   size='xl'
                   radius='xs'
                   color="gray"
                   data={['Yes', 'No']}
-                  value={unitTactics?.awareness ? 'Yes' : 'No'} // Assuming awareness is a boolean in unitTactics
-                  disabled
                 />
                 <p>Within logistics support range?</p>
                 <SegmentedControl
+                  value = {enemyquestion2}
+                  onChange={setEnemyQuestion2}
                   size='xl'
                   radius='xs'
                   color="gray"
                   data={['Yes', 'No']}
-                  value={unitTactics?.logistics ? 'Yes' : 'No'}
-                  disabled
                 />
               </Grid.Col>
             </Grid>
@@ -989,21 +1015,21 @@ function BattlePage() {
                 <h1>Enemy: {enemyUnit?.unit_name}</h1>
                 <p>Under ISR coverage?</p>
                 <SegmentedControl
+                  value={enemyquestion3}
+                  onChange={setEnemyQuestion3}
                   size='xl'
                   radius='xs'
                   color="gray"
                   data={['Yes', 'No']}
-                  value={unitTactics?.coverage ? 'Yes' : 'No'}
-                  disabled
                 />
                 <p>Working GPS?</p>
                 <SegmentedControl
+                  value={enemyquestion4}
+                  onChange={setEnemyQuestion4}
                   size='xl'
                   radius='xs'
                   color="gray"
                   data={['Yes', 'No']}
-                  value={unitTactics?.gps ? 'Yes' : 'No'}
-                  disabled
                 />
               </Grid.Col>
             </Grid>
@@ -1032,21 +1058,21 @@ function BattlePage() {
                 <h1>Enemy: {enemyUnit?.unit_name}</h1>
                 <p>Working communications?</p>
                 <SegmentedControl
+                  value={enemyquestion5}
+                  onChange={setEnemyQuestion5}
                   size='xl'
                   radius='xs'
                   color="gray"
                   data={['Yes', 'No']}
-                  value={unitTactics?.comms ? 'Yes' : 'No'}
-                  disabled
                 />
                 <p>Within fire support range?</p>
                 <SegmentedControl
+                  value={enemyquestion6}
+                  onChange={setEnemyQuestion6}
                   size='xl'
                   radius='xs'
                   color="gray"
                   data={['Yes', 'No']}
-                  value={unitTactics?.fire ? 'Yes' : 'No'}
-                  disabled
                 />
               </Grid.Col>
             </Grid>
@@ -1073,12 +1099,12 @@ function BattlePage() {
                 <h1>Enemy: {enemyUnit?.unit_name}</h1>
                 <p>Accessible by pattern force?</p>
                 <SegmentedControl
+                  value={enemyquestion7}
+                  onChange={setEnemyQuestion7}
                   size='xl'
                   radius='xs'
                   color="gray"
                   data={['Yes', 'No']}
-                  value={unitTactics?.pattern ? 'Yes' : 'No'}
-                  disabled
                 />
               </Grid.Col>
             </Grid>

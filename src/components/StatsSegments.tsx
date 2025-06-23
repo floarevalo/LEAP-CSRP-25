@@ -43,7 +43,7 @@ export function StatsSegments({ friendlyCount, enemyCount, friendlyKilled, enemy
           Friendly: Active / Killed
         </Text>
         <Group justify="space-between" align="flex-end" gap={0}>
-          <Text c="#3d85c6" fz={30} fw={700} className={classes.statCount}>{`${friendlyCount} / ${friendlyKilled}`}</Text>
+          <Text c="blue" fz={30} fw={700} className={classes.statCount}>{`${friendlyCount} / ${friendlyKilled}`}</Text>
         </Group>
       </Box>
 
