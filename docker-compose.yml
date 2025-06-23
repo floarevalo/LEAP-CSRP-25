@@ -5,18 +5,19 @@ services:
     image: postgres:16
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: admin
+      POSTGRES_PASSWORD: postgres
       POSTGRES_DB: LEAP
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./LEAP_FALL24_DB_1.sql:/docker-entrypoint-initdb.d/LEAP_FALL24_DB_1.sql:ro # Restore database on init
+      - ./LEAP-SUMMER2025-DB-Backup.sql:/docker-entrypoint-initdb.d/LEAP-SUMMER2025-DB-Backup.sql:ro # Restore database on init
+      
     ports:
       - "5433:5432"
 
   backend:
     build: ./backend
     environment:
-      DATABASE_URL: postgres://postgres:admin@postgres:5432/LEAP
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/LEAP
     ports:
       - "5000:5000"
     depends_on:
