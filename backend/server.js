@@ -15,6 +15,12 @@ const pool = new Pool({
   password: 'postgres',
   port: 5432,
 });
+const user = 'postgres';
+const password = 'postgres';
+const host = 'localhost';
+const dataport = 5432;
+const database = 'LEAP';
+const connectionString = `postgresql://${user}:${password}@${host}:${dataport}/${database}`;
 
 // gets live updates from database
 let unitClients = [];
@@ -24,6 +30,7 @@ app.get('/events',(req, res) => {
   res.setHeader('Connection','keep-alive');
   res.setHeader('Access-Control-Allow-Origin','*');
   res.flushHeaders();
+  res.write('retry: 10000\n\n');
 
   unitClients.push(res);
   console.log('client connected');
@@ -34,7 +41,7 @@ app.get('/events',(req, res) => {
   });
 });
 function notifyunitClients(newunit) {
-  console.log('sending SSE');
+  console.log('sending unit data');
   const data = JSON.stringify({
     unit_name: newunit.unit_name, 
     unit_id: newunit.unit_id,
@@ -46,7 +53,7 @@ function notifyunitClients(newunit) {
     unit_posture: newunit.unit_posture, 
     unit_mobility: newunit.unit_mobility, 
     unit_readiness: newunit.unit_readiness,
-    unit_skill: newunit.unit_readiness,
+    unit_skill: newunit.unit_skill,
     section_id: newunit.section_id,
     unit_wez: newunit.unit_wez
   });
@@ -58,7 +65,7 @@ async function sendunitdata(unitID){
     const newunit = result.rows[0];
     if (newunit) {
       notifyunitClients(newunit);
-      console.log('the package has been sent');
+      console.log('unit data has been sent');
     } else {
       console.log('no matching unit found')
     }
@@ -68,21 +75,6 @@ async function sendunitdata(unitID){
   }
 
 }
-
-(async() => {
-  listenClient = await pool.connect();
-  await listenClient.query('LISTEN unit_added');
-  console.log('Listening for unit_added events');
-
-  listenClient.on('notification',async (msg) => {
-    const payload = JSON.parse(msg.payload);
-    console.log('The eagle has landed');
-    const unitName = payload.unit_name;
-    const unitID = payload.unit_id;
-    sendunitdata(unitID);
-    console.log('It is done')
-  });
-})();
 
 let sectionClients = [];
 app.get('/sectionevents',(req, res) => {
@@ -103,7 +95,7 @@ app.get('/sectionevents',(req, res) => {
   });
 });
 function notifySectionClients(newsection, isOnline) {
-  console.log('sending SSE');
+  console.log('sending new section');
   const data = JSON.stringify({
     sectionid: newsection,
     isonline: isOnline
@@ -111,21 +103,49 @@ function notifySectionClients(newsection, isOnline) {
   sectionClients.forEach(res=> res.write(`data: ${data}\n\n`));
 }
 
+const { Client } = require('pg');
 (async() => {
-  listenClient = await pool.connect();
+  const listenClient = new Client({
+    connectionString
+  });
+  await listenClient.connect();
+  await listenClient.query('LISTEN unit_added');
   await listenClient.query('LISTEN new_section_channel');
-  console.log('Listening for new_section_channel events');
+  console.log('Listening for unit_added and new_section_channel events');
 
   listenClient.on('notification',async (msg) => {
-    const payload = JSON.parse(msg.payload);
-    console.log('another eagle has landed');
-    const newsection = payload.section_id;
-    const isOnline = payload.isonline;
-    notifySectionClients(newsection, isOnline);
-    console.log('Its over');
+    try{
+      console.log('The eagle has landed');
+      const payload = JSON.parse(msg.payload);
+      switch (msg.channel) {
+        case 'unit_added':
+          console.log('unit_added notification', payload);
+          const unitName = payload.unit_name;
+          const unitID = payload.unit_id;
+          await sendunitdata(unitID);
+          break;
+        case 'new_section_channel':
+          console.log('new_section_channel notification:', payload);
+          const newsection = payload.section_id;
+          const isOnline = payload.isonline;
+          notifySectionClients(newsection, isOnline);
+          console.log('section sent');
+          break;
+        default:
+          console.warn('unhandled channel',msg.channel);
+      }
+    } catch (err) {
+      console.error('error handling notification',err.message);
+    }
   });
+  listenClient.on('error',(err) => {
+    console.log('listen client error', err.message);
+  });
+  setInterval(()=> {
+    unitClients.forEach(res => res.write(': keep-alive\n\n'));
+    sectionClients.forEach(res => res.write(': keep-alive\n\n'));
+  }, 30000);
 })();
-
 
 // Endpoint to fetch data from 'sections' table
 app.get('/api/sections', async (req, res) => {
