@@ -126,7 +126,7 @@ const { Client } = require('pg');
           break;
         case 'new_section_channel':
           console.log('new_section_channel notification:', payload);
-          const newsection = payload.section_id;
+          const newsection = payload.sectionid;
           const isOnline = payload.isonline;
           notifySectionClients(newsection, isOnline);
           console.log('section sent');
