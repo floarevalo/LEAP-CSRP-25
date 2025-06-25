@@ -38,7 +38,7 @@ import {
 // import SectionCopyModule from '../components/sectionCopyModule';
 import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
 // import { IconCheck, IconX } from '@tabler/icons-react';
-
+import REACT_APP_BACKEND_URL from '../APIBase';
 
 
 function AdminPage() {
@@ -94,7 +94,7 @@ function AdminPage() {
   // Fetch all sections from the backend
   const fetchData = async () => {
     try {
-      const response = await axios.get<Section[]>(`${process.env.REACT_APP_BACKEND_URL}/api/sections`);
+      const response = await axios.get<Section[]>(`${REACT_APP_BACKEND_URL}/sections`);
       setSections(response.data);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -104,7 +104,7 @@ function AdminPage() {
   useEffect(() => {
     fetchData();
 
-    const eventSource = new EventSource(`${process.env.REACT_APP_BACKEND_URL}/sectionevents`);
+    const eventSource = new EventSource(`${REACT_APP_BACKEND_URL}/sectionevents`);
 
     eventSource.onopen = () => {
       console.log('Connected to /sectionevents');
@@ -148,7 +148,7 @@ function AdminPage() {
   //   if (newSectionName.trim()) {
   //     try {
   //       // Make POST request to backend
-  //       const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/sections`, {
+  //       const response = await axios.post(`${REACT_APP_BACKEND_URL}/sections`, {
   //         sectionid: newSectionName.trim(),
   //         isonline: false, // Default to offline
   //       });
@@ -171,7 +171,7 @@ function AdminPage() {
   const toggleSectionOnline = async (sectionID: string, isOnline: boolean): Promise<void> => {
     try {
       // Send a PUT request to the backend to update the section's online status
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/sections/${sectionID}`, {
+      const response = await fetch(`${REACT_APP_BACKEND_URL}/sections/${sectionID}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -221,7 +221,7 @@ function AdminPage() {
   //     if (!confirmDelete) return;
 
   //     // Send delete request to the backend
-  //     await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/sections/${sectionId}`);
+  //     await axios.delete(`${REACT_APP_BACKEND_URL}/sections/${sectionId}`);
 
   //     // Success: Update the sections state by removing the deleted section
   //     setSections((prevSections) =>

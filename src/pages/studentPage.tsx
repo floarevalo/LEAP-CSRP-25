@@ -14,6 +14,7 @@ import { FaArrowAltCircleLeft } from "react-icons/fa";
 import logo from '../images/logo/Tr_FullColor_NoSlogan.png'
 import { Unit } from '../components/Cards';
 import axios from 'axios';
+import REACT_APP_BACKEND_URL from '../APIBase';
 
 interface UnitStatsProps {
   friendlyCount: number;
@@ -81,10 +82,10 @@ function App() {
       setIsLoading(true);
       try {
         // Create promises for both API calls
-        const friendlyPromise = axios.get<Unit[]>(`${process.env.REACT_APP_BACKEND_URL}/api/units/sectionSort`, {
+        const friendlyPromise = axios.get<Unit[]>(`${REACT_APP_BACKEND_URL}/units/sectionSort`, {
           params: { sectionid: userSection }
         });
-        const enemyPromise = axios.get<Unit[]>(`${process.env.REACT_APP_BACKEND_URL}/api/units/enemyUnits`, {
+        const enemyPromise = axios.get<Unit[]>(`${REACT_APP_BACKEND_URL}/units/enemyUnits`, {
           params: { sectionid: userSection }
         });
 
@@ -108,7 +109,7 @@ function App() {
   useEffect(() => {
     if (!userSection) return;
 
-    const eventSource = new EventSource(`${process.env.REACT_APP_BACKEND_URL}/events`);
+    const eventSource = new EventSource(`${REACT_APP_BACKEND_URL}/events`);
 
     eventSource.onmessage = (event) => {
       const newUnit = JSON.parse(event.data);

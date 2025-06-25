@@ -14,6 +14,7 @@ import { Unit } from '../components/Cards';
 import classes from './battlePage.module.css';
 import axios from 'axios';
 import getImageSRC from '../context/imageSrc';
+import REACT_APP_BACKEND_URL from '../APIBase';
 
 
 // The interface that is used to take in and send variables for the tactics tables
@@ -68,7 +69,7 @@ function BattlePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get<Unit[]>(`${process.env.REACT_APP_BACKEND_URL}/api/units/sectionSort`, {
+        const response = await axios.get<Unit[]>(`${REACT_APP_BACKEND_URL}/units/sectionSort`, {
           params: {
             sectionid: userSection  // Pass userSection as a query parameter
           }
@@ -100,7 +101,7 @@ function BattlePage() {
     //};
     const fetchData = async () => {
       try {
-        const response = await axios.get<Unit[]>(`${process.env.REACT_APP_BACKEND_URL}/api/units/enemyUnits`, {
+        const response = await axios.get<Unit[]>(`${REACT_APP_BACKEND_URL}/units/enemyUnits`, {
           params: {
             sectionid: userSection  // Pass userSection as a query parameter
           }
@@ -134,7 +135,7 @@ function BattlePage() {
   //     }
   //     // call backend to get enemy tactics from preset_tactics
   //     try {
-  //       const response = await axios.get<PresetTacticsResponse>(`${process.env.REACT_APP_BACKEND_URL}/api/preset_tactics/`,
+  //       const response = await axios.get<PresetTacticsResponse>(`${REACT_APP_BACKEND_URL}/preset_tactics/`,
   //         {
   //           params: {
   //             unit_name: enemyUnit?.unit_name
@@ -172,7 +173,7 @@ function BattlePage() {
 
   // function to update unit health after each round of an engagement
   const updateUnitHealth = async (id: number, newHealth: number) => {
-    const url = `${process.env.REACT_APP_BACKEND_URL}/api/units/health`; // Corrected URL to point to the server running on port 5000
+    const url = `${REACT_APP_BACKEND_URL}/units/health`; // Corrected URL to point to the server running on port 5000
     const options = {
       method: 'PUT',
       headers: {
@@ -507,7 +508,7 @@ function BattlePage() {
     // Submit answers to backend
     try {
       // Submit engagement data
-      const engagementResponse = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/engagements`, {
+      const engagementResponse = await fetch(`${REACT_APP_BACKEND_URL}/engagements`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -523,7 +524,7 @@ function BattlePage() {
       console.log('Engagement created:', engagementResult);
 
       // Submit tactics data
-      const tacticsResponse = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/tactics`, {
+      const tacticsResponse = await fetch(`${REACT_APP_BACKEND_URL}/tactics`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -807,7 +808,7 @@ function BattlePage() {
       // Send a GET request to the backend API endpoint /api/withinWEZ
       // Pass enemyID and friendlyID as query parameters
       let enemyInWEZ = false;
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/withinWEZ`, {
+      const response = await axios.get(`${REACT_APP_BACKEND_URL}/withinWEZ`, {
         params: {
           enemyid: enemyID, // ID of the enemy unit being checked
           friendlyid: selectedUnit  // ID of the friendly unit

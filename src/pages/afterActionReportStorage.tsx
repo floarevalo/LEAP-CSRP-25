@@ -31,6 +31,7 @@ import axios from 'axios';
 import logo from '../images/logo/Tr_FullColor_NoSlogan.png';
 // Import custom hook to get the current user's role
 import { useUserRole } from '../context/UserContext';
+import REACT_APP_BACKEND_URL from '../APIBase';
 
 
 // Defines the structure for recent engagement data (not currently used in this component)
@@ -136,7 +137,7 @@ export default function AAR() {
     const fetchEngagementData = async () => {
       try {
         console.log('Fetching data for engagement:', sectionId);
-        const response = await axios.get<Engagement[]>(`${process.env.REACT_APP_BACKEND_URL}/api/ordered_engagements/${sectionId}`, {
+        const response = await axios.get<Engagement[]>(`${REACT_APP_BACKEND_URL}/ordered_engagements/${sectionId}`, {
           params: {
             sectionid: sectionId  // Pass userSection as a query parameter
           }
@@ -146,7 +147,7 @@ export default function AAR() {
 
         // Step 2: For each engagement, create a promise to fetch its specific tactics data.
         const tacticsPromises = response.data.map(async (engagement) => {
-          const tacticsResponse = await axios.get<Tactics[]>(`${process.env.REACT_APP_BACKEND_URL}/api/tactics/${engagement.engagementid}`);
+          const tacticsResponse = await axios.get<Tactics[]>(`${REACT_APP_BACKEND_URL}/tactics/${engagement.engagementid}`);
           return { engagementId: engagement.engagementid, tactics: tacticsResponse.data };
         });
 

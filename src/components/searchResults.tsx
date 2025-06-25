@@ -8,6 +8,7 @@ import { GridC } from './Cards'; // Import your Card component
 import axios from 'axios';
 import { Unit } from '../components/Cards';
 import { useUserRole } from '../context/UserContext';
+import REACT_APP_BACKEND_URL from '../APIBase';
 
 interface Props {
   search: string;
@@ -22,7 +23,7 @@ const SearchResultList: React.FC<Props> = (props) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get<Unit[]>(`${process.env.REACT_APP_BACKEND_URL}/api/sectionunits/sectionSort`, {
+        const response = await axios.get<Unit[]>(`${REACT_APP_BACKEND_URL}/sectionunits/sectionSort`, {
           params: {
             sectionid: userSection  // Pass userSection as a query parameter
           }

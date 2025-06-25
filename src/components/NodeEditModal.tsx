@@ -5,6 +5,7 @@ import { useDisclosure } from '@mantine/hooks';
 import axios from 'axios';
 import { Unit } from './Cards';
 import { IconEdit, IconSquarePlus, IconSquareX } from '@tabler/icons-react';
+import REACT_APP_BACKEND_URL from '../APIBase';
 
 interface NodeEditProps {
     isOpen: boolean;
@@ -86,7 +87,7 @@ export default function NodeEditModal({ isOpen, onClose, nodeID, is_friendly, us
 
             try {
                 // Fetch unit data
-                const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/unit/${nodeID}`);
+                const response = await axios.get(`${REACT_APP_BACKEND_URL}/unit/${nodeID}`);
                 console.log("Retrieving unit: ", nodeID);
                 const data = response.data[0]; // Accessing data directly from response
                 setUnit(data); // Set the fetched data to the unit state
@@ -94,7 +95,7 @@ export default function NodeEditModal({ isOpen, onClose, nodeID, is_friendly, us
 
                 // Fetch unit tactics based on unit_id from unit data
                 if (data?.unit_id) {
-                    const tacticsResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/unitTactics/${data.unit_id}`);
+                    const tacticsResponse = await axios.get(`${REACT_APP_BACKEND_URL}/unitTactics/${data.unit_id}`);
                     console.log("Fetching unit tactics for unit ID:", data.unit_id);
                     const tacticsData = tacticsResponse.data;
                     setUnitTactics(tacticsData); // Update the unitTactics state
@@ -138,7 +139,7 @@ export default function NodeEditModal({ isOpen, onClose, nodeID, is_friendly, us
     // FUNCTION: FETCH PRESET UNITS
     const fetchPresetUnits = async () => {
         try {
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/preset_units`);
+            const response = await axios.get(`${REACT_APP_BACKEND_URL}/preset_units`);
 
             const normalizedData = response.data.map((unit: any) => ({
                 unit_name: unit.unit_name,
@@ -174,7 +175,7 @@ export default function NodeEditModal({ isOpen, onClose, nodeID, is_friendly, us
         }
 
         try {
-            const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/deleteNode/${nodeID}`, {
+            const response = await fetch(`${REACT_APP_BACKEND_URL}/deleteNode/${nodeID}`, {
                 method: 'DELETE'
             });
 
@@ -219,7 +220,7 @@ export default function NodeEditModal({ isOpen, onClose, nodeID, is_friendly, us
 
                 try {
                     // Step 1: Fetch tactics from `preset_tactics` where unit_name matches
-                    const tacticsResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/preset_tactics`, {
+                    const tacticsResponse = await axios.get(`${REACT_APP_BACKEND_URL}/preset_tactics`, {
                         params: {
                             unit_name: selectedUnit.unit_name,
                         }
@@ -285,7 +286,7 @@ export default function NodeEditModal({ isOpen, onClose, nodeID, is_friendly, us
 
         try {
             // Step 1: Submit the unit data to the section_units table
-            const unitResponse = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/section_units`, {
+            const unitResponse = await axios.post(`${REACT_APP_BACKEND_URL}/section_units`, {
                 unit_name: formValues.updated_unit_name,
                 unit_health: formValues.unit_health,
                 unit_type: formValues.unit_type,
@@ -305,7 +306,7 @@ export default function NodeEditModal({ isOpen, onClose, nodeID, is_friendly, us
                 console.log('New node added with ID:', newNodeID);
 
                 // Step 2: Submit the tactics data to the section_tactics table
-                const tacticsResponse = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/newsectionunit/tactics`, {
+                const tacticsResponse = await axios.post(`${REACT_APP_BACKEND_URL}/newsectionunit/tactics`, {
                     unit_id: newNodeID,
                     awareness: segmentValues.awareness,
                     logistics: segmentValues.logistics,
@@ -323,7 +324,7 @@ export default function NodeEditModal({ isOpen, onClose, nodeID, is_friendly, us
                 }
 
                 if (!is_root) {
-                    await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/newchildnode`, {
+                    await axios.post(`${REACT_APP_BACKEND_URL}/newchildnode`, {
                         child_id: newNodeID,  // The new child node's ID
                         parent_id: unit?.unit_id  // The parent node's ID
                     });
@@ -358,7 +359,7 @@ export default function NodeEditModal({ isOpen, onClose, nodeID, is_friendly, us
 
         try {
             // Step 1: Submit the unit data to the section_units table
-            const unitResponse = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/update_unit`, {
+            const unitResponse = await axios.post(`${REACT_APP_BACKEND_URL}/update_unit`, {
                 unit_id: unit?.unit_id,
                 unit_name: nodeValues.unit_name,
                 unit_health: nodeValues.unit_health,
@@ -378,7 +379,7 @@ export default function NodeEditModal({ isOpen, onClose, nodeID, is_friendly, us
                 console.log('Updated unit:', unit?.unit_id);
 
                 // Step 2: Submit the tactics data to the section_tactics table
-                const tacticsResponse = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/update/tactics`, {
+                const tacticsResponse = await axios.post(`${REACT_APP_BACKEND_URL}/update/tactics`, {
                     unit_id: unit?.unit_id, // Include unit_id to associate tactics with the correct unit
                     awareness: unitTactics.awareness,
                     logistics: unitTactics.logistics,

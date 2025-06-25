@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Modal, Button, TextInput, Select, Box, Loader, Text, Tabs, SegmentedControl, Group } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import axios from 'axios';
+import REACT_APP_BACKEND_URL from '../APIBase';
 
 interface UnitCreationProps {
   isOpen: boolean;
@@ -66,7 +67,7 @@ export default function UnitCreationModule({ isOpen, onClose }: UnitCreationProp
     console.log(values.unitMobility)
 
     try {
-      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/newpresetunit`, {
+      const response = await axios.post(`${REACT_APP_BACKEND_URL}/newpresetunit`, {
         unit_name: values.unitName,
         unit_type: values.unitType,
         unit_role: values.unitRole,
@@ -81,7 +82,7 @@ export default function UnitCreationModule({ isOpen, onClose }: UnitCreationProp
       console.log('Form submitted with values:', response.data);
 
       // Second API call: Submit tactics data
-      const tacticsResponse = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/newpresetunit/tactics`, {
+      const tacticsResponse = await axios.post(`${REACT_APP_BACKEND_URL}/newpresetunit/tactics`, {
         unit_name: values.unitName, // You may want to use the unit ID from unitResponse if available
         awareness: segmentValues.awareness,
         logistics: segmentValues.logistics,

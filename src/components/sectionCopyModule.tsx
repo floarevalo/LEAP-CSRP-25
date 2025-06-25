@@ -3,6 +3,7 @@ import { Modal, Button, TextInput, Loader, Text } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import axios from 'axios';
 import { error } from 'console';
+import REACT_APP_BACKEND_URL from '../APIBase';
 
 interface SectionCopyProps {
   isOpen: boolean;
@@ -39,7 +40,7 @@ export default function SectionCopyModule({ isOpen, onClose, sectionToCopy, onCo
     }
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/copySection`, {
+      const response = await fetch(`${REACT_APP_BACKEND_URL}/copySection`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

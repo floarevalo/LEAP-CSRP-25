@@ -8,6 +8,7 @@ import { FaArrowAltCircleLeft } from "react-icons/fa";
 import Hierarchy from '../components/HierarchyBuilder';
 import logo from '../images/logo/Tr_FullColor_NoSlogan.png'
 import axios from 'axios';
+import REACT_APP_BACKEND_URL from '../APIBase';
 // export interface Engagement {
 //   engagementID: string;
 //   sectionID: string;
@@ -47,7 +48,7 @@ function SectionControls() {
     const fetchSectionData = async () => {
       try {
         console.log("Fetching section data...");
-        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/sections/${sectionId}/status`);
+        const response = await fetch(`${REACT_APP_BACKEND_URL}/sections/${sectionId}/status`);
         if (response.ok) {
           const sectionData = await response.json();
           setSectionOnline(sectionData.isonline);
@@ -73,7 +74,7 @@ function SectionControls() {
 
   const toggleSectionOnline = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/sections/${sectionId}`, {
+      const response = await fetch(`${REACT_APP_BACKEND_URL}/sections/${sectionId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

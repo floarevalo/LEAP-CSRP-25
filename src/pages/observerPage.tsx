@@ -23,6 +23,7 @@ import { StatsRing } from '../components/StatsRing';
 import logo from '../images/logo/Tr_FullColor_NoSlogan.png';
 import axios from 'axios';
 import { Unit } from '../components/Cards';
+import REACT_APP_BACKEND_URL from '../APIBase';
 
 // Defines the data structure for holding statistics for any group of units.
 type UnitStats = {
@@ -76,8 +77,8 @@ function ObserverPage() {
 
     try {
       const [friendlyRes, enemyRes] = await Promise.all([
-        axios.get<Unit[]>(`${process.env.REACT_APP_BACKEND_URL}/api/units/sectionSort`, {params: { sectionid: userSection }}),
-        axios.get<Unit[]>(`${process.env.REACT_APP_BACKEND_URL}/api/units/allEnemyUnits`, {params: { sectionid: userSection }})
+        axios.get<Unit[]>(`${REACT_APP_BACKEND_URL}/units/sectionSort`, {params: { sectionid: userSection }}),
+        axios.get<Unit[]>(`${REACT_APP_BACKEND_URL}/units/allEnemyUnits`, {params: { sectionid: userSection }})
       ]);
       const allFriendlies = friendlyRes.data;
       const allEnemies = enemyRes.data;

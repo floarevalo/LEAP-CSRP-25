@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Modal, Button, Select, Loader, Text } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import axios from 'axios';
+import REACT_APP_BACKEND_URL from '../APIBase';
 
 interface UnitDeleteProps {
   isOpen: boolean;
@@ -32,7 +33,7 @@ export default function UnitDeleteModule({ isOpen, onClose }: UnitDeleteProps) {
       const fetchUnits = async () => {
         try {
           setIsLoading(true);
-          const response = await axios.get<Unit[]>(`${process.env.REACT_APP_BACKEND_URL}/api/presetunits`);
+          const response = await axios.get<Unit[]>(`${REACT_APP_BACKEND_URL}/presetunits`);
           console.log('API Response:', response.data);
           setUnits(response.data);
           setIsLoading(false);
@@ -54,7 +55,7 @@ export default function UnitDeleteModule({ isOpen, onClose }: UnitDeleteProps) {
       setSubmitSuccess(false);
 
       // Send delete request with the unit_name
-      await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/units/${values.unit_name}`);
+      await axios.delete(`${REACT_APP_BACKEND_URL}/units/${values.unit_name}`);
 
       setSubmitSuccess(true);
       setIsLoading(false);

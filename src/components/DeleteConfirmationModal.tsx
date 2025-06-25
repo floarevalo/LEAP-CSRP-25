@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Modal, Button, Title, Group, Text } from '@mantine/core';
+import REACT_APP_BACKEND_URL from '../APIBase';
 
 interface DeleteConfirmationModalProps {
   open: boolean;
@@ -21,7 +22,7 @@ export default function DeleteConfirmationModal({open, sectionId, onClose, onDel
     try {
       console.log("Attempting to delete section :)")
       // Send delete request to the backend
-      await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/sections/${sectionId}`);
+      await axios.delete(`${REACT_APP_BACKEND_URL}/sections/${sectionId}`);
       
       onDeleteSuccess();
       onClose(); // Close the modal on success

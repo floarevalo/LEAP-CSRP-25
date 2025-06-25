@@ -11,6 +11,7 @@ import { useUserRole } from '../context/UserContext';
 import { MantineProvider } from '@mantine/core';
 import logo from '../images/logo/Tr_FullColor.png'
 // import { useUnitProvider } from '../context/UnitContext';
+import REACT_APP_BACKEND_URL from '../APIBase';
 
 // Sets the dynamic interface of the class section
 export interface Section {
@@ -70,24 +71,24 @@ export default function LandingPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get<Section[]>(`${process.env.REACT_APP_BACKEND_URL}/api/sections`);
+        const response = await axios.get<Section[]>(`${REACT_APP_BACKEND_URL}/sections`);
         setSections(response.data);
       } catch (error) {
         console.error('Error fetching data:', error);
       }
     };
     fetchData();
-    const eventSource = new EventSource(`${process.env.REACT_APP_BACKEND_URL}/sectionevents`);
+    const newsectionSource = new EventSource(`${REACT_APP_BACKEND_URL}/sectionevents`);
 
-    eventSource.onopen = () => {
+    newsectionSource.onopen = () => {
       console.log('Connected to /sectionevents');
     };
 
-    eventSource.onerror = (err) => {
+    newsectionSource.onerror = (err) => {
       console.error('SSE connection error:', err);
     };
 
-    eventSource.onmessage = (event) => {
+    newsectionSource.onmessage = (event) => {
       try {
         const newSection = JSON.parse(event.data); // expects { sectionid: "...", isonline: false }
 
@@ -99,11 +100,30 @@ export default function LandingPage() {
       } catch (err) {
         console.error('Error parsing SSE section data:', err);
       }
+    }
+
+    const isonlineSource = new EventSource(`${REACT_APP_BACKEND_URL}/isonlineEvents`);
+    isonlineSource.onopen = () => console.log('connected to /isonlineEvents');
+    isonlineSource.onerror = err => console.log('SSE error on /isonlineEvents:', err);
+    isonlineSource.onmessage = event => {
+      try {
+        const update = JSON.parse(event.data);
+        setSections(prevSections =>
+          prevSections.map(sec =>
+            sec.sectionid === update.sectionid
+            ? {...sec, isonline: update.isonline}
+            : sec
+          )
+        );
+      } catch (err) {
+        console.error('error parsing data:', err);
+      }
     };
 
     // 💡 Cleanup on unmount
     return () => {
-      eventSource.close();
+      newsectionSource.close();
+      isonlineSource.close();
     };
   }, []);
 

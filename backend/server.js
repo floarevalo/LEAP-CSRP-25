@@ -24,7 +24,7 @@ const connectionString = `postgresql://${user}:${password}@${host}:${dataport}/$
 
 // gets live updates from database
 let unitClients = [];
-app.get('/events',(req, res) => {
+app.get('/api/events',(req, res) => {
   res.setHeader('Content-Type','text/event-stream');
   res.setHeader('Cache-Control','no-cache');
   res.setHeader('Connection','keep-alive');
@@ -77,7 +77,7 @@ async function sendunitdata(unitID){
 }
 
 let sectionClients = [];
-app.get('/sectionevents',(req, res) => {
+app.get('/api/sectionevents',(req, res) => {
   res.setHeader('Content-Type','text/event-stream');
   res.setHeader('Cache-Control','no-cache');
   res.setHeader('Connection','keep-alive');
@@ -103,6 +103,32 @@ function notifySectionClients(newsection, isOnline) {
   sectionClients.forEach(res=> res.write(`data: ${data}\n\n`));
 }
 
+let isonlineClients = [];
+app.get('/api/isonlineEvents', (req,res) => {
+  res.setHeader('Content-Type','text/event-stream');
+  res.setHeader('Cache-Control','no-cache');
+  res.setHeader('Connection','keep-alive');
+  res.setHeader('Access-Control-Allow-Origin','*');
+  res.flushHeaders();
+  res.write('retry: 10000\n\n');
+
+  isonlineClients.push(res);
+  console.log('isonlive Client connected');
+
+  req.on('close', () => {
+    isonlineClients = isonlineClients.filter(c => c !==res);
+    console.log('isonline Client disconnected');
+  });
+});
+function notifyIsOnline(update_sectionid, update_isonline) {
+  console.log('sending isonline package');
+  const payload = JSON.stringify({
+    sectionid: update_sectionid,
+    isonline: update_isonline
+  });
+  isonlineClients.forEach(res => res.write(`data: ${payload}\n\n`));
+}
+
 const { Client } = require('pg');
 (async() => {
   const listenClient = new Client({
@@ -111,11 +137,12 @@ const { Client } = require('pg');
   await listenClient.connect();
   await listenClient.query('LISTEN unit_added');
   await listenClient.query('LISTEN new_section_channel');
-  console.log('Listening for unit_added and new_section_channel events');
+  await listenClient.query('LISTEN isonline_channel');
+  console.log('Listening for unit_added and new_section_channel events and isonline_channel');
 
   listenClient.on('notification',async (msg) => {
     try{
-      console.log('The eagle has landed');
+      console.log(`notification from ${msg.channel}`);
       const payload = JSON.parse(msg.payload);
       switch (msg.channel) {
         case 'unit_added':
@@ -131,6 +158,13 @@ const { Client } = require('pg');
           notifySectionClients(newsection, isOnline);
           console.log('section sent');
           break;
+        case 'isonline_channel':
+          console.log('recieved isonline package');
+          const update_sectionid = payload.sectionid;
+          const update_isonline = payload.isonline;
+          notifyIsOnline(update_sectionid, update_isonline);
+          console.log('online status sent');
+          break;
         default:
           console.warn('unhandled channel',msg.channel);
       }
@@ -142,8 +176,15 @@ const { Client } = require('pg');
     console.log('listen client error', err.message);
   });
   setInterval(()=> {
-    unitClients.forEach(res => res.write(': keep-alive\n\n'));
-    sectionClients.forEach(res => res.write(': keep-alive\n\n'));
+    if (unitClients) {
+      unitClients.forEach(res => res.write(': keep-alive\n\n'));
+    }
+    if (sectionClients) {
+      sectionClients.forEach(res => res.write(': keep-alive\n\n'));
+    }
+    if (isonlineClients){
+      isonlineClients.forEach(res => res.write(': keep-alive\n\n'));
+    }
   }, 30000);
 })();
 
@@ -1653,6 +1694,6 @@ app.post('/api/copySection', async (req, res) => {
 
 
 
-app.listen(port, () => {
+app.listen(port, '0.0.0.0', () => {
   console.log(`Server running on port ${port}`);
 });
