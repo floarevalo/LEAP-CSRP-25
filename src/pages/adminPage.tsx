@@ -27,16 +27,17 @@ import { FaArrowAltCircleLeft } from "react-icons/fa";
 import axios from 'axios';
 import { Section } from './landingPage';
 import logo from '../images/logo/Tr_FullColor_NoSlogan.png'
-import { 
+import {
   // IconCopy, IconCubeOff, IconCubePlus, 
-  IconDots, 
+  IconDots,
   // IconMessages, IconNote, IconPencil, IconReportAnalytics, 
-  IconTrash 
+  IconTrash
 } from '@tabler/icons-react';
 // import UnitCreationModule from '../components/UnitCreationModule';
 // import UnitDeleteModule from '../components/UnitDeleteModule';
 // import SectionCopyModule from '../components/sectionCopyModule';
 import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
+import RenameConfirmationModal from '../components/RenameConfirmationModal';
 // import { IconCheck, IconX } from '@tabler/icons-react';
 
 
@@ -56,6 +57,8 @@ function AdminPage() {
   // const [sectionToCopy, setSectionToCopy] = useState<string | null>(null);
   // const [sectionDeleteOpen, setSectionDeleteOpen] = useState(false);
   const [opened, { open, close }] = useDisclosure(false);  // Controls delete modal visibility
+  const [renameModalOpened, { open: openRenameModal, close: closeRenameModal }] = useDisclosure(false); //Controls Rename Modal Visibility
+
   const [sections, setSections] = useState<Section[]>([]); // Stores all section records
 
 
@@ -235,6 +238,9 @@ function AdminPage() {
   //   }
   // };  
 
+  const openRenameSectionModal = () => {
+    openRenameModal();
+  };
 
   // Open the delete modal for the selected section
   const openDeleteSectionModal = () => {
@@ -253,6 +259,15 @@ function AdminPage() {
     fetchData();
   };
 
+  const handleRenameSection = (newSectionId: string) => {
+    if (selectedSection) {
+      setSections(prevSections =>
+        prevSections.map(section => section.sectionid === selectedSection ? { ...section, sectionid: newSectionId } : section)
+      );
+    }
+    setSelectedSection(newSectionId); // Optionally update the selected section too
+
+  };
   // const handleRowDoubleClick = (sectionid: string) => {
   //   setUserSection(sectionid);
   //   navigate(`/sectionControls/${sectionid}`);
@@ -337,12 +352,14 @@ function AdminPage() {
                     transitionProps={{ transition: 'pop' }}
                     withArrow
                     position="bottom-end"
-                    withinPortal
+                    withinPortal={false}
                   >
                     <Menu.Target>
-                      <ActionIcon variant="subtle" color="white" style={{ marginRight: '15px' }}>
-                        <IconDots style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
-                      </ActionIcon>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <ActionIcon variant="subtle" color="white" style={{ marginRight: '15px' }}>
+                          <IconDots style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
+                        </ActionIcon>
+                      </div>
                     </Menu.Target>
                     <Menu.Dropdown>
                       {/* <Menu.Item
@@ -351,14 +368,19 @@ function AdminPage() {
                       >
                         Copy Scenerio
                       </Menu.Item> */}
+                      <Menu.Item
+                        color="white"
+                        onClick={() => openRenameSectionModal()}
+                      >Rename Scenario</Menu.Item>
 
                       <Menu.Item
                         leftSection={<IconTrash style={{ width: rem(16), height: rem(16) }} stroke={1.5} />}
                         color="red"
                         onClick={() => openDeleteSectionModal()}
                       >
-                        Delete Scenerio
+                        Delete Scenario
                       </Menu.Item>
+
                     </Menu.Dropdown>
                   </Menu>
                 </Group>
@@ -475,6 +497,16 @@ function AdminPage() {
             onClose={close}
             sectionId={selectedSection}
             onDeleteSuccess={handleDeleteSectionSuccess}
+          />
+        )}
+
+        {selectedSection && (
+          <RenameConfirmationModal
+            open={renameModalOpened}
+            onClose={closeRenameModal}
+            sectionId={selectedSection}
+            onRenameSuccess={handleRenameSection}
+            sections={sections}
           />
         )}
 
