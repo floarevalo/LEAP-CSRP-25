@@ -6,9 +6,10 @@ import { IconCheck, IconX} from '@tabler/icons-react';
 import { useUserRole } from '../context/UserContext';
 import { FaArrowAltCircleLeft } from "react-icons/fa";
 import Hierarchy from '../components/HierarchyBuilder';
-import logo from '../images/logo/Tr_FullColor_NoSlogan.png'
 import axios from 'axios';
 import REACT_APP_BACKEND_URL from '../APIBase';
+const logo = '/images/logo/Tr_FullColor_NoSlogan.png'
+
 // export interface Engagement {
 //   engagementID: string;
 //   sectionID: string;

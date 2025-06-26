@@ -1,74 +1,74 @@
-import airAssaultBLUE from '../images/symbols/air_assault_BLUE.png';
-import airAssaultRED from '../images/symbols/air_assault_RED.png';
+ export const airAssaultBLUE = '/public/images/symbols/air_assault_BLUE.png';
+ export const airAssaultRED = '/images/symbols/air_assault_RED.png';
 
-import airDefenseBLUE from '../images/symbols/air_defense_BLUE.png';
-import airDefenseRED from '../images/symbols/air_defense_RED.png';
+ export const airDefenseBLUE = '/public/images/symbols/air_defense_BLUE.png';
+ export const airDefenseRED = '/public/images/symbols/air_defense_RED.png';
 
-import ammunitionBLUE from '../images/symbols/ammunition_BLUE.png';
-import ammunitionRED from '../images/symbols/ammunition_RED.png';
+ export const ammunitionBLUE = '/public/images/symbols/ammunition_BLUE.png';
+ export const ammunitionRED = '/public/images/symbols/ammunition_RED.png';
 
-import armoredBLUE from '../images/symbols/armored_mechanized_BLUE.png';
-import armoredRED from '../images/symbols/armored_mehanized_RED.png';
+ export const armoredBLUE = '/public/images/symbols/armored_mechanized_BLUE.png';
+ export const armoredRED = '/public/images/symbols/armored_mehanized_RED.png';
 
-import armoredTrackedBLUE from '../images/symbols/armored_mechanized_tracked_BLUE.png';
-import armoredTrackedRED from '../images/symbols/armored_mechanized_tracked_RED.png';
+ export const armoredTrackedBLUE = '/public/images/symbols/armored_mechanized_tracked_BLUE.png';
+ export const armoredTrackedRED = '/public/images/symbols/armored_mechanized_tracked_RED.png';
 
-import combatServiceBLUE from '../images/symbols/combat_service_support_BLUE.png';
-import combatServiceRED from '../images/symbols/combat_service_support_RED.png';
+ export const combatServiceBLUE = '/public/images/symbols/combat_service_support_BLUE.png';
+ export const combatServiceRED = '/public/images/symbols/combat_service_support_RED.png';
 
-import combatSupportBLUE from '../images/symbols/combat_support_BLUE.png';
-import combatSupportRED from '../images/symbols/combat_support_RED.png';
+ export const combatSupportBLUE = '/public/images/symbols/combat_support_BLUE.png';
+ export const combatSupportRED = '/public/images/symbols/combat_support_RED.png';
 
-import combinedArmsBLUE from '../images/symbols/combined_arms_BLUE.png';
-import combinedArmsRED from '../images/symbols/combined_arms_RED.png';
+ export const combinedArmsBLUE = '/public/images/symbols/combined_arms_BLUE.png';
+ export const combinedArmsRED = '/public/images/symbols/combined_arms_RED.png';
 
-import commandControlBLUE from '../images/symbols/command_and_control_BLUE.png';
-import commandControlRED from '../images/symbols/command_and_control_RED.png';
+ export const commandControlBLUE = '/public/images/symbols/command_and_control_BLUE.png';
+ export const commandControlRED = '/public/images/symbols/command_and_control_RED.png';
 
-import electronicWarfareBLUE from '../images/symbols/electronic_warfare_BLUE.png';
-import electronicWarfareRED from '../images/symbols/electronic_warfare_RED.png';
+ export const electronicWarfareBLUE = '/public/images/symbols/electronic_warfare_BLUE.png';
+ export const electronicWarfareRED = '/public/images/symbols/electronic_warfare_RED.png';
 
-import engineerBLUE from '../images/symbols/engineer_BLUE.png';
-import engineerRED from '../images/symbols/engineer_RED.png';
+ export const engineerBLUE = '/public/images/symbols/engineer_BLUE.png';
+ export const engineerRED = '/public/images/symbols/engineer_RED.png';
 
-import fieldArtilleryBLUE from '../images/symbols/field_artillery_BLUE.png';
-import fieldArtilleryRED from '../images/symbols/field_artillery_RED.png';
+ export const fieldArtilleryBLUE = '/public/images/symbols/field_artillery_BLUE.png';
+ export const fieldArtilleryRED = '/public/images/symbols/field_artillery_RED.png';
 
-import infantryBLUE from '../images/symbols/infantry_BLUE.png';
-import infantryRED from '../images/symbols/infantry_RED.png';
+ export const infantryBLUE = '/public/images/symbols/infantry_BLUE.png';
+ export const infantryRED = '/public/images/symbols/infantry_RED.png';
 
-import medicalBLUE from '../images/symbols/medical_treatment_facility_BLUE.png';
-import medicalRED from '../images/symbols/medical_treatment_facility_RED.png';
+ export const medicalBLUE = '/public/images/symbols/medical_treatment_facility_BLUE.png';
+ export const medicalRED = '/public/images/symbols/medical_treatment_facility_RED.png';
 
-import petroleumBLUE from '../images/symbols/petroleum_oil_lubricants_BLUE.png';
-import petroleumRED from '../images/symbols/petroleum_oil_lubricants_RED.png';
+ export const petroleumBLUE = '/public/images/symbols/petroleum_oil_lubricants_BLUE.png';
+ export const petroleumRED = '/public/images/symbols/petroleum_oil_lubricants_RED.png';
 
-import railheadBLUE from '../images/symbols/railhead_BLUE.png';
-import railheadRED from '../images/symbols/railhead_RED.png';
+ export const railheadBLUE = '/public/images/symbols/railhead_BLUE.png';
+ export const railheadRED = '/public/images/symbols/railhead_RED.png';
 
-import reconBLUE from '../images/symbols/recon_BLUE.png';
-import reconRED from '../images/symbols/recon_RED.png';
+ export const reconBLUE = '/public/images/symbols/recon_BLUE.png';
+ export const reconRED = '/public/images/symbols/recon_RED.png';
 
-import rotaryBLUE from '../images/symbols/rotary_wing_BLUE.png';
-import rotaryRED from '../images/symbols/rotary_wing_RED.png';
+ export const rotaryBLUE = '/public/images/symbols/rotary_wing_BLUE.png';
+ export const rotaryRED = '/public/images/symbols/rotary_wing_RED.png';
 
-import seaPortBLUE from '../images/symbols/sea_port_BLUE.png';
-import seaPortRED from '../images/symbols/sea_port_RED.png';
+ export const seaPortBLUE = '/public/images/symbols/sea_port_BLUE.png';
+ export const seaPortRED = '/public/images/symbols/sea_port_RED.png';
 
-import selfPropelledBLUE from '../images/symbols/self_propelled_BLUE.png';
-import selfPropelledRED from '../images/symbols/self_propelled_RED.png';
+ export const selfPropelledBLUE = '/public/images/symbols/self_propelled_BLUE.png';
+ export const selfPropelledRED = '/public/images/symbols/self_propelled_RED.png';
 
-import signalBLUE from '../images/symbols/signal_BLUE.png';
-import signalRED from '../images/symbols/signal_RED.png';
+ export const signalBLUE = '/public/images/symbols/signal_BLUE.png';
+ export const signalRED = '/public/images/symbols/signal_RED.png';
 
-import specialOperationsBLUE from '../images/symbols/special_operations_forces_BLUE.png';
-import specialOperationsRED from '../images/symbols/special_operations_forces_RED.png';
+ export const specialOperationsBLUE = '/public/images/symbols/special_operations_forces_BLUE.png';
+ export const specialOperationsRED = '/public/images/symbols/special_operations_forces_RED.png';
 
-import sustainmentBLUE from '../images/symbols/sustainment_BLUE.png';
-import sustainmentRED from '../images/symbols/sustainment_RED.png';
+ export const sustainmentBLUE = '/public/images/symbols/sustainment_BLUE.png';
+ export const sustainmentRED = '/public/images/symbols/sustainment_RED.png';
 
-import unmannedBLUE from '../images/symbols/unmanned_aerial_systems_BLUE.png';
-import unmannedRED from '../images/symbols/unmanned_aerial_systems_RED.png';
+ export const unmannedBLUE = '/public/images/symbols/unmanned_aerial_systems_BLUE.png';
+ export const unmannedRED = '/public/images/symbols/unmanned_aerial_systems_RED.png';
 
 interface UnitImage {
     blue: string;
@@ -166,7 +166,7 @@ interface Props {
     isFriendly: boolean;
 }
 
-export const getImageSRC = (unitType: string, isFriendly: boolean): string => {
+ export const getImageSRC = (unitType: string, isFriendly: boolean): string => {
     const unitKey = unitTypeToKey(unitType);
 
     // Check if the unitKey is valid
@@ -182,4 +182,4 @@ export const getImageSRC = (unitType: string, isFriendly: boolean): string => {
 };
 
 
-export default getImageSRC;
+ export  default getImageSRC;

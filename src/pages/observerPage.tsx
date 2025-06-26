@@ -24,7 +24,7 @@ import { enemySizeColors, friendlySizeColors, StatsRing } from '../components/St
 import axios from 'axios';
 import { Unit } from '../components/Cards';
 import REACT_APP_BACKEND_URL from '../APIBase';
-const logo = "/Tr_FullColor_NoSlogan.png";
+const logo = "/images/logo/Tr_FullColor_NoSlogan.png";
 
 // Defines the data structure for holding statistics for any group of units.
 export type UnitStats = {

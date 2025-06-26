@@ -26,7 +26,6 @@ import { useUserRole } from '../context/UserContext';
 import { FaArrowAltCircleLeft } from "react-icons/fa";
 import axios from 'axios';
 import { Section } from './landingPage';
-import logo from '../images/logo/Tr_FullColor_NoSlogan.png'
 import {
   // IconCopy, IconCubeOff, IconCubePlus, 
   IconDots,
@@ -40,6 +39,8 @@ import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
 import RenameConfirmationModal from '../components/RenameConfirmationModal';
 // import { IconCheck, IconX } from '@tabler/icons-react';
 import REACT_APP_BACKEND_URL from '../APIBase';
+const logo = '/images/logo/Tr_FullColor_NoSlogan.png'
+
 
 
 function AdminPage() {
