@@ -27,3 +27,7 @@ release-build/MyReactApp-win32-x64/resources/app/LEAP_images.tar
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+
+leap-launcher/leap-browser-profile/**
+nginx-1.27.5/logs/error.log
