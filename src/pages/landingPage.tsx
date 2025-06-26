@@ -9,9 +9,10 @@ import { useForm } from '@mantine/form';
 import classes from './landingPage.module.css';
 import { useUserRole } from '../context/UserContext';
 import { MantineProvider } from '@mantine/core';
-import logo from '../images/logo/Tr_FullColor.png'
 // import { useUnitProvider } from '../context/UnitContext';
 import REACT_APP_BACKEND_URL from '../APIBase';
+
+const logo = '/images/logo/Tr_FullColor.png'
 
 // Sets the dynamic interface of the class section
 export interface Section {

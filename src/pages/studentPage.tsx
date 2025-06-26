@@ -15,7 +15,7 @@ import { FaArrowAltCircleLeft } from "react-icons/fa";
 import { Unit } from '../components/Cards';
 import axios from 'axios';
 import REACT_APP_BACKEND_URL from '../APIBase';
-const logo = "/Tr_FullColor_NoSlogan.png";
+const logo = "/images/logo/Tr_FullColor_NoSlogan.png";
 
 interface UnitStatsProps {
   friendlyCount: number;
@@ -58,7 +58,7 @@ function App() {
   const navigate = useNavigate();
   const { sectionId } = useParams(); // Retrieve sectionId from route parameters
   const { userRole, userSection } = useUserRole();
-  const { selectedUnit } = useUnitProvider();
+  const { selectedUnit, setSelectedUnit } = useUnitProvider();
   const [view, setView] = useState('Unit Selection');
   const [friendlyUnits, setFriendlyUnits] = useState<Unit[]>([]);
   const [enemyUnits, setEnemyUnits] = useState<Unit[]>([]);
@@ -106,6 +106,9 @@ function App() {
     fetchAllUnitData();
   }, [userSection]); // Dependency: re-fetch if the userSection changes
 
+  useEffect(()=>{
+  setSelectedUnit(null);
+}, []);
 //live updates
   useEffect(() => {
     if (!userSection) return;
