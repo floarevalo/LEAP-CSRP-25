@@ -11,10 +11,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useUserRole } from '../context/UserContext';
 import { useUnitProvider } from '../context/UnitContext';
 import { FaArrowAltCircleLeft } from "react-icons/fa";
-import logo from '../images/logo/Tr_FullColor_NoSlogan.png'
+//import logo from "/Tr_FullColor_NoSlogan.png";
 import { Unit } from '../components/Cards';
 import axios from 'axios';
 import REACT_APP_BACKEND_URL from '../APIBase';
+const logo = "/Tr_FullColor_NoSlogan.png";
 
 interface UnitStatsProps {
   friendlyCount: number;
@@ -204,7 +205,7 @@ function App() {
                 fallbackSrc="https://placehold.co/600x400?text=Placeholder"
                 onClick={handleLogoClick}
                 style={{ cursor: 'pointer', scale: '1', padding: '8px' }}
-              />
+              /> 
             </div>
           </div>
         </AppShell.Header>

@@ -28,10 +28,11 @@ import classes from './TableReviews.module.css';
 // Import axios for making HTTP requests to the backend
 import axios from 'axios';
 // Import application logo
-import logo from '../images/logo/Tr_FullColor_NoSlogan.png';
+//import logo from '../images/logo/Tr_FullColor_NoSlogan.png';
 // Import custom hook to get the current user's role
 import { useUserRole } from '../context/UserContext';
 import REACT_APP_BACKEND_URL from '../APIBase';
+const logo = "/Tr_FullColor_NoSlogan.png";
 
 
 // Defines the structure for recent engagement data (not currently used in this component)

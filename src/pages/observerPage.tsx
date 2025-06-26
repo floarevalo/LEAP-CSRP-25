@@ -20,10 +20,11 @@ import { FaArrowAltCircleLeft } from "react-icons/fa";
 import { StatsSegments } from '../components/StatsSegments';
 import { StatsRing } from '../components/StatsRing'; 
 // Import assets and helper tools
-import logo from '../images/logo/Tr_FullColor_NoSlogan.png';
+//import logo from '../images/logo/Tr_FullColor_NoSlogan.png';
 import axios from 'axios';
 import { Unit } from '../components/Cards';
 import REACT_APP_BACKEND_URL from '../APIBase';
+const logo = "/Tr_FullColor_NoSlogan.png";
 
 // Defines the data structure for holding statistics for any group of units.
 type UnitStats = {
