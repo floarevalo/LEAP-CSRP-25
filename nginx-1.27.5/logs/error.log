@@ -269,3 +269,85 @@
 2025/06/26 08:45:13 [notice] 560#6172: signal process started
 2025/06/26 08:45:13 [error] 14700#7196: *181 WSARecv() failed (10054: An existing connection was forcibly closed by the remote host) while reading upstream, client: 127.0.0.1, server: localhost, request: "GET /api/isonlineEvents HTTP/1.1", upstream: "http://127.0.0.1:5000/api/isonlineEvents", host: "localhost", referrer: "http://localhost/"
 2025/06/26 08:45:13 [error] 14700#7196: *179 WSARecv() failed (10054: An existing connection was forcibly closed by the remote host) while reading upstream, client: 127.0.0.1, server: localhost, request: "GET /api/sectionevents HTTP/1.1", upstream: "http://127.0.0.1:5000/api/sectionevents", host: "localhost", referrer: "http://localhost/"
+2025/06/26 09:29:54 [notice] 17248#4292: signal process started
+2025/06/26 09:29:54 [error] 17248#4292: CreateFile() "C:\Users\STEM\Desktop\LEAP-CSRP-25\nginx-1.27.5/logs/nginx.pid" failed (2: The system cannot find the file specified)
+2025/06/26 09:30:02 [error] 12960#1948: *1 connect() failed (10061: No connection could be made because the target machine actively refused it) while connecting to upstream, client: 127.0.0.1, server: localhost, request: "GET /api/sections HTTP/1.1", upstream: "http://[::1]:5000/api/sections", host: "localhost", referrer: "http://localhost/"
+2025/06/26 09:30:02 [error] 12960#1948: *5 connect() failed (10061: No connection could be made because the target machine actively refused it) while connecting to upstream, client: 127.0.0.1, server: localhost, request: "GET /api/isonlineEvents HTTP/1.1", upstream: "http://[::1]:5000/api/isonlineEvents", host: "localhost", referrer: "http://localhost/"
+2025/06/26 09:30:35 [notice] 5136#2656: signal process started
+2025/06/26 09:30:35 [error] 12960#1948: *23 WSARecv() failed (10054: An existing connection was forcibly closed by the remote host) while reading upstream, client: 127.0.0.1, server: localhost, request: "GET /api/isonlineEvents HTTP/1.1", upstream: "http://127.0.0.1:5000/api/isonlineEvents", host: "localhost", referrer: "http://localhost/"
+2025/06/26 09:30:35 [error] 12960#1948: *21 WSARecv() failed (10054: An existing connection was forcibly closed by the remote host) while reading upstream, client: 127.0.0.1, server: localhost, request: "GET /api/sectionevents HTTP/1.1", upstream: "http://127.0.0.1:5000/api/sectionevents", host: "localhost", referrer: "http://localhost/"
+2025/06/26 12:05:20 [notice] 19876#19864: signal process started
+2025/06/26 12:05:20 [error] 19876#19864: CreateFile() "C:\Users\STEM\Desktop\LEAP-CSRP-25\nginx-1.27.5/logs/nginx.pid" failed (2: The system cannot find the file specified)
+2025/06/26 12:05:27 [error] 9432#3160: *1 connect() failed (10061: No connection could be made because the target machine actively refused it) while connecting to upstream, client: 127.0.0.1, server: localhost, request: "GET /api/sections HTTP/1.1", upstream: "http://[::1]:5000/api/sections", host: "localhost", referrer: "http://localhost/"
+2025/06/26 12:05:27 [error] 9432#3160: *5 connect() failed (10061: No connection could be made because the target machine actively refused it) while connecting to upstream, client: 127.0.0.1, server: localhost, request: "GET /api/isonlineEvents HTTP/1.1", upstream: "http://[::1]:5000/api/isonlineEvents", host: "localhost", referrer: "http://localhost/"
+2025/06/26 12:05:41 [error] 9432#3160: *1 connect() failed (10061: No connection could be made because the target machine actively refused it) while connecting to upstream, client: 127.0.0.1, server: localhost, request: "GET /api/events HTTP/1.1", upstream: "http://[::1]:5000/api/events", host: "localhost", referrer: "http://localhost/studentPage/test_again"
+2025/06/26 12:37:04 [notice] 21184#13156: signal process started
+2025/06/26 12:37:10 [error] 14620#6784: *1 connect() failed (10061: No connection could be made because the target machine actively refused it) while connecting to upstream, client: 127.0.0.1, server: localhost, request: "GET /api/sections HTTP/1.1", upstream: "http://[::1]:5000/api/sections", host: "localhost", referrer: "http://localhost/"
+2025/06/26 12:37:11 [error] 14620#6784: *2 connect() failed (10061: No connection could be made because the target machine actively refused it) while connecting to upstream, client: 127.0.0.1, server: localhost, request: "GET /api/isonlineEvents HTTP/1.1", upstream: "http://[::1]:5000/api/isonlineEvents", host: "localhost", referrer: "http://localhost/"
+2025/06/26 12:37:18 [notice] 2576#12868: signal process started
+2025/06/26 12:37:18 [error] 2576#12868: CreateFile() "C:\Users\STEM\Desktop\LEAP-CSRP-25\nginx-1.27.5/logs/nginx.pid" failed (2: The system cannot find the file specified)
+2025/06/26 12:40:10 [notice] 11272#2820: signal process started
+2025/06/26 12:40:10 [error] 11272#2820: CreateFile() "C:\Users\STEM\Desktop\LEAP-CSRP-25\nginx-1.27.5/logs/nginx.pid" failed (2: The system cannot find the file specified)
+2025/06/26 12:40:11 [notice] 11060#2640: signal process started
+2025/06/26 12:40:11 [error] 11060#2640: CreateFile() "C:\Users\STEM\Desktop\LEAP-CSRP-25\nginx-1.27.5/logs/nginx.pid" failed (2: The system cannot find the file specified)
+2025/06/26 12:40:11 [notice] 9292#14380: signal process started
+2025/06/26 12:40:11 [error] 9292#14380: CreateFile() "C:\Users\STEM\Desktop\LEAP-CSRP-25\nginx-1.27.5/logs/nginx.pid" failed (2: The system cannot find the file specified)
+2025/06/26 12:41:08 [notice] 12268#7760: signal process started
+2025/06/26 12:41:08 [error] 12268#7760: CreateFile() "C:\Users\STEM\Desktop\LEAP-CSRP-25\nginx-1.27.5/logs/nginx.pid" failed (2: The system cannot find the file specified)
+2025/06/26 12:41:14 [error] 14620#6784: *10 connect() failed (10061: No connection could be made because the target machine actively refused it) while connecting to upstream, client: 127.0.0.1, server: localhost, request: "GET /api/isonlineEvents HTTP/1.1", upstream: "http://[::1]:5000/api/isonlineEvents", host: "localhost", referrer: "http://localhost/"
+2025/06/26 12:41:17 [notice] 12096#16196: signal process started
+2025/06/26 12:44:00 [notice] 9936#4540: signal process started
+2025/06/26 12:44:00 [error] 9936#4540: CreateFile() "C:\Users\STEM\Desktop\LEAP-CSRP-25\nginx-1.27.5/logs/nginx.pid" failed (2: The system cannot find the file specified)
+2025/06/26 12:44:07 [error] 14620#6784: *19 connect() failed (10061: No connection could be made because the target machine actively refused it) while connecting to upstream, client: 127.0.0.1, server: localhost, request: "GET /api/isonlineEvents HTTP/1.1", upstream: "http://[::1]:5000/api/isonlineEvents", host: "localhost", referrer: "http://localhost/"
+2025/06/26 12:45:23 [notice] 11272#7308: signal process started
+2025/06/26 12:45:23 [error] 11272#7308: OpenEvent("Global\ngx_stop_20008") failed (2: The system cannot find the file specified)
+2025/06/26 12:45:29 [error] 14620#6784: *26 connect() failed (10061: No connection could be made because the target machine actively refused it) while connecting to upstream, client: 127.0.0.1, server: localhost, request: "GET /api/isonlineEvents HTTP/1.1", upstream: "http://[::1]:5000/api/isonlineEvents", host: "localhost", referrer: "http://localhost/"
+2025/06/26 12:45:35 [notice] 5632#10412: signal process started
+2025/06/26 13:07:16 [notice] 4524#13024: signal process started
+2025/06/26 13:07:16 [error] 4524#13024: CreateFile() "C:\Users\STEM\Desktop\LEAP-CSRP-25\nginx-1.27.5/logs/nginx.pid" failed (2: The system cannot find the file specified)
+2025/06/26 13:07:23 [error] 14620#6784: *34 connect() failed (10061: No connection could be made because the target machine actively refused it) while connecting to upstream, client: 127.0.0.1, server: localhost, request: "GET /api/isonlineEvents HTTP/1.1", upstream: "http://[::1]:5000/api/isonlineEvents", host: "localhost", referrer: "http://localhost/"
+2025/06/26 13:07:26 [notice] 16872#21332: signal process started
+2025/06/26 13:12:51 [notice] 11152#2812: signal process started
+2025/06/26 13:12:51 [error] 11152#2812: CreateFile() "C:\Users\STEM\Desktop\LEAP-CSRP-25\nginx-1.27.5/logs/nginx.pid" failed (2: The system cannot find the file specified)
+2025/06/26 13:12:58 [error] 14620#6784: *42 connect() failed (10061: No connection could be made because the target machine actively refused it) while connecting to upstream, client: 127.0.0.1, server: localhost, request: "GET /api/isonlineEvents HTTP/1.1", upstream: "http://[::1]:5000/api/isonlineEvents", host: "localhost", referrer: "http://localhost/"
+2025/06/26 13:13:02 [notice] 11080#21252: signal process started
+2025/06/26 13:42:13 [notice] 17024#8372: signal process started
+2025/06/26 13:42:13 [error] 17024#8372: CreateFile() "C:\Users\STEM\Desktop\LEAP-CSRP-25\nginx-1.27.5/logs/nginx.pid" failed (2: The system cannot find the file specified)
+2025/06/26 13:42:19 [error] 14620#6784: *50 connect() failed (10061: No connection could be made because the target machine actively refused it) while connecting to upstream, client: 127.0.0.1, server: localhost, request: "GET /api/isonlineEvents HTTP/1.1", upstream: "http://[::1]:5000/api/isonlineEvents", host: "localhost", referrer: "http://localhost/"
+2025/06/26 13:42:25 [notice] 1064#2648: signal process started
+2025/06/26 13:43:20 [notice] 6368#8644: signal process started
+2025/06/26 13:43:20 [error] 6368#8644: OpenEvent("Global\ngx_stop_20408") failed (2: The system cannot find the file specified)
+2025/06/26 13:43:26 [error] 14620#6784: *58 connect() failed (10061: No connection could be made because the target machine actively refused it) while connecting to upstream, client: 127.0.0.1, server: localhost, request: "GET /api/isonlineEvents HTTP/1.1", upstream: "http://[::1]:5000/api/isonlineEvents", host: "localhost", referrer: "http://localhost/"
+2025/06/26 13:44:05 [notice] 4932#20764: signal process started
+2025/06/26 13:44:46 [notice] 1064#20356: signal process started
+2025/06/26 13:44:46 [error] 1064#20356: OpenEvent("Global\ngx_stop_4216") failed (2: The system cannot find the file specified)
+2025/06/26 13:44:52 [error] 14620#6784: *66 connect() failed (10061: No connection could be made because the target machine actively refused it) while connecting to upstream, client: 127.0.0.1, server: localhost, request: "GET /api/isonlineEvents HTTP/1.1", upstream: "http://[::1]:5000/api/isonlineEvents", host: "localhost", referrer: "http://localhost/"
+2025/06/26 13:44:59 [notice] 12956#6184: signal process started
+2025/06/26 13:57:44 [notice] 11864#9784: signal process started
+2025/06/26 13:57:44 [error] 11864#9784: OpenEvent("Global\ngx_stop_15660") failed (2: The system cannot find the file specified)
+2025/06/26 13:57:50 [error] 14620#6784: *74 connect() failed (10061: No connection could be made because the target machine actively refused it) while connecting to upstream, client: 127.0.0.1, server: localhost, request: "GET /api/isonlineEvents HTTP/1.1", upstream: "http://[::1]:5000/api/isonlineEvents", host: "localhost", referrer: "http://localhost/"
+2025/06/26 13:58:09 [notice] 20012#20476: signal process started
+2025/06/26 13:58:49 [notice] 8492#20560: signal process started
+2025/06/26 13:58:49 [error] 8492#20560: CreateFile() "C:\Users\STEM\Desktop\LEAP-CSRP-25\nginx-1.27.5/logs/nginx.pid" failed (2: The system cannot find the file specified)
+2025/06/26 13:58:56 [error] 14620#6784: *82 connect() failed (10061: No connection could be made because the target machine actively refused it) while connecting to upstream, client: 127.0.0.1, server: localhost, request: "GET /api/isonlineEvents HTTP/1.1", upstream: "http://[::1]:5000/api/isonlineEvents", host: "localhost", referrer: "http://localhost/"
+2025/06/26 13:58:59 [notice] 8052#16188: signal process started
+2025/06/26 14:06:42 [notice] 20128#1436: signal process started
+2025/06/26 14:06:42 [error] 20128#1436: CreateFile() "C:\Users\STEM\Desktop\LEAP-CSRP-25\nginx-1.27.5/logs/nginx.pid" failed (2: The system cannot find the file specified)
+2025/06/26 14:06:49 [error] 14620#6784: *90 connect() failed (10061: No connection could be made because the target machine actively refused it) while connecting to upstream, client: 127.0.0.1, server: localhost, request: "GET /api/isonlineEvents HTTP/1.1", upstream: "http://[::1]:5000/api/isonlineEvents", host: "localhost", referrer: "http://localhost/"
+2025/06/26 14:06:56 [notice] 20800#4708: signal process started
+2025/06/26 14:11:48 [notice] 2208#19336: signal process started
+2025/06/26 14:11:48 [error] 2208#19336: CreateFile() "C:\Users\STEM\Desktop\LEAP-CSRP-25\nginx-1.27.5/logs/nginx.pid" failed (2: The system cannot find the file specified)
+2025/06/26 14:12:22 [error] 14620#6784: *98 connect() failed (10061: No connection could be made because the target machine actively refused it) while connecting to upstream, client: 127.0.0.1, server: localhost, request: "GET /api/isonlineEvents HTTP/1.1", upstream: "http://[::1]:5000/api/isonlineEvents", host: "localhost", referrer: "http://localhost/"
+2025/06/26 14:12:36 [notice] 19548#19192: signal process started
+2025/06/26 14:12:48 [notice] 21848#21672: signal process started
+2025/06/26 14:12:48 [error] 21848#21672: CreateFile() "C:\Users\STEM\Desktop\LEAP-CSRP-25\nginx-1.27.5/logs/nginx.pid" failed (2: The system cannot find the file specified)
+2025/06/26 14:12:48 [notice] 21624#21632: signal process started
+2025/06/26 14:12:48 [error] 21624#21632: CreateFile() "C:\Users\STEM\Desktop\LEAP-CSRP-25\nginx-1.27.5/logs/nginx.pid" failed (2: The system cannot find the file specified)
+2025/06/26 14:13:58 [notice] 22376#21156: signal process started
+2025/06/26 14:13:58 [error] 22376#21156: CreateFile() "C:\Users\STEM\Desktop\LEAP-CSRP-25\nginx-1.27.5/logs/nginx.pid" failed (2: The system cannot find the file specified)
+2025/06/26 14:14:05 [error] 14620#6784: *120 connect() failed (10061: No connection could be made because the target machine actively refused it) while connecting to upstream, client: 127.0.0.1, server: localhost, request: "GET /api/isonlineEvents HTTP/1.1", upstream: "http://[::1]:5000/api/isonlineEvents", host: "localhost", referrer: "http://localhost/"
+2025/06/26 14:14:20 [notice] 3936#12912: signal process started
+2025/06/26 14:17:58 [notice] 20168#21308: signal process started
+2025/06/26 14:17:58 [error] 20168#21308: OpenEvent("Global\ngx_stop_22404") failed (2: The system cannot find the file specified)
+2025/06/26 14:18:05 [error] 14620#6784: *129 connect() failed (10061: No connection could be made because the target machine actively refused it) while connecting to upstream, client: 127.0.0.1, server: localhost, request: "GET /api/isonlineEvents HTTP/1.1", upstream: "http://[::1]:5000/api/isonlineEvents", host: "localhost", referrer: "http://localhost/"
+2025/06/26 14:18:34 [notice] 6588#5368: signal process started
