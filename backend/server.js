@@ -306,6 +306,27 @@ app.get('/api/tactics/:id', async (req, res) => {
 //   }
 // });
 
+//Called to rename a sectionId with a new sectionId. In the database, there is triggers to update the sectionId across the other table. 
+app.put('/api/sections', async (req, res) => {
+  const{sectionIdToBeRenamed, newSectionId} = req.body;
+
+    if (!sectionIdToBeRenamed || !newSectionId) {
+    return res.status(400).json({ error: 'Missing sectionIdToBeRenamed or newSectionId' });
+  }
+  try {
+    const result = await pool.query('UPDATE sections SET sectionid = $1 where sectionid = $2', [newSectionId, sectionIdToBeRenamed]);
+    
+  if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'Section not found' });
+    }
+        res.status(200).json({ message: 'Section renamed successfully' });
+  }catch (err) {
+    console.error('Error updating section:', err);
+    res.status(500).json({ error: 'Failed to rename section' });
+  }
+
+});
+
 app.get('/api/units/sectionSort', async (req, res) => {
   const sectionid = req.query.sectionid;
   try {
@@ -354,21 +375,21 @@ app.get('/api/units', async (req, res) => {
   }
 });
 
-//A helper function to delette all units associated with sectionID
-async function deleteUnitsBySection(sectionId) {
-  try {
-    const result = await pool.query(
-      'DELETE FROM units WHERE section_id = $1',
-      [sectionId]
-    );
-    return result;
-    console.log(`Units for section ${sectionId} deleted.`);
-  } catch (err) {
-    console.error(`Error deleting units for section ${sectionId}:`, err);
-    throw err; // rethrow so the main handler can catch it
-  };
+// //A helper function to delette all units associated with sectionID
+// async function deleteUnitsBySection(sectionId) {
+//   try {
+//     const result = await pool.query(
+//       'DELETE FROM units WHERE section_id = $1',
+//       [sectionId]
+//     );
+//     return result;
+//     console.log(`Units for section ${sectionId} deleted.`);
+//   } catch (err) {
+//     console.error(`Error deleting units for section ${sectionId}:`, err);
+//     throw err; // rethrow so the main handler can catch it
+//   };
 
-}
+// }
 
 //Delete section name and all its units
 app.delete('/api/sections/:sectionId', async (req, res) => {
@@ -376,8 +397,8 @@ app.delete('/api/sections/:sectionId', async (req, res) => {
 
   try {
     // Step 1: Delete all units
-    const resultUnits = await deleteUnitsBySection(sectionId);
-    console.log(`[DEBUG] deleteUnitsBySection → rowCount = ${resultUnits.rowCount}`);
+    // const resultUnits = await deleteUnitsBySection(sectionId);
+    // console.log(`[DEBUG] deleteUnitsBySection → rowCount = ${resultUnits.rowCount}`);
 
     // Step 2: Delete the section
     const result = await pool.query(
@@ -390,7 +411,7 @@ app.delete('/api/sections/:sectionId', async (req, res) => {
     }
 
     console.log(`Section ${sectionId} deleted.`);
-    res.status(200).json({ message: 'Section and its units deleted successfully.' });
+    res.status(200).json({ message: `Section ${sectionId} is deleted succesfully.` });
 
   } catch (error) {
     console.error('Error deleting section and/or units:', error);

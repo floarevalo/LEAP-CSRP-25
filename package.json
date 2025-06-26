@@ -81,6 +81,7 @@
     "postcss": "^8.4.38",
     "postcss-preset-mantine": "^1.15.0",
     "postcss-simple-vars": "^7.0.1",
+    "tsx": "^4.20.3",
     "wait-on": "^8.0.0"
   }
 }

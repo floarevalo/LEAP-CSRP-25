@@ -3,7 +3,7 @@
  * engagement statistics and a detailed breakdown of active units by type.
  */
 
-import '../App.css'; 
+import '../App.css';
 // Import necessary UI components from the Mantine library
 import { AppShell, Image, Button, MantineProvider, SimpleGrid, Container, Text, Group, ThemeIcon, Box } from '@mantine/core';
 // Import hooks from React and Mantine for state management and side effects
@@ -18,7 +18,7 @@ import { useUserRole } from '../context/UserContext';
 import { FaArrowAltCircleLeft } from "react-icons/fa";
 // Import custom, reusable components for displaying stats
 import { StatsSegments } from '../components/StatsSegments';
-import { StatsRing } from '../components/StatsRing'; 
+import { enemySizeColors, friendlySizeColors, StatsRing } from '../components/StatsRing';
 // Import assets and helper tools
 //import logo from '../images/logo/Tr_FullColor_NoSlogan.png';
 import axios from 'axios';
@@ -27,13 +27,19 @@ import REACT_APP_BACKEND_URL from '../APIBase';
 const logo = "/Tr_FullColor_NoSlogan.png";
 
 // Defines the data structure for holding statistics for any group of units.
-type UnitStats = {
+export type UnitStats = {
   friendlyCount: number;
   enemyCount: number;
   friendlyKilled: number;
   enemyKilled: number;
 };
 
+// type unitStatsBySize = {
+//   Squad: number;
+//   Company: number;
+//   Battalion: number;
+//   Brigade: number;
+// };
 // The main functional component for the Observer Page.
 function ObserverPage() {
   // Hooks for managing UI state, navigation, and URL parameters
@@ -48,6 +54,7 @@ function ObserverPage() {
   const [totalStats, setTotalStats] = useState<UnitStats>({ friendlyCount: 0, enemyCount: 0, friendlyKilled: 0, enemyKilled: 0 });
   // State to hold an object where keys are unit types (e.g., 'infantry') and values are their corresponding stats.
   const [statsByType, setStatsByType] = useState<Record<string, UnitStats>>({});
+  const [unitStatsBySize, setUnitStatsBySize] = useState<Record<string, Record<string, UnitStats>>>({});
   // State to manage the countdown timer
   const [countdown, setCountdown] = useState(10);
 
@@ -70,7 +77,8 @@ function ObserverPage() {
     const killedEnemies = enemyList.length - activeEnemies;
     return { friendlyCount: activeFriendlies, enemyCount: activeEnemies, friendlyKilled: killedFriendlies, enemyKilled: killedEnemies };
   };
-  
+
+
   // Wraped the data fetching logic in useCallback to prevent it from being redefined on every render.
   // This allows it to be used safely inside other useEffect hooks.
   const fetchUnitData = useCallback(async () => {
@@ -84,34 +92,54 @@ function ObserverPage() {
       const allFriendlies = friendlyRes.data;
       const allEnemies = enemyRes.data;
 
-      const unitTypesToProcess = [
-          { key: 'infantry', names: ['Infantry', 'Combined Arms'] },
-          { key: 'armor', names: ['Armor Company'] },
-          { key: 'specOps', names: ['Special Operations Forces', 'Special Operations Forces - EZO'] },
-          { key: 'artillery', names: ['Field Artillery'] },
-      ];
-      
-      const newStats: Record<string, UnitStats> = {};
 
+      const unitTypesToProcess = [
+        { key: 'infantry', names: ['Infantry', 'Combined Arms'] },
+        { key: 'armor', names: ['Armor Company'] },
+        { key: 'specOps', names: ['Special Operations Forces', 'Special Operations Forces - EZO'] },
+        { key: 'artillery', names: ['Field Artillery'] },
+        { key: 'logistics', names: ['Combat Support'] },
+      ];
+
+      const unitSizes = ['Squad/Team', 'Company/Battery', 'Battalion', 'Brigade/Regiment'];
+
+      // --- Collect stats by type and by size ---
+      const newStats: Record<string, UnitStats> = {};
+      const newStatsBySize: Record<string, Record<string, UnitStats>> = {};
+
+      // Loop over each defined unit type (e.g., infantry, armor, etc.)
       for (const typeInfo of unitTypesToProcess) {
+
+        // Filter  units that match any of the names for this unit type
         const friendliesOfType = allFriendlies.filter(u => typeInfo.names.includes(u.unit_type));
         const enemiesOfType = allEnemies.filter(u => typeInfo.names.includes(u.unit_type));
-        newStats[typeInfo.key] = getStatsFromLists(friendliesOfType, enemiesOfType);
-      }
 
-      const definedTypes = unitTypesToProcess.flatMap(t => t.names);
-      const logisticsFriendlies = allFriendlies.filter(u => !definedTypes.includes(u.unit_type));
-      const logisticsEnemies = allEnemies.filter(u => !definedTypes.includes(u.unit_type));
-      newStats['logistics'] = getStatsFromLists(logisticsFriendlies, logisticsEnemies);
+        // Loop over each unit size (e.g., Squad/Team, Battalion)
+        newStatsBySize[typeInfo.key] = {};
+        for (const size of unitSizes) {
+
+          // Further filter units to just those matching this size
+          const friendliesOfTypeAndSize = friendliesOfType.filter(friendlyOfType => friendlyOfType.unit_size === size);
+          const enemiesOfTypeAndSize = enemiesOfType.filter(enemyOfType => enemyOfType.unit_size === size);
+
+          // Store the stats for this unit type + size (e.g., infantry → Squad/Team)
+          newStatsBySize[typeInfo.key][size] = getStatsFromLists(friendliesOfTypeAndSize, enemiesOfTypeAndSize);
+
+        }
+        // Store the total stats for this unit type (across all sizes)
+        newStats[typeInfo.key] = getStatsFromLists(friendliesOfType, enemiesOfType);
+
+      }
 
       setTotalStats(getStatsFromLists(allFriendlies, allEnemies));
       setStatsByType(newStats);
+      setUnitStatsBySize(newStatsBySize);
 
     } catch (error) {
       console.error("Error fetching unit data:", error);
     }
   }, [sectionId, userSection]); // Dependencies for useCallback
-  
+
   // This effect runs the initial data fetch when the component mounts.
   useEffect(() => {
     fetchUnitData();
@@ -142,6 +170,7 @@ function ObserverPage() {
   const handleArrowClick = () => navigate('/');
   const handleAARClick = () => navigate(`/AAR/${sectionId}`);
 
+
   // --- RENDERED COMPONENT (JSX) ---
   return (
     <MantineProvider defaultColorScheme='dark'>
@@ -166,90 +195,112 @@ function ObserverPage() {
           {/* Use a Group with justify="space-between" to position update and AAR button on opposite ends */}
           <Group justify="space-between">
             <Text c="dimmed">Updating data in {countdown} seconds</Text>
-            <Button 
-              size='sm' 
-              variant='link' 
-              onClick={handleAARClick} 
+            <Button
+              size='sm'
+              variant='link'
+              onClick={handleAARClick}
               style={{ margin: '10px ' }}>
-                After Action Reports
+              After Action Reports
             </Button>
           </Group>
-          
+
           {/* Observing section label */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
               {sectionId && (<p>You are observing: <strong>{sectionId}</strong></p>)}
             </div>
           </div>
-          
+
           {/* Main page stats */}
           <Container my="md" fluid>
-            
+
             {/* Render the main statistics card for overall engagement numbers. */}
             <Container size="67%" p={0} style={{ marginBottom: 'var(--mantine-spacing-xl)' }}>
               <StatsSegments {...totalStats} />
             </Container>
-            
+
             <Box>
-              
+
               {/* Title */}
-              <Text fz={35} fw={700} style={{ marginBottom: 'var(--mantine-spacing-md)' }}> 
+              <Text fz={35} fw={700} style={{ marginBottom: 'var(--mantine-spacing-md)' }}>
                 Active Units by Type
               </Text>
-              
+
               {/* Render a grid of StatsRing components, one for each unit type, passing the calculated stats. */}
               <SimpleGrid
                 cols={{ base: 1, sm: 2, md: 3, lg: 5 }}
                 spacing="md"
               >
-                <StatsRing 
-                  title="Infantry" 
-                  icon="infantry" 
-                  friendlyCount={statsByType.infantry?.friendlyCount ?? 0} 
-                  enemyCount={statsByType.infantry?.enemyCount ?? 0} 
+                <StatsRing
+                  title="Infantry"
+                  icon="infantry"
+                  friendlyCount={statsByType.infantry?.friendlyCount ?? 0}
+                  enemyCount={statsByType.infantry?.enemyCount ?? 0}
+                  statsBySize={unitStatsBySize['infantry'] ?? {}} // 🛠 fallback to empty object
                 />
-                <StatsRing 
-                  title="Armor Company" 
-                  icon="armor" 
-                  friendlyCount={statsByType.armor?.friendlyCount ?? 0} 
-                  enemyCount={statsByType.armor?.enemyCount ?? 0} 
+                <StatsRing
+                  title="Armor Company"
+                  icon="armor"
+                  friendlyCount={statsByType.armor?.friendlyCount ?? 0}
+                  enemyCount={statsByType.armor?.enemyCount ?? 0}
+                  statsBySize={unitStatsBySize['armor'] ?? {}}
                 />
-                <StatsRing 
-                  title="Special Forces" 
-                  icon="specOps" 
-                  friendlyCount={statsByType.specOps?.friendlyCount ?? 0} 
-                  enemyCount={statsByType.specOps?.enemyCount ?? 0} 
+                <StatsRing
+                  title="Special Forces"
+                  icon="specOps"
+                  friendlyCount={statsByType.specOps?.friendlyCount ?? 0}
+                  enemyCount={statsByType.specOps?.enemyCount ?? 0}
+                  statsBySize={unitStatsBySize['specOps'] ?? {}}
+
                 />
-                <StatsRing 
-                  title="Artillery" 
-                  icon="artillery" 
-                  friendlyCount={statsByType.artillery?.friendlyCount ?? 0} 
-                  enemyCount={statsByType.artillery?.enemyCount ?? 0} 
+                <StatsRing
+                  title="Artillery"
+                  icon="artillery"
+                  friendlyCount={statsByType.artillery?.friendlyCount ?? 0}
+                  enemyCount={statsByType.artillery?.enemyCount ?? 0}
+                  statsBySize={unitStatsBySize['artillery'] ?? {}}
+
                 />
-                <StatsRing 
-                title="Logistics" 
-                icon="logistics" 
-                friendlyCount={statsByType.logistics?.friendlyCount ?? 0} 
-                enemyCount={statsByType.logistics?.enemyCount ?? 0}
+                <StatsRing
+                  title="Logistics"
+                  icon="logistics"
+                  friendlyCount={statsByType.logistics?.friendlyCount ?? 0}
+                  enemyCount={statsByType.logistics?.enemyCount ?? 0}
+                  statsBySize={unitStatsBySize['logistics'] ?? {}}
+
                 />
               </SimpleGrid>
-            
-              {/* Render the legend for the ring charts at the bottom. */}
-              <Group justify="center" mb="lg" style={{ marginTop: 'var(--mantine-spacing-lg)' }}>
-                {/* friendly units */}
-                <Group gap="xs" align="center">
-                    <ThemeIcon color="#3d85c6" size="md" radius="xl"/>
-                    <Text size="md">
-                      Active Friendly Units
-                    </Text>
-                </Group>
-                {/* enemy units */}
-                <Group gap="xs" align="center">
-                  <ThemeIcon color="#c1432d" size="md" radius="xl" />
-                  <Text size="md">
-                    Active Enemy Units
+
+              <Group justify="center" mt="xl" gap="5rem">
+                {/* Friendly Ring Legend */}
+                <Box>
+                  <Text size="xl" fw={700} ta="center" mb="sm" c="blue.4">
+                    Friendly Ring
                   </Text>
-                </Group>
+                  <Box>
+                    {Object.entries(friendlySizeColors).map(([label, color]) => (
+                      <Group key={label} gap="xs" align="center" mb={4}>
+                        <Box w={14} h={14} bg={color} style={{ borderRadius: '50%' }} />
+                        <Text size="md" c="gray.2">{label}</Text>
+                      </Group>
+                    ))}
+                  </Box>
+                </Box>
+
+                {/* Enemy Ring Legend */}
+                <Box>
+                  <Text size="xl" fw={700} ta="center" mb="sm" c="red.4">
+                    Enemy Ring
+                  </Text>
+                  <Box>
+                    {Object.entries(enemySizeColors).map(([label, color]) => (
+                      <Group key={label} gap="xs" align="center" mb={4}>
+                        <Box w={14} h={14} bg={color} style={{ borderRadius: '50%' }} />
+                        <Text size="md" c="gray.2">{label}</Text>
+                      </Group>
+                    ))}
+                  </Box>
+                </Box>
               </Group>
 
             </Box> {/* End box statement for rings section of page */}

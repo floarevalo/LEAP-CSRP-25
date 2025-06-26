@@ -32,7 +32,7 @@ function UnitStats({ friendlyCount, enemyCount }: UnitStatsProps) {
   return (
     <Card withBorder radius="md" padding="xl" bg="var(--mantine-color-body)" my="xl">
       <Text fz="xs" tt="uppercase" fw={700} c="dimmed">
-        Units Compared
+        Active Units
       </Text>
       
       {/* Friendly Units Progress */}
@@ -246,7 +246,7 @@ function App() {
           {/* This renders the new stats component after loading is done */}
           {!isLoading && (
             <UnitStats
-              friendlyCount={friendlyUnits.length}
+              friendlyCount={friendlyUnits.filter(unit => unit.unit_health > 0).length}
               enemyCount={enemyUnits.length}
             />
           )}

@@ -47,7 +47,8 @@ function BattlePage() {
   const closeLocation = '/studentPage/' + userSection; // A way to navigate back to the correct section of the student page
   const { selectedUnit, setSelectedUnit } = useUnitProvider(); // Tracks the selected unit for an engagement
   const [baseValue, setBaseValue] = useState<number>(0); // State to track the base value (based on characteristics of each individual unit) of a unit
-  const [realTimeScore, setRealTimeScore] = useState<number | null>(null); // State to track the real time (tactics) score of a unit
+  const [TacticsScore, setTacticsScore] = useState<number | null>(null); // State to track the real time (tactics) score of a FRIENDLY unit
+  const [enemyTacticsScore, setEnemyTacticsScore] = useState<number | null>(null); // State to track the real time (tactics) score of an ENEMY unit
   const [units, setUnits] = useState<Unit[]>([]);
   const [progress, setProgress] = useState(0); // Used to calculate the progress of the animation for the finalize tactics button
   const [loaded, setLoaded] = useState(false); // creates variable to wait for after conflict calculations to be done
@@ -64,6 +65,9 @@ function BattlePage() {
   const [enemyBaseValue, setEnemyBaseValue] = useState<number>(0); // Sets and gets the state for the enemy base value 
   const [enemyWithinWEZ, setEnemeyWithinWEZ] = useState<Unit[]>([]); //array of strings that tracks enemies within the WEZ
   const [isLoadingUnits, setisLoadingUnits] = useState(true); //creates variable to check that data for units has loaded before the engagement can start
+  const [firstAttackFriendly, setFirstAttackFriendly] = useState<Boolean>(false);
+  const [friendlyAccuracyLevel, setFriendlyAccuracyLevel] = useState<string>("Low");
+  const [enemyAccuracyLevel, setEnemyAccuracyLevel] = useState<string>("Low");
 
   // Fetches data of the units(friendly units) based on class section
   useEffect(() => {
@@ -158,7 +162,7 @@ function BattlePage() {
 
 
   //initializes the characteristics of each friendly unit
-  const unit = units.find((u) => u.unit_id === selectedUnit);
+  const unit: Unit | undefined = units.find((u) => u.unit_id === selectedUnit);
   const {
     unit_type,
     unit_health,
@@ -281,7 +285,7 @@ function BattlePage() {
 
       // Set initial friendlyHealth based on unit_health
       if (!inEngagement) {
-        console.log('FriendlyHealth set to ' + unit.unit_health);
+        console.log('Inital FriendlyHealth set to ' + unit.unit_health);
         setFriendlyHealth(unit.unit_health ?? 0);
       }
 
@@ -326,13 +330,430 @@ function BattlePage() {
   const [enemyquestion7, setEnemyQuestion7] = useState('Yes')
 
   // This function handles the engagement tactics form submission
-  const finalizeTactics = async () => {
+  const finalizeTactics = async () => { 
+
+    // If 'unit' or 'enemyUnit' is not defined, log an error and exit the function.
+    if (!unit || !enemyUnit) {
+      console.error("Cannot finalize tactics: Friendly or enemy unit is missing.");
+      return; // Exit the function early
+    }
+    
+    // Convert question answers from strings to numbers
+    const tacticsData = {
+      FriendlyCoverage: question1 === "Yes" ? 1 : 0,
+      EnemyCoverage: enemyquestion1 === "Yes" ? 1 : 0,
+      FriendlyLogistics: question2 === "Yes" ? 1 : 0,
+      EnemyLogistics: enemyquestion2 === "Yes" ? 1 : 0,
+      FriendlyCritical: question3 === "Yes" ? 1 : 0,
+      EnemyCritical: enemyquestion3 === "Yes" ? 1 : 0,
+      FriendlyGPS: question4 === "Yes" ? 1 : 0,
+      EnemyGPS: enemyquestion4 === "Yes" ? 1 : 0,
+      FriendlyComms: question5 === "Yes" ? 1 : 0,
+      EnemyComms: enemyquestion5 === "Yes" ? 1 : 0,
+      FriendlyCAS: question6 === "Yes" ? 1 : 0,
+      EnemyCAS: enemyquestion6 === "Yes" ? 1 : 0,
+      FriendlyAccess: question7 === "Yes" ? 1 : 0,
+      EnemyAccess: enemyquestion7 === "Yes" ? 1 : 0,
+    };
+
+    // ------------------- DETECTION PHASE ------------------------------------------------------------------------------------------
+    // This phase defines the probability of detection and if friendly gets to attack first or not 
+
+    const unitDetectionBeamWidth: Record<string, number> = { // Corresponds to "w" variable in LEAP_parameters_v3.xlsx
+      "Infantry": 12,
+      "Combined Arms": 15,
+      "Armor Company": 17,
+      "Field Artillery": 18,
+      "Special Operations Forces": 5, "Special Operations Forces - EZO": 5,
+      "Combat Support": 17,
+      // These unit types not currently implemented into current MDL scenario
+      "Reconnaissance": 12,
+      "Command and Control": 0, // No value provided in the sheet, assuming 0
+      "Armored Mechanized": 17,
+      "Armored Mechanized Tracked": 17,
+      "Self-propelled": 18,
+      "Electronic Warfare": 20,
+      "Signal": 20,
+      "Ammunition": 10,
+      "Air Defense": 30,
+      "Engineer": 17,
+      "Air Assault": 15,
+      "Medical Treatment Facility": 12,
+      "Aviation Rotary Wing": 15,
+      "Sustainment": 17,
+      "Unmanned Aerial Systems": 3,
+      "Combat Service Support": 10,
+      "Petroleum, Oil and Lubricants": 10,
+      "Sea Port": 20,
+      "Railhead": 20
+    };
+    const unitSphereOfInflu: Record<string, number> = { //// Corresponds to "A" variable in LEAP_parameters_v3.xlsx
+      "Infantry": 45,
+      "Combined Arms": 50,
+      "Armor Company": 25,
+      "Field Artillery": 15,
+      "Special Operations Forces": 80, "Special Operations Forces - EZO": 80,
+      "Combat Support": 20,
+      // These unit types not currently implemented into current MDL scenario
+      "Reconnaissance": 30,
+      "Command and Control": 0, // No value provided, assuming 0
+      "Armored Mechanized": 25,
+      "Armored Mechanized Tracked": 20,
+      "Self-propelled": 22,
+      "Electronic Warfare": 10,
+      "Signal": 40,
+      "Ammunition": 10,
+      "Air Defense": 10,
+      "Engineer": 20,
+      "Air Assault": 50,
+      "Medical Treatment Facility": 15,
+      "Aviation Rotary Wing": 50,
+      "Sustainment": 20,
+      "Unmanned Aerial Systems": 10,
+      "Combat Service Support": 10,
+      "Petroleum, Oil and Lubricants": 15,
+      "Sea Port": 10,
+      "Railhead": 10
+    };
+
+    let friendlyBeamWidth = unitDetectionBeamWidth[unit.unit_type] || 0;         // Defaults to 0 if type not listed above
+    let friendlySphOfInflu = unitSphereOfInflu[unit.unit_type] || 0;             // Defaults to 0 if type not listed above
+    console.log("friendlyBeamWidth = ", friendlyBeamWidth)
+    console.log("friendlySphOfInflu = ", friendlySphOfInflu)
+
+    // Adjust FRIENDLY "w" and "A" if role is headquarters or facility or if mobility is fixed 
+    if (unit.unit_role === "Headquarters") {
+      friendlyBeamWidth *= 1.25     // Increase "w" by 25%
+      friendlySphOfInflu *= 0.50   // Decrease "A" by 50%
+      console.log("FRIENDLY w and A changed due to unit being 'Headquarters'")
+      console.log("friendlyBeamWidth = ", friendlyBeamWidth, "friendlySphOfInflu = ", friendlySphOfInflu)
+    }
+    else if (unit.unit_role === "Facility") {
+      friendlyBeamWidth *= 1.30     // Increase "w" by 30%
+      friendlySphOfInflu *= 0.75   // Decrease "A" by 25%
+      console.log("FRIENDLY w and A changed due to unit being 'Facility'")
+      console.log("friendlyBeamWidth = ", friendlyBeamWidth, "friendlySphOfInflu = ", friendlySphOfInflu)
+    }
+    if (unit.unit_mobility === "Fixed") {
+      friendlySphOfInflu = 5          // Set "A" to 5
+      console.log("FRIENDLY A changed due to unit being 'Facility'")
+      console.log("friendlySphOfInflu = ", friendlySphOfInflu)
+    }
+
+    // initialize "t"
+    let tFriendly = 1
+    // exceptions to inital t value for certain unit types that need to be initialized to 0
+    if (unit.unit_type === "Medical Treatment Facility" || unit.unit_type === "Petroleum, Oil and Lubricants" || unit.unit_type === "Sea Port" ){
+      tFriendly = 0
+    }
+    
+    // unit readiness affects on "t"
+    if (unit.unit_readiness == "Low") {
+      tFriendly *= 0.50 // Decrease "t" by 50%
+      console.log("tFriendly changed due to low unit readiness")
+      console.log("tFriendly = ", tFriendly)
+    }
+    else if (unit.unit_readiness == "Medium") {
+      tFriendly *= 0.85 // Decrease "t" by 15%
+      console.log("tFriendly changed due to medium unit readiness")
+      console.log("tFriendly = ", tFriendly)
+    }
+
+    // Only coverage and comms answers affect "t" 
+    if (tacticsData.FriendlyCoverage === 1) { 
+      tFriendly *= 1.25 // Increase "t" by 25%
+      console.log("tFriendly changed due to FriendlyCoverage answered yes")
+      console.log("tFriendly = ", tFriendly)
+    }
+    else {
+      tFriendly *= 0.75 // Decrease "t" by 25%
+      console.log("tFriendly changed due to FriendlyCoverage answered no")
+      console.log("tFriendly = ", tFriendly)
+    }
+    if (tacticsData.FriendlyComms === 1) {
+      tFriendly *= 1.25 // Increase "t" by 15%
+      console.log("tFriendly changed due to FriendlyComms answered yes")
+      console.log("tFriendly = ", tFriendly)
+    }
+    else {
+      tFriendly *= 0.75 // Decrease "t" by 25%
+      console.log("tFriendly changed due to FriendlyComms answered no")
+      console.log("tFriendly = ", tFriendly)
+    }
+
+    // Detection phase equation: P = 1 - e^(-(w*t)/(A))
+    const friendlyDetectProb = (friendlySphOfInflu > 0)       // ensure not dividing by 0
+      ? 1 - Math.exp(-(friendlyBeamWidth * tFriendly) / friendlySphOfInflu)
+      : 0;
+    console.log("friendlyDetectProb calculated: ", friendlyDetectProb)
+
+
+
+    let enemyBeamWidth = unitDetectionBeamWidth[enemyUnit.unit_type] || 0;       // Defaults to 0 if type not listed above
+    let enemySphOfInflu = unitSphereOfInflu[enemyUnit.unit_type] || 0;           // Defaults to 0 if type not listed above
+    console.log("enemyBeamWidth = ", enemyBeamWidth)
+    console.log("enemySphOfInflu = ", enemySphOfInflu)
+
+    // Adjust ENEMY "w" and "A" if role is headquarters or facility or if mobility is fixed 
+    if (enemyUnit.unit_role === "Headquarters") {
+      enemyBeamWidth *= 1.25     // Increase "w" by 25%
+      enemySphOfInflu *= 0.50   // Decrease "A" by 50%
+      console.log("ENEMY w and A changed due to unit being 'Headquarters'")
+      console.log("enemyBeamWidth = ", enemyBeamWidth, "enemySphOfInflu = ", enemySphOfInflu)
+    }
+    else if (enemyUnit.unit_role === "Facility") {
+      enemyBeamWidth *= 1.30     // Increase "w" by 30%
+      enemySphOfInflu *= 0.75   // Decrease "A" by 25%
+      console.log("ENEMY w and A changed due to unit being 'Facility'")
+      console.log("enemyBeamWidth = ", enemyBeamWidth, "enemySphOfInflu = ", enemySphOfInflu)
+    }
+    if (enemyUnit.unit_mobility === "Fixed") {
+      enemySphOfInflu = 5          // Set "A" to 5
+      console.log("ENEMY A changed due to unit being 'Fixed'")
+      console.log("enemySphOfInflu = ", enemySphOfInflu)
+    }
+
+    // initialize "t"
+    let tEnemy = 1
+    // exceptions to inital t value for certain unit types that need to be initialized to 0
+    if (enemyUnit.unit_type === "Medical Treatment Facility" || unit.unit_type === "Petroleum, Oil and Lubricants" || unit.unit_type === "Sea Port" ){
+      tEnemy = 0
+    }
+    
+    // unit readiness affects on "t"
+    if (enemyUnit.unit_readiness == "Low") {
+      tEnemy *= 0.50 // Decrease "t" by 50%
+      console.log("tEnemy changed due to low unit readiness")
+      console.log("tEnemy = ", tEnemy)
+    }
+    else if (enemyUnit.unit_readiness == "Medium") {
+      tEnemy *= 0.85 // Decrease "t" by 15%
+      console.log("tEnemy changed due to medium unit readiness")
+      console.log("tEnemy = ", tEnemy)
+    }
+
+    // Only coverage and comms answers affect "t" 
+    if (tacticsData.EnemyCoverage === 1) { 
+      tEnemy *= 1.25 // Increase "t" by 25%
+      console.log("tEnemy changed due to EnemyCoverage answered yes")
+      console.log("tEnemy = ", tEnemy)
+    }
+    else {
+      tEnemy *= 0.75 // Decrease "t" by 25%
+      console.log("tEnemy changed due to EnemyCoverage answered no")
+      console.log("tEnemy = ", tEnemy)
+    }
+    if (tacticsData.EnemyComms === 1) {
+      tEnemy *= 1.25 // Increase "t" by 15%
+      console.log("tEnemy changed due to EnemyComms answered yes")
+      console.log("tEnemy = ", tEnemy)
+    }
+    else {
+      tEnemy *= 0.75 // Decrease "t" by 25%
+      console.log("tEnemy changed due to EnemyComms answered no")
+      console.log("tEnemy = ", tEnemy)
+    }
+
+    // Detection phase equation: P = 1 - e^(-(w*t)/(A))
+    const enemyDetectProb = (enemySphOfInflu > 0)             // ensure not dividing by 0
+      ? 1 - Math.exp(-(enemyBeamWidth * tEnemy) / enemySphOfInflu)
+      : 0;
+    console.log("enemyDetectProb calculated: ", enemyDetectProb)
+
+    if (friendlyDetectProb > enemyDetectProb) {
+      setFirstAttackFriendly(true);
+      console.log("Friendly attacks first")
+    }
+    else {
+      // Includes the case where probabilities are equal, granting the defender the ambush
+      setFirstAttackFriendly(false);
+      console.log("Enemy attacks first")
+    }
+
+
+
+
+    
+    // --------------- TARGET ENGAGEMENT PHASE --------------------------------------------------------------------------------------
+    // Propbability player hit the target 
+    // NOTE: "v" is being used in place of "u" for the target engagement phase equation calculations
+    //       "rho" is being used in place of "σ" for the target engagement phase equation calculations
+
+    // Defines the "v" values (unit specific attributes) given by Lt Col Rayl
+    const vValue: Record<string, number> = {
+      "Infantry": 1,
+      "Combined Arms": 1,
+      "Armor Company": 2,
+      "Field Artillery": 2,
+      "Special Operations Forces": 1,
+      "Special Operations Forces - EZO": 1,
+      "Combat Support": 1,
+      // These unit types not currently implemented into current MDL scenario
+      "Reconnaissance": 1,
+      "Command and Control": 0,
+      "Armored Mechanized": 2,
+      "Armored Mechanized Tracked": 2,
+      "Self-propelled": 2,
+      "Electronic Warfare": 0,
+      "Signal": 0,
+      "Ammunition": 0,
+      "Air Defense": 1,
+      "Engineer": 1,
+      "Air Assault": 1,
+      "Medical Treatment Facility": 0,
+      "Aviation Rotary Wing": 1,
+      "Sustainment": 1,
+      "Unmanned Aerial Systems": 1,
+      "Combat Service Support": 0,
+      "Petroleum, Oil and Lubricants": 0,
+      "Sea Port": 0,
+      "Railhead": 0
+    };
+
+    // Defines the "rho" values (Circular error probability of the attackers weapon) given by Lt Col Rayl
+    const unitAccuracyError: Record<string, number> = {
+        "Infantry": 8,
+        "Combined Arms": 5,
+        "Armor Company": 10,
+        "Field Artillery": 6,
+        "Special Operations Forces": 4, "Special Operations Forces - EZO": 4, 
+        "Combat Support": 15,
+        // These unit types not currently implemented into current MDL scenario
+        "Reconnaissance": 18,
+        "Command and Control": 0,
+        "Armored Mechanized": 10,
+        "Armored Mechanized Tracked": 6,
+        "Self-propelled": 6,
+        "Electronic Warfare": 0,
+        "Signal": 0,
+        "Ammunition": 0,
+        "Air Defense": 5,
+        "Engineer": 15,
+        "Air Assault": 5,
+        "Medical Treatment Facility": 0,
+        "Aviation Rotary Wing": 0,
+        "Sustainment": 15,
+        "Unmanned Aerial Systems": 4,
+        "Combat Service Support": 0,
+        "Petroleum, Oil and Lubricants": 0,
+        "Sea Port": 0,
+        "Railhead": 0
+    };
+
+    let vFriendly = vValue[unit.unit_type] || 0;                 // Defaults to 0 if type not listed above
+    let rhoFriendly = unitAccuracyError[unit.unit_type] || 0;    // Defaults to 0 if type not listed above
+    console.log("vFriendly = ", vFriendly)
+    console.log("rhoFriendly = ", rhoFriendly)
+
+    // unit readiness affects on "rho"
+    if (unit.unit_readiness == "Low") {
+      rhoFriendly *= 0.50 // Decrease "rho" by 50%
+      console.log("rhoFriendly changed due to low unit readiness")
+      console.log("rhoFriendly = ", rhoFriendly)
+    }
+    else if (unit.unit_readiness == "Medium") {
+      rhoFriendly *= 0.85 // Decrease "rho" by 15%
+      console.log("rhoFriendly changed due to medium unit readiness")
+      console.log("rhoFriendly = ", rhoFriendly)
+    }
+
+    // Only close air support (CAS) and GPA answers affect "rho" 
+    if (tacticsData.FriendlyCAS === 1) { 
+      rhoFriendly *= 1.10 // Increase "rho" by 10%
+      console.log("rhoFriendly changed due to FriendlyCAS answered yes")
+      console.log("rhoFriendly = ", rhoFriendly)
+    }
+    if (tacticsData.FriendlyGPS === 1) {
+      rhoFriendly *= 0.70 // Decrease "t" by 30%
+      console.log("rhoFriendly changed due to FriendlyGPS answered yes")
+      console.log("rhoFriendly = ", rhoFriendly)
+    }
+
+    // Target engagement phase equation: P_h = 1 - e^(-(u^2)/(2*σ^2))
+    const friendlyAccuracyPercent = (rhoFriendly > 0)  // ensure not dividing by 0 or neg
+      ? 1 - Math.exp(-(vFriendly**2) / (2*(rhoFriendly)**2))
+      : 0; // equates to zero if rho is 0 or neg 
+    console.log("friendlyAccuracyPercent calculated:", friendlyAccuracyPercent)
+
+    // Sorts percentage values into 3 levels
+    if (friendlyAccuracyPercent >= 0 && friendlyAccuracyPercent < 0.3333) {
+      setFriendlyAccuracyLevel("Low")
+      console.log("friendlyAccuracyLevel = ", friendlyAccuracyLevel)
+    }
+    else if (friendlyAccuracyPercent >= 0.3333 && friendlyAccuracyPercent < 0.6667) {
+      setFriendlyAccuracyLevel("Medium")
+      console.log("friendlyAccuracyLevel = ", friendlyAccuracyLevel)
+    }
+    else if (friendlyAccuracyPercent >= 0.6667 && friendlyAccuracyPercent < 1.001) {
+      setFriendlyAccuracyLevel("High")
+      console.log("friendlyAccuracyLevel = ", friendlyAccuracyLevel)
+    }
+    else {
+      console.log("Accuracy percent not valid.")
+    } 
+      
+
+
+    let vEnemy = vValue[enemyUnit.unit_type] || 0;                    // Defaults to 0 if type not listed above
+    let rhoEnemy = unitAccuracyError[enemyUnit.unit_type] || 0;       // Defaults to 0 if type not listed above
+    console.log("vEnemy = ", vEnemy)
+    console.log("rhoEnemy = ", rhoEnemy)
+
+    // unit readiness affects on "rho"
+    if (enemyUnit.unit_readiness == "Low") {
+      rhoEnemy *= 0.50 // Decrease "rho" by 50%
+      console.log("rhoEnemy changed due to low unit readiness")
+      console.log("rhoEnemy = ", rhoEnemy)
+    }
+    else if (enemyUnit.unit_readiness == "Medium") {
+      rhoEnemy *= 0.85 // Decrease "rho" by 15%
+      console.log("rhoEnemy changed due to medium unit readiness")
+      console.log("rhoEnemy = ", rhoEnemy)
+    }
+
+    // Only close air support (CAS) and GPA answers affect "rho" 
+    if (tacticsData.EnemyCAS === 1) { 
+      rhoEnemy *= 1.10 // Increase "rho" by 10%
+      console.log("rhoEnemy changed due to EnemyCAS answered yes")
+      console.log("rhoEnemy = ", rhoEnemy)
+    }
+    if (tacticsData.EnemyGPS === 1) {
+      rhoEnemy *= 0.70 // Decrease "t" by 30%
+      console.log("rhoEnemy changed due to EnemyGPS answered yes")
+      console.log("rhoEnemy = ", rhoEnemy)
+    }
+
+    // Target engagement phase equation: P_h = 1 - e^(-(u^2)/(2*σ^2))
+    const enemyAccuracyPercent = (rhoEnemy > 0)  // ensure not dividing by 0 or neg
+      ? 1 - Math.exp(-(vEnemy**2) / (2*(rhoEnemy)**2))
+      : 0;  // equates to zero if rho is 0 or neg 
+    console.log("enemyAccuracyPercent calculated:", enemyAccuracyPercent)
+
+    // Sorts percentage values into 3 levels
+    if (enemyAccuracyPercent >= 0 && enemyAccuracyPercent < 0.3333){
+      setEnemyAccuracyLevel("Low")
+      console.log("enemyAccuracyLevel = ", enemyAccuracyLevel)
+    }
+    else if (enemyAccuracyPercent >= 0.3333 && enemyAccuracyPercent < 0.6667) {
+      setEnemyAccuracyLevel("Medium")
+      console.log("enemyAccuracyLevel = ", enemyAccuracyLevel)
+    }
+    else if (enemyAccuracyPercent >= 0.6667 && enemyAccuracyPercent < 1.001) {
+      setEnemyAccuracyLevel("High")
+      console.log("enemyAccuracyLevel = ", enemyAccuracyLevel)
+    }
+    else {
+      console.log("Accuracy percent not valid.")
+    }
+
+    // --------------- DAMAGE ASSESSMENT PHASE --------------------------------------------------------------------------------------
+    // This phase defines the damage inflicted, applied to the max damage a unit can inflict 
 
     // Dummy data for enemyscore
-    const enemyTotalScore = ((enemyBaseValue * .70) + (Number(realTimeScore) * .30));
+    const enemyTotalScore = ((enemyBaseValue * .70) + (Number(enemyTacticsScore) * .30));
 
     // Calculates the total friendly score which is 70% of the base value plue 30% of the tactics value
-    const friendlyTotalScore = ((baseValue * .70) + (Number(realTimeScore) * .30));
+    const friendlyTotalScore = ((baseValue * .70) + (Number(TacticsScore) * .30));
 
     // Checks whether the friendly unit won the engagement or not
     const isWin = friendlyTotalScore > enemyTotalScore;
@@ -340,8 +761,14 @@ function BattlePage() {
     // 'r' generates a random number 
     let r = Math.floor(Math.random() * (5 - 0 + 1)) + 0;
     let r_enemy = Math.floor(Math.random() * (5 - 0 + 1)) + 0;
-    console.log("!! Friendly: ", r);
-    console.log("enemy r: ", r_enemy);
+    if (tacticsData.FriendlyCritical === 1) {
+      r = r * 1.25
+    }
+    if (tacticsData.EnemyCritical === 1) {
+      r_enemy = r_enemy * 1.25
+    }
+    console.log("Friendly rand num (r): ", r);
+    console.log("Enemy rand num (r_enemy): ", r_enemy);
 
     // Initializes 'b' to zero. 'b' is the variable for the range of weapons given for each unit type
     let b = 0;
@@ -380,6 +807,11 @@ function BattlePage() {
       b = 0;
     }
 
+    // Access answers affect b
+    if (tacticsData.FriendlyAccess === 1) {
+      b *= 0.75 // Decrease b by 25%
+    }
+
     // These are based on values given by Lt. Col. Rayl
     if (enemyUnit?.unit_type === 'Armored Mechanized' || enemyUnit?.unit_type === 'Armored Mechanized Tracked' || enemyUnit?.unit_type === 'Field Artillery') {
       b_enemy = 10;
@@ -410,12 +842,18 @@ function BattlePage() {
       b_enemy = 0;
     }
 
+    // Access answers affect b
+    if (tacticsData.EnemyAccess === 1) {
+      b_enemy *= 0.75 // Decrease b by 25%
+    }
+
     // Calculates the damage previously done to the friendly unit
     let prevFriendlyDamage
     if (b_enemy > 0) {
-      prevFriendlyDamage = Math.exp(-((r ** 2) / (2 * ((b_enemy * (calculateEnemyRealTimeScore() / 100)) ** 2))));
-      console.log("!!!!! ", calculateRealTimeScore())
-      console.log("!!!!! ", calculateEnemyRealTimeScore())
+      // Friendly damage assessment phase calculations ------------------------------------------------------------------------------
+      prevFriendlyDamage = Math.exp(-((r ** 2) / (2 * ((b_enemy * (calculateEnemyTacticsScore() / 100)) ** 2))));
+      console.log("Friendly tactics score (calculateTacticsScore): ", calculateTacticsScore())
+      console.log("Enemy tactics score (calculateEnemyTacticsScore): ", calculateEnemyTacticsScore())
     }
     else {
       prevFriendlyDamage = 0;
@@ -424,6 +862,7 @@ function BattlePage() {
     // Calculates the maximum damage that the friendly striking unit can inflict in a particular engagement
     let maxFriendlyDamage = .5 * Number(enemyUnit?.unit_health);
 
+    // Friendly example damage assessment -------------------------------------------------------------------------------------------
     let friendlyDamage = maxFriendlyDamage * prevFriendlyDamage;
     console.log("First friendly damage: ", friendlyDamage)
     console.log("Friendly Health: ", Number(friendlyHealth))
@@ -436,6 +875,7 @@ function BattlePage() {
     // Calculates the overall damage to the friendly unit
     setTotalFriendlyDamage(friendlyDamage);
 
+    // Friendly attrition calculation: Fn = Fi - D ----------------------------------------------------------------------------------
     // Subtracts the total damage from the previous friendly health in order to set a new health for the friendly unit
     setFriendlyHealth(Math.round((Number(friendlyHealth)) - friendlyDamage));
 
@@ -445,13 +885,15 @@ function BattlePage() {
     let prevEnemyDamage = 0;
     // Calculates the damage previously done to the enemy unit
     if (b > 0) {
-      prevEnemyDamage = Math.exp(-((r_enemy ** 2) / (2 * ((b * (calculateRealTimeScore() / 100)) ** 2))));
+      // Enemy damage assessment phase calculations ---------------------------------------------------------------------------------
+      prevEnemyDamage = Math.exp(-((r_enemy ** 2) / (2 * ((b * (calculateTacticsScore() / 100)) ** 2))));
     }
     else {
       prevEnemyDamage = 0;
     }
 
     // Make sure enemy health is never negative
+    // Enemy example damage assessment ----------------------------------------------------------------------------------------------
     let enemyDamage = maxEnemyDamage * prevEnemyDamage;
     console.log("First enemy damage: ", enemyDamage)
     console.log("Enemy Health: ", enemyHealth)
@@ -463,16 +905,19 @@ function BattlePage() {
     // // Calculates the overall damage to the enemy unit and sets it to the totalEnemyDamage variable
     setTotalEnemyDamage(enemyDamage);
 
+    // Enemy attrition calculation: Fn = Fi - D -------------------------------------------------------------------------------------
     // Subtracts the total damage from the previous enemy health in order to set a new health for the enemy unit
     setEnemyHealth(Math.round((Number(enemyHealth)) - enemyDamage));
 
     // Calls the function that calculates the score for each unit and sets the score as finalized
-    const score = calculateRealTimeScore();
-    setRealTimeScore(score);
+    const friendlyScore = calculateTacticsScore();
+    setTacticsScore(friendlyScore);
+    const enemyScore = calculateEnemyTacticsScore();
+    setEnemyTacticsScore(enemyScore);
 
     setRound(round + 1); // Updates the round as the scores are finalized
 
-    console.log(unit_id);
+    console.log("FriendlyID: ", unit_id);
 
     // Prepare data for engagement and tactics
     const engagementData = {
@@ -481,28 +926,11 @@ function BattlePage() {
       EnemyID: enemyUnit?.unit_id,
       FriendlyBaseScore: baseValue,
       EnemyBaseScore: enemyBaseValue,
-      FriendlyTacticsScore: realTimeScore,
-      EnemyTacticsScore: realTimeScore,
+      FriendlyTacticsScore: TacticsScore,
+      EnemyTacticsScore: enemyTacticsScore,
       FriendlyTotalScore: friendlyTotalScore,
       EnemyTotalScore: enemyTotalScore,
       isWin: isWin,
-    };
-
-    const tacticsData = {
-      FriendlyAwareness: question1 === "Yes" ? 1 : 0,
-      EnemyAwareness: enemyquestion1 === "Yes" ? 1 : 0,
-      FriendlyLogistics: question2 === "Yes" ? 1 : 0,
-      EnemyLogistics: enemyquestion2 === "Yes" ? 1 : 0,
-      FriendlyCoverage: question3 === "Yes" ? 1 : 0,
-      EnemyCoverage: enemyquestion3 === "Yes" ? 1 : 0,
-      FriendlyGPS: question4 === "Yes" ? 1 : 0,
-      EnemyGPS: enemyquestion4 === "Yes" ? 1 : 0,
-      FriendlyComms: question5 === "Yes" ? 1 : 0,
-      EnemyComms: enemyquestion5 === "Yes" ? 1 : 0,
-      FriendlyFire: question6 === "Yes" ? 1 : 0,
-      EnemyFire: enemyquestion6 === "Yes" ? 1 : 0,
-      FriendlyPattern: question7 === "Yes" ? 1 : 0,
-      EnemyPattern: enemyquestion7 === "Yes" ? 1 : 0,
     };
 
     // Submit answers to backend
@@ -544,7 +972,7 @@ function BattlePage() {
     }
 
     // Save health
-    console.log("Saving health: ", Math.round(friendlyHealth - friendlyDamage), " ", Math.round(enemyHealth - enemyDamage))
+    console.log("Saving health (friendly, enemy): ", Math.round(friendlyHealth - friendlyDamage), " ", Math.round(enemyHealth - enemyDamage))
     updateUnitHealth(Number(unit_id), Math.round(friendlyHealth - friendlyDamage));
     updateUnitHealth(Number(enemyUnit?.unit_id), Math.round(enemyHealth - enemyDamage));
 
@@ -583,7 +1011,7 @@ function BattlePage() {
   type WeightKeys = 'awareOfPresence' | 'logisticsSupportRange' | 'isrCoverage' | 'gpsWorking' | 'communicationsWorking' | 'fireSupportRange' | 'patternForceRange';
 
   // Calculates the score based on different tactics for each engagement
-  const calculateRealTimeScore = () => {
+  const calculateTacticsScore = () => {
     let score = 0;
 
     // Variable Conditions and corresponding weights
@@ -610,7 +1038,7 @@ function BattlePage() {
   };
 
   // Calculates the score based on different tactics for each engagement
-  const calculateEnemyRealTimeScore = () => {
+  const calculateEnemyTacticsScore = () => {
     let score = 0;
 
       const weights: Record<WeightKeys, { yes: number; no: number }> = {
@@ -804,6 +1232,7 @@ function BattlePage() {
 
   //check to see if the enemy with a specific enemy id is in the FriendlyForce WEZ
   const checkWEZ = async (enemyID: number): Promise<boolean> => {
+    if(!selectedUnit) return false;
     try {
       // Send a GET request to the backend API endpoint /api/withinWEZ
       // Pass enemyID and friendlyID as query parameters
@@ -1123,6 +1552,7 @@ function BattlePage() {
                   }
                   finalizeTactics();
                   console.log("total friendly damage: ", totalFriendlyDamage);
+                  console.log("total enemy damage: ", totalEnemyDamage);
                 }}
                 color={theme.primaryColor}
                 disabled={progress !== 0} // Disable the button during loading
@@ -1346,9 +1776,9 @@ function BattlePage() {
 
                             <Progress.Section
                               className={classes.progressSection}
-                              value={calculateRealTimeScore()}
+                              value={calculateTacticsScore()}
                               color='#3d85c6'>
-                              {calculateRealTimeScore()}
+                              {calculateTacticsScore()}
                             </Progress.Section>
 
                           </Progress.Root>
@@ -1365,9 +1795,9 @@ function BattlePage() {
 
                             <Progress.Section
                               className={classes.progressSection}
-                              value={calculateEnemyRealTimeScore()}
+                              value={calculateEnemyTacticsScore()}
                               color='#c1432d'>
-                              {calculateEnemyRealTimeScore()}
+                              {calculateEnemyTacticsScore()}
                             </Progress.Section>
 
                           </Progress.Root>
@@ -1389,9 +1819,9 @@ function BattlePage() {
                         >
                           <Progress.Section
                             className={classes.progressSection}
-                            value={Math.round((baseValue * .70) + (Number(realTimeScore) * .30))}
+                            value={Math.round((baseValue * .70) + (Number(TacticsScore) * .30))}
                             color="#4e87c1">
-                            {Math.round((baseValue * .70) + (Number(realTimeScore) * .30))}
+                            {Math.round((baseValue * .70) + (Number(TacticsScore) * .30))}
                           </Progress.Section>
                         </Tooltip>
                       </Progress.Root> */}
@@ -1405,9 +1835,9 @@ function BattlePage() {
                         >
                           <Progress.Section
                             className={classes.progressSection}
-                            value={Math.round((enemyBaseValue * .70) + (Number(realTimeScore) * .30))}
+                            value={Math.round((enemyBaseValue * .70) + (Number(TacticsScore) * .30))}
                             color="#bd3058">
-                            {Math.round((enemyBaseValue * .70) + (Number(realTimeScore) * .30))}
+                            {Math.round((enemyBaseValue * .70) + (Number(TacticsScore) * .30))}
                           </Progress.Section>
                         </Tooltip>
                       </Progress.Root>
