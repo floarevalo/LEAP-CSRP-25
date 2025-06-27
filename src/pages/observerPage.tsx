@@ -220,8 +220,8 @@ function ObserverPage() {
             <Box>
 
               {/* Title */}
-              <Text fz={35} fw={700} style={{ marginBottom: 'var(--mantine-spacing-md)' }}>
-                Active Units by Type
+              <Text fz={35} fw={700} style={{ marginBottom: 'var(--mantine-spacing-md)', textAlign: 'center' }}>
+                Active Units by Type/Size
               </Text>
 
               {/* Render a grid of StatsRing components, one for each unit type, passing the calculated stats. */}
