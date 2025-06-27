@@ -29,9 +29,7 @@ yarn-debug.log*
 yarn-error.log*
 
 leap-launcher/node_modules/
-nginx*
-leap-launcher/package.json
-leap-launcher/package-lock.json
+
 
 
 
