@@ -28,6 +28,12 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+leap-launcher/node_modules/
+nginx*
+leap-launcher/package.json
+leap-launcher/package-lock.json
+
+
 
 leap-launcher/leap-browser-profile/**
 nginx-1.27.5/logs/error.log
