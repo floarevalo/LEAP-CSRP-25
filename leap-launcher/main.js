@@ -127,9 +127,10 @@ How to fix:
           console.log('[INFO] React build completed successfully');
 
           console.log('[INFO] Starting backend...');
-          backendProcess = exec('node server.js', {
-            cwd: path.join(leapPath, 'backend'),
-          });
+          exec(`start "" cmd /k "cd ${leapPath}/backend && node server.js"`); //this is for development and debugging so that the backend printouts show
+          //backendProcess = exec('node server.js', {
+            //cwd: path.join(leapPath, 'backend'),
+          //});
 
 
           // Add small delay to let backend initialize
