@@ -31,3 +31,5 @@ yarn-error.log*
 
 leap-launcher/leap-browser-profile/**
 nginx-1.27.5/logs/error.log
+nginx-1.27.5/logs/access.log
+nginx-1.27.5/logs/nginx.pid
