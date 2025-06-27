@@ -6,6 +6,7 @@ const fs = require('fs');
 const leapPath = path.join(__dirname, '..');
 const indexPath = path.join(__dirname, 'index.html');
 const nginxPath = path.join(leapPath, 'nginx-1.27.5');
+const appDataPath = path.join(app.getPath('userData'), 'first-run-flag.txt');
 
 let backendProcess = null;
 let listenerProcess = null;
@@ -32,6 +33,23 @@ function createWindow() {
   });
 
   //win.webContents.openDevTools(); //debugging window for development
+  if(!fs.existsSync(appDataPath)) {
+    dialog.showMessageBoxSync({
+      type: 'info',
+      title: 'Port 80 set up for LEAP',
+      message: `To ensure LEAP can run on other computers:
+1. Open Windows Firewall Defender
+2. Click Advanced settings
+3. In Left pane click inbound rules
+4. On the right click "New Rule"
+5. Select "Port" -> Newt -> TCP _> Specific local ports: 80 -> Next
+6. Allow connection -> Next -> Private (if all computers running LEAP are on the same private network) -> name it LEAP permissions -> Finish
+
+You may need to stop services on port 80 to do this, but unlikely
+This message only shows once.`
+    });
+    fs.writeFileSync(appDataPath, 'shown');
+  }
 
   ipcMain.on('start-app', () => {
     console.log('[INFO] Checking PostgreSQL...');
