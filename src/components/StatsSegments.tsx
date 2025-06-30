@@ -110,7 +110,7 @@ export function StatsSegments({ friendlyCount, enemyCount, friendlyKilled, enemy
 
       {/* Renders the friendly progress bar using the segments created above. */}
       <Text c="dimmed" fz="lg" mt="lg">
-        Friendly Force Composition
+        % Friendly Force Active
       </Text>
       <Progress.Root size={50} mt='md'>
         {friendlySegments}
@@ -118,7 +118,7 @@ export function StatsSegments({ friendlyCount, enemyCount, friendlyKilled, enemy
 
       {/* Renders the enemy progress bar using the segments created above. */}
       <Text c="dimmed" fz="lg" mt="lg">
-        Enemy Force Composition
+        % Enemy Force Active
       </Text>
       <Progress.Root size={50} mt="md">
         {enemySegments}

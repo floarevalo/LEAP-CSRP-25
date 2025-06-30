@@ -178,6 +178,37 @@ export function StatsRing({ title, friendlyCount, enemyCount, icon, statsBySize 
           </Tooltip>
           <Text size="sm" c="dimmed">ENEMY</Text>
         </Box>
+
+        {/* TOTAL COUNT WITH TOOLTIP */}
+        <Box ta="center">
+          <Tooltip
+            label={
+              <Box>
+                {totalUnits && totalUnits > 0 ? (
+                  <Text> Total </Text>
+                ) : (
+                  <Text fz={16} fw={600} >
+                    No Units Detected
+                  </Text>
+                )}
+              </Box>
+            }
+            withArrow
+            multiline
+            styles={{
+              tooltip: {
+                backgroundColor: '#7f7f7f',
+                color: 'white',
+                fontSize: '20px',
+              },
+            }}
+          >
+            <Text c="white" fz={26} fw={700} style={{ cursor: 'pointer' }}>
+              {totalUnits}
+            </Text>
+          </Tooltip>
+          <Text size="sm" c="dimmed">TOTAL</Text>
+        </Box>
       </Group>
 
 

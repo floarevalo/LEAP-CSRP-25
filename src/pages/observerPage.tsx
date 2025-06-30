@@ -145,7 +145,7 @@ function ObserverPage() {
     fetchUnitData();
   }, [fetchUnitData]);
 
-  // Effect to manage the 15-second countdown timer.
+  // Effect to manage the 10-second countdown timer.
   useEffect(() => {
     // Create an interval that runs every 1000 milliseconds (1 second).
     const interval = setInterval(() => {
