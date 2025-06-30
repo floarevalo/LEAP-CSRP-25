@@ -1,23 +1,16 @@
 {
   "name": "leap-launcher",
   "version": "1.0.0",
+  "description": "A launcher and process manager for the LEAP application.",
   "main": "main.js",
+  "author": "Your Name",
+  "license": "ISC",
   "scripts": {
     "start": "electron .",
-    "pack": "electron-builder --dir",
-    "dist": "electron-builder"
+    "package-win": "electron-packager . \"LEAP Launcher\" --platform=win32 --arch=x64 --out=dist --overwrite --icon=Icon.ico"
   },
   "devDependencies": {
-    "electron": "^30.5.1",
-    "electron-builder": "^24.0.0"
-  },
-  "build": {
-    "appId": "com.leap.launcher",
-    "win": {
-      "target": "nsis"
-    },
-    "files": [
-      "**/*"
-    ]
+    "electron": "^30.0.2",
+    "electron-packager": "^17.1.2"
   }
 }

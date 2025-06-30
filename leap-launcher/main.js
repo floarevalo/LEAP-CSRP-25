@@ -3,7 +3,11 @@ const path = require('path');
 const { exec, spawn } = require('child_process');
 const fs = require('fs');
 
-const leapPath = path.join(__dirname, '..');
+const leapPath = app.isPackaged
+  ? path.dirname(process.execPath) // When packaged, base path is where the .exe is.
+  : path.join(__dirname, '..');    // In development, it's one level up from /leap-launcher.
+console.log(leapPath)
+
 const indexPath = path.join(__dirname, 'index.html');
 const nginxPath = path.join(leapPath, 'nginx-1.27.5');
 const appDataPath = path.join(app.getPath('userData'), 'first-run-flag.txt');
@@ -117,12 +121,12 @@ How to fix:
         }
         console.log('Node.js found');
 
-        console.log('[INFO] Building React app...');
-        exec('npm run build', { cwd: leapPath }, (err, stdout, stderr) => {
-          if (err) {
-            console.error('[ERROR] React build failed');
-            console.error(stderr);
-          }
+        //console.log('[INFO] Building React app...');
+        //exec('npm run build', { cwd: leapPath }, (err, stdout, stderr) => {
+          //if (err) {
+            //console.error('[ERROR] React build failed');
+            //console.error(stderr);
+          //}
 
           console.log('[INFO] React build completed successfully');
 
@@ -184,7 +188,7 @@ How to fix:
               }, 4000); // Delay to let nginx fully serve the app
             });
           }, 3000); // Delay to give backend time to be ready
-        });
+        //});
       });
     });
   });
