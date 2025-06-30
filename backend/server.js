@@ -507,7 +507,7 @@ app.post('/api/engagements', async (req, res) => {
   }
 });
 
-// Endpoint to make record tactics
+// Endpoint to make record tactics and info for tactics feedback
 app.post('/api/tactics', async (req, res) => {
   console.log("Attempting to store tactics record in tactics");
   

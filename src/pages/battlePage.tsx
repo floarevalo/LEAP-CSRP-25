@@ -1,5 +1,7 @@
-/** BattlePage.tsx takes in a unit from the studentPage.tsx and conducts an engagement with an enemy unit that a cadet selects
-The engagement continues until either the friendly or enemy unit dies and the information is logged in the After Action Reviews Page **/
+/** BattlePage.tsx takes in a unit from the studentPage.tsx and conducts an engagement with an enemy unit that a cadet selects. 
+ * Enemy unit selection drop down populates with enemy units in the selected unit's WEZ. Calculates detection ability probability, 
+ * accuracy percentage, and damage while providing feedback at the end of each round. 
+ * The engagement continues until either the friendly or enemy unit dies and the information is logged in the After Action Reviews Page **/
 
 import React, { useEffect, useState } from 'react';
 import '@mantine/core/styles.css';
@@ -901,27 +903,24 @@ function BattlePage() {
     else if (unit_type === 'Air Defense') {
       b = 50;
     }
-    else if (unit_type === 'Infantry') {
+    else if (unit_type === 'Infantry' || unit_type === 'Combined Arms') {
       b = 10; //needs to be 10
     }
     else if (unit_type === 'Reconnaissance' || unit_type === 'Unmanned Aerial Systems') {
       b = 5;
     }
-    else if (unit_type === 'Combined Arms') {
-      b = 30;
-    }
-    else if (unit_type === 'Self-propelled' || unit_type === 'Electronic Warfare' || unit_type === 'Air Assault' || unit_type === 'Aviation Rotary Wing') {
+    else if (unit_type === 'Self-propelled' || unit_type === 'Electronic Warfare' || unit_type === 'Air Assault' || unit_type === 'Aviation Rotary Wing' || unit_type === 'Combat Support') {
       b = 15;
     }
     else if (unit_type === 'Signal' || unit_type === 'Special Operations Forces') {
       b = 10;
-
     } // add multiple special forces types some are b=10 and some are b=15 add MEU and MLR
     else if (unit_type === 'Special Operations Forces - EZO') {
       b = 15;
     }
     else {
       b = 0;
+      console.log("Friendly unit type not recognized, WEZ set to 0")
     }
 
     // Access answers affect b
@@ -947,17 +946,18 @@ function BattlePage() {
     else if (enemyUnit?.unit_type === 'Reconnaissance' || enemyUnit?.unit_type === 'Unmanned Aerial Systems') {
       b_enemy = 10;
     }
-    else if (enemyUnit?.unit_type === 'Combined Arms') {
-      b_enemy = 10;
-    }
-    else if (enemyUnit?.unit_type === 'Self-propelled' || enemyUnit?.unit_type === 'Electronic Warfare' || enemyUnit?.unit_type === 'Air Assault' || unit_type === 'Aviation Rotary Wing') {
+    else if (enemyUnit?.unit_type === 'Self-propelled' || enemyUnit?.unit_type === 'Electronic Warfare' || enemyUnit?.unit_type === 'Air Assault' || enemyUnit?.unit_type === 'Aviation Rotary Wing' || enemyUnit?.unit_type === 'Combat Support') {
       b_enemy = 10;
     }
     else if (enemyUnit?.unit_type === 'Signal' || enemyUnit?.unit_type === 'Special Operations Forces') {
       b_enemy = 10;
+    } // add multiple special forces types some are b=10 and some are b=15 add MEU and MLR
+    else if (enemyUnit?.unit_type === 'Special Operations Forces - EZO') {
+      b = 15;
     }
     else {
       b_enemy = 0;
+      console.log("Enemy unit type not recognized, WEZ set to 0")
     }
 
     // Access answers affect b
@@ -972,14 +972,15 @@ function BattlePage() {
 
     // Calculates the damage previously done to the friendly unit
     let prevFriendlyDamage
-    if (b > 0 && calculateTacticsScore() > 0) {
+    if (b > 0 && calculateEnemyTacticsScore() > 0) {
       // Friendly damage assessment phase calculations ------------------------------------------------------------------------------
       prevFriendlyDamage = Math.exp(-((r ** 2) / (2 * ((b_enemy * (calculateEnemyTacticsScore() / 100)) ** 2))));
-      console.log("Friendly tactics score (calculateTacticsScore): ", calculateTacticsScore())
       console.log("Enemy tactics score (calculateEnemyTacticsScore): ", calculateEnemyTacticsScore())
     }
     else {
-      prevFriendlyDamage = 1;
+      prevFriendlyDamage = 0;
+      console.log("calculateEnemyTacticsScore = 0")
+      console.log("Enemy tactics score (calculateEnemyTacticsScore): ", calculateEnemyTacticsScore())
     }
 
     // Calculates the maximum damage that the friendly striking unit can inflict in a particular engagement
@@ -998,6 +999,7 @@ function BattlePage() {
     // Calculates the overall damage to the friendly unit
     setTotalFriendlyDamage(friendlyDamage);
     currentTacticsData.friendlyDamage = totalFriendlyDamage;
+    console.log("total friendly damage: ", totalFriendlyDamage);
 
     // Friendly attrition calculation: Fn = Fi - D ----------------------------------------------------------------------------------
     // Subtracts the total damage from the previous friendly health in order to set a new health for the friendly unit
@@ -1011,9 +1013,12 @@ function BattlePage() {
     if (b > 0 && calculateTacticsScore() > 0) {
       // Enemy damage assessment phase calculations ---------------------------------------------------------------------------------
       prevEnemyDamage = Math.exp(-((r_enemy ** 2) / (2 * ((b * (calculateTacticsScore() / 100)) ** 2))));
+      console.log("Friendly tactics score (calculateTacticsScore): ", calculateTacticsScore())
     }
     else {
-      prevEnemyDamage = 1;
+      prevEnemyDamage = 0;
+      console.log("calculateTacticsScore = 0")
+      console.log("Friendly tactics score (calculateTacticsScore): ", calculateTacticsScore())
     }
 
     // Make sure enemy health is never negative
@@ -1029,6 +1034,7 @@ function BattlePage() {
     // // Calculates the overall damage to the enemy unit and sets it to the totalEnemyDamage variable
     setTotalEnemyDamage(enemyDamage);
     currentTacticsData.enemyDamage = totalEnemyDamage;
+    console.log("total enemy damage: ", totalEnemyDamage);
 
     // Enemy attrition calculation: Fn = Fi - D -------------------------------------------------------------------------------------
     // Subtracts the total damage from the previous enemy health in order to set a new health for the enemy unit
@@ -1696,8 +1702,6 @@ function BattlePage() {
                     interval.start();
                   }
                   finalizeTactics();
-                  console.log("total friendly damage: ", totalFriendlyDamage);
-                  console.log("total enemy damage: ", totalEnemyDamage);
                 }}
                 color={theme.primaryColor}
                 disabled={progress !== 0} // Disable the button during loading

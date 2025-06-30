@@ -1,5 +1,5 @@
 // afterActionReviewStorage.tsx renders the after action reviews page. Core functionalities include displaying 
-// round statistics (scores/tactics/more info)
+// round statistics (scores/tactics/feedback)
 
 // Import React hooks for state and lifecycle management
 import React, { useState, useEffect } from 'react';
@@ -47,7 +47,7 @@ export interface recentEngagementData {
   section: number;
 }
 
-// Defines the structure for the tactics data associated with an engagement
+// Defines the structure for the tactics data and feedback associated with an engagement
 export interface Tactics {
   question: string;
   FriendlyISR?: number;
@@ -379,6 +379,7 @@ export default function AAR() {
                       </Table>
                     </Card.Section>
 
+                    {/* Tactics Feedback Table for the selected engagement */}
                     <Card.Section withBorder inheritPadding py="xs">
                       <Container>
                         <Text size="xl" fw={700}>Tactics Feedback & Effects</Text>
@@ -411,6 +412,7 @@ export default function AAR() {
 
                           {/* Row 2: Icon Tooltips */}
                           <Table.Tr>
+                          {/* Detection columm */}
                             <Table.Td>
                               <Group justify="center" gap="xs">
                                 {/* Positive Feedback Tooltip */}
