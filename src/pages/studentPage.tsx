@@ -34,7 +34,7 @@ function UnitStats({ friendlyCount, enemyCount }: UnitStatsProps) {
       <Text fz="xs" tt="uppercase" fw={700} c="dimmed">
         Active Units
       </Text>
-      
+
       {/* Friendly Units Progress */}
       <Text fz="lg" fw={500} mt="sm">
         Friendly: {friendlyCount}
@@ -66,7 +66,7 @@ function App() {
 
   // Redirects to the home page if the user is not a 'Student' or if their section ID does not match the current section ID.
   useEffect(() => {
-  //  if (!userRole || !userSection || !sectionId) return; //waits for user data before authenticating
+    //  if (!userRole || !userSection || !sectionId) return; //waits for user data before authenticating
     if (userRole !== 'Student' || userSection !== sectionId) {
       console.log(`user Role: ${userRole}`);
       console.log(`user section: ${sectionId}`);
@@ -106,10 +106,10 @@ function App() {
     fetchAllUnitData();
   }, [userSection]); // Dependency: re-fetch if the userSection changes
 
-  useEffect(()=>{
-  setSelectedUnit(null);
-}, []);
-//live updates
+  useEffect(() => {
+    setSelectedUnit(null);
+  }, []);
+  //live updates
   useEffect(() => {
     if (!userSection) return;
 
@@ -123,14 +123,14 @@ function App() {
       }
 
       if (newUnit.is_friendly) {
-      // Update friendly units
+        // Update friendly units
         setFriendlyUnits(prev => {
-        // Avoid duplicates
+          // Avoid duplicates
           const exists = prev.some(unit => unit.unit_id === newUnit.unit_id);
           return exists ? prev : [...prev, newUnit];
         });
       } else {
-      // Update enemy units
+        // Update enemy units
         setEnemyUnits(prev => {
           const exists = prev.some(unit => unit.unit_id === newUnit.unit_id);
           return exists ? prev : [...prev, newUnit];
@@ -148,7 +148,7 @@ function App() {
     };
   }, [userSection]);
 
-    
+
 
 
 
@@ -201,14 +201,20 @@ function App() {
                 <FaArrowAltCircleLeft />
               </Button>
               {/* Clickable logo that takes user back to homepage */}
-              <Image
+              <img
                 src={logo}
-                radius="md"
-                h={50}
-                fallbackSrc="https://placehold.co/600x400?text=Placeholder"
-                onClick={handleLogoClick}
-                style={{ cursor: 'pointer', scale: '1', padding: '8px' }}
-              /> 
+                alt="A descriptive alt text for the logo"
+                height="50"
+                style={{
+                  borderRadius: 'var(--mantine-radius-md)',
+                  width: 'auto',
+                  objectFit: 'cover'
+                }}
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = 'https://placehold.co/600x400?text=Placeholder';
+                }}
+              />
             </div>
           </div>
         </AppShell.Header>

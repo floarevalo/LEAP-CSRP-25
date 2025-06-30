@@ -24,7 +24,7 @@ import { enemySizeColors, friendlySizeColors, StatsRing } from '../components/St
 import axios from 'axios';
 import { Unit } from '../components/Cards';
 import REACT_APP_BACKEND_URL from '../APIBase';
-const logo = "/images/logo/Tr_FullColor_NoSlogan.png";
+const logo = "/images/symbols/Tr_FullColor_NoSlogan.png";
 
 // Defines the data structure for holding statistics for any group of units.
 export type UnitStats = {
@@ -86,8 +86,8 @@ function ObserverPage() {
 
     try {
       const [friendlyRes, enemyRes] = await Promise.all([
-        axios.get<Unit[]>(`${REACT_APP_BACKEND_URL}/units/sectionSort`, {params: { sectionid: userSection }}),
-        axios.get<Unit[]>(`${REACT_APP_BACKEND_URL}/units/allEnemyUnits`, {params: { sectionid: userSection }})
+        axios.get<Unit[]>(`${REACT_APP_BACKEND_URL}/units/sectionSort`, { params: { sectionid: userSection } }),
+        axios.get<Unit[]>(`${REACT_APP_BACKEND_URL}/units/allEnemyUnits`, { params: { sectionid: userSection } })
       ]);
       const allFriendlies = friendlyRes.data;
       const allEnemies = enemyRes.data;
@@ -185,7 +185,22 @@ function ObserverPage() {
               <Button size='sm' variant='link' onClick={handleArrowClick} style={{ margin: '10px' }}>
                 <FaArrowAltCircleLeft />
               </Button>
-              <Image src={logo} radius="md" h={50} onClick={handleLogoClick} style={{ cursor: 'pointer', scale: '1', padding: '8px' }} />
+              <div style={{ display: 'flex', justifyContent: 'center', margin: '40px' }}>
+                <img
+                  src={logo}
+                  alt="A descriptive alt text for the logo"
+                  height="200"
+                  style={{
+                    borderRadius: 'var(--mantine-radius-md)',
+                    width: 'auto',
+                    objectFit: 'cover'
+                  }}
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = 'https://placehold.co/600x400?text=Placeholder';
+                  }}
+                />
+              </div>
             </div>
           </div>
         </AppShell.Header>

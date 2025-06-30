@@ -39,7 +39,7 @@ import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
 import RenameConfirmationModal from '../components/RenameConfirmationModal';
 // import { IconCheck, IconX } from '@tabler/icons-react';
 import REACT_APP_BACKEND_URL from '../APIBase';
-const logo = '/images/logo/Tr_FullColor_NoSlogan.png'
+const logo = '/images/symbols/Tr_FullColor_NoSlogan.png'
 
 
 
@@ -425,14 +425,22 @@ function AdminPage() {
             <Button size='sm' variant='link' onClick={handleArrowClick} style={{ margin: '10px' }}>
               <FaArrowAltCircleLeft />
             </Button>
-            <Image
-              src={logo}
-              radius="md"
-              h={50}
-              fallbackSrc="https://placehold.co/600x400?text=Placeholder"
-              onClick={handleLogoClick}
-              style={{ cursor: 'pointer', scale: '1', padding: '8px' }}
-            />
+            <div style={{ display: 'flex', justifyContent: 'center', margin: '40px' }}>
+              <img
+                src={logo}
+                alt="A descriptive alt text for the logo"
+                height="50"
+                style={{
+                  borderRadius: 'var(--mantine-radius-md)',
+                  width: 'auto',
+                  objectFit: 'cover'
+                }}
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = 'https://placehold.co/600x400?text=Placeholder';
+                }}
+              />
+            </div>
           </div>
         </AppShell.Header>
         <AppShell.Main>

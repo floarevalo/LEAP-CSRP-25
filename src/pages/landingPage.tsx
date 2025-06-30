@@ -12,7 +12,7 @@ import { MantineProvider } from '@mantine/core';
 // import { useUnitProvider } from '../context/UnitContext';
 import REACT_APP_BACKEND_URL from '../APIBase';
 
-const logo = '/images/logo/Tr_FullColor.png'
+const logo = '/images/symbols/Tr_FullColor.png'
 
 // Sets the dynamic interface of the class section
 export interface Section {
@@ -196,11 +196,16 @@ export default function LandingPage() {
         <Paper className={classes.form} radius={0} p={30}>
           {/* Displays the LEAP image */}
           <div style={{ display: 'flex', justifyContent: 'center', margin: '40px', scale: '0.75' }}>
-            <Image
-              radius="md"
+            <img
+              //radius="md"
               src={logo}
-              h={200}
-              fallbackSrc='https://placehold.co/600x400?text=Placeholder'
+              //h={200}
+              //fallbackSrc='https://placehold.co/600x400?text=Placeholder'
+              style={{
+                height: '200px', 
+                width: 'auto',
+                borderRadius: 'var(--mantine-radius-md)'
+              }}
             />
           </div>
 

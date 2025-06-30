@@ -11,6 +11,7 @@ console.log(leapPath)
 const indexPath = path.join(__dirname, 'index.html');
 const nginxPath = path.join(leapPath, 'nginx-1.27.5');
 const appDataPath = path.join(app.getPath('userData'), 'first-run-flag.txt');
+const secondInstructionFlagPath = path.join(app.getPath('userData'), 'second-instruction-shown.txt');
 
 let backendProcess = null;
 let listenerProcess = null;
@@ -43,10 +44,15 @@ function createWindow() {
       title: 'Port 80 set up for LEAP',
       message: `To ensure LEAP can run on other computers:
 1. Open Windows Firewall Defender
+
 2. Click Advanced settings
+
 3. In Left pane click inbound rules
+
 4. On the right click "New Rule"
+
 5. Select "Port" -> Newt -> TCP _> Specific local ports: 80 -> Next
+
 6. Allow connection -> Next -> Private (if all computers running LEAP are on the same private network) -> name it LEAP permissions -> Finish
 
 You may need to stop services on port 80 to do this, but unlikely
@@ -68,29 +74,56 @@ This message only shows once.`
 How to fix:
 1. The download page should open in your browser, if not use this link: 
     https://www.enterprisedb.com/downloads/postgres-postgresql-downloads
+    or look up postgres download
+
 2. Download PostgreSQL 16.9 and use the installation file to set up
+
 3. when prompted my the PostgreSQL installer set password to postgres and install on port 5432
+
 4. During the install remember to check "add PostgreSQL to PATH"
-5. If you already have PostreSQL 16.9 installed but it is not in path:
+
+5. If intallation wizard pops up, no need to install add ons, you can close out of that
+
+6. If you already have PostreSQL 16.9 installed but it is not in path:
+
   a) search this in for "C:\\Program Files\\PostgreSQL\\16\\bin in your file manager
+
   b) go to your "Edit System Enviroment variables
+
   c) click enviroment variables
+
   d) under system variables click path then edit
+
   e) now click new and put the link to your own specific postgres bin folder here
-6. If your have PostgresSQL already but it is not on port 5432 installing this version will not be impeded
-7. if you are getting an error indicating port 5432 is not free follow these steps:
-  a) open your computer task manager
-  b) go to performance tab
-  c) find the three dots/menu and click "Open Resource Monitor"
-  d) in rescource monitor find the network tab
-  e) look through the listening ports section to find what is on port 5432
-  f) get the PID for the process
-  g) now in task manager go to detail and find the process that matches that PID
-  h) right click and hit "end task"
-7. For a user interface for the database use pgAdmin 4: 
-  a) in ths you can create a database for named LEAP and restore our LEAP database sql file, this is in plain text
+
+7. If your have PostgresSQL already but it is not on port 5432 installing this version will not be impeded
+
+  *For Port Error* if you are getting an error indicating port 5432 is not free follow these steps:
+
+    a) open your computer task manager
+
+    b) go to performance tab
+
+    c) find the three dots/menu and click "Open Resource Monitor"
+
+    d) in rescource monitor find the network tab
+
+    e) look through the listening ports section to find what is on port 5432
+
+    f) get the PID for the process
+
+    g) now in task manager go to detail and find the process that matches that PID
+
+    h) right click and hit "end task"
+
+8. For a user interface for the database use pgAdmin 4: 
+
+  a) in this you can create a database for named LEAP and restore our LEAP database sql file found in your zip file, this is in plain text
+  *Refer to "LEAP Online Manual" for more instructions on data base restore*
+
   b) by doing this you have a user interface to change the database manually or the change the units being used in LEAP
-8. Restart computer and retry LEAP launcher`
+
+9. Restart computer and retry LEAP launcher`
         });
         return;
       }
@@ -107,15 +140,23 @@ How to fix:
 How to fix:
 1. The Node.js download page will open in your browser, if not use this link:
    https://nodejs.org/en/download/
-2. install Node.js make sure the last box at the top of the download page says with npm and use the installer for the .msi version
-3. make sure to add to PATH when prompted by the installer
-4. if you think you already have Node.js installed with npm and as .msi you will need to add it to PATH:
-  a)find your Node.js installation path with C:\Program Files\nodejs\ (this is the default intall path)
-  b)go to your "Edit System Enviroment variables
+   or look up node.js installer in browser
+
+2. Install Node.js make sure the last box at the top of the download page says with npm and use the installer for the .msi version
+
+3. If you think you already have Node.js installed with npm and as .msi you will need to add it to PATH:
+
+  a) find your Node.js installation path with C:\Program Files\nodejs\ (this is the default intall path)
+
+  b) go to your "Edit System Enviroment variables"
+
   c) click enviroment variables
+
   d) under system variables click path then edit
+
   e) now click new and put the link to your own specific node installation folder path here
-5. restart your computer and try LEAP launcher again`
+
+4. Restart your computer and try LEAP launcher again`
           });
           return;
         }
@@ -151,6 +192,25 @@ How to fix:
                 stdio: 'ignore'
               });
               listenerProcess.unref();
+              if(!fs.existsSync(secondInstructionFlagPath)) {
+                dialog.showMessageBoxSync({
+                  type: 'info',
+                  title:'Dis Listener Set up',
+                  message: ` For initial set up of your dis listener:
+1. Go to settings
+
+2. change to recieving IP address to 0.0.0.0
+
+3. change database IP address to 127.0.0.1
+
+4. change recieving port to 3000
+
+5. change database port to 5432
+
+6. change exercise ID to the system ASCOTT is running on.`
+                });
+                fs.writeFileSync(secondInstructionFlagPath, 'shown');
+              }
               //listenerProcess = exec(`"${disPath}"`);
             } else console.warn('dis path does not exist:', disPath);
 
@@ -170,12 +230,12 @@ How to fix:
 
               // Wait before opening the browser
               setTimeout(() => {
-                const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'; // adjust if needed
+                const firefoxPath = 'C:\\Program Files\\Mozilla Firefox\\firefox.exe'; // adjust if needed
                 const tempProfile = path.join(__dirname, 'leap-browser-profile');
 
                 if (!fs.existsSync(tempProfile)) fs.mkdirSync(tempProfile, { recursive: true });
 
-                browserProcess = spawn(chromePath, [
+                browserProcess = spawn(firefoxPath, [
                   `--user-data-dir=${tempProfile}`,
                   '--new-window',
                   'http://localhost'
