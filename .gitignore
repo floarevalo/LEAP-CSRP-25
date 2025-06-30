@@ -30,8 +30,8 @@ yarn-error.log*
 
 leap-launcher/node_modules/
 
-
-
+*/dist/**
+*.log
 
 leap-launcher/leap-browser-profile/**
 nginx-1.27.5/logs/error.log
