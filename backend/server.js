@@ -548,28 +548,56 @@ app.post('/api/engagements', async (req, res) => {
   }
 });
 
-// Endpoint to make record tactics
+// Endpoint to make record tactics and info for tactics feedback
 app.post('/api/tactics', async (req, res) => {
-
-  console.log("Attempting to store tactics record in tactics")
+  console.log("Attempting to store tactics record in tactics");
+  
   const {
-    FriendlyAwareness, EnemyAwareness,
-    FriendlyLogistics, EnemyLogistics, FriendlyCoverage, EnemyCoverage,
-    FriendlyGPS, EnemyGPS, FriendlyComms, EnemyComms, FriendlyFire,
-    EnemyFire, FriendlyPattern, EnemyPattern
+    engagementid,
+    FriendlyISR, EnemyISR, 
+    FriendlyLogistics, EnemyLogistics,
+    FriendlyCritical, EnemyCritical, 
+    FriendlyGPS, EnemyGPS,
+    FriendlyComms, EnemyComms,
+    FriendlyCAS, EnemyCAS,
+    FriendlyAccess, EnemyAccess,
+    firstAttackFriendly,
+    friendlyAccuracyPercent,
+    friendlyAccuracyLevel,
+    enemyAccuracyPercent,
+    enemyAccuracyLevel,
+    friendlyDamage,
+    enemyDamage,
+    detectionPositiveFeedback,
+    detectionNegativeFeedback,
+    accuracyPositiveFeedback,
+    accuracyNegativeFeedback,
+    damagePositiveFeedback,
+    damageNegativeFeedback
   } = req.body;
 
   try {
-    const result = await pool.query(
-      `INSERT INTO Tactics (FriendlyAwareness, EnemyAwareness, FriendlyLogistics, EnemyLogistics, FriendlyCoverage, EnemyCoverage,
-       FriendlyGPS, EnemyGPS, FriendlyComms, EnemyComms, FriendlyFire, EnemyFire, FriendlyPattern, EnemyPattern)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *`,
-      [
-        FriendlyAwareness, EnemyAwareness, FriendlyLogistics,
-        EnemyLogistics, FriendlyCoverage, EnemyCoverage, FriendlyGPS, EnemyGPS,
-        FriendlyComms, EnemyComms, FriendlyFire, EnemyFire, FriendlyPattern, EnemyPattern
-      ]
-    );
+    const sqlQuery = `INSERT INTO tactics (
+        engagementid, "FriendlyISR", "EnemyISR", "FriendlyLogistics", "EnemyLogistics",
+        "FriendlyCritical", "EnemyCritical", "FriendlyGPS", "EnemyGPS", "FriendlyComms", "EnemyComms",
+        "FriendlyCAS", "EnemyCAS", "FriendlyAccess", "EnemyAccess", "firstAttackFriendly",
+        "friendlyAccuracyPercent", "friendlyAccuracyLevel", "enemyAccuracyPercent", "enemyAccuracyLevel",
+        "friendlyDamage", "enemyDamage", "detectionPositiveFeedback", "detectionNegativeFeedback",
+        "accuracyPositiveFeedback", "accuracyNegativeFeedback", "damagePositiveFeedback", "damageNegativeFeedback"
+       )
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28) RETURNING *`;
+    
+    const values = [
+        engagementid, FriendlyISR, EnemyISR, FriendlyLogistics, EnemyLogistics,
+        FriendlyCritical, EnemyCritical, FriendlyGPS, EnemyGPS, FriendlyComms, EnemyComms,
+        FriendlyCAS, EnemyCAS, FriendlyAccess, EnemyAccess, firstAttackFriendly,
+        friendlyAccuracyPercent, friendlyAccuracyLevel, enemyAccuracyPercent, enemyAccuracyLevel,
+        friendlyDamage, enemyDamage, detectionPositiveFeedback, detectionNegativeFeedback,
+        accuracyPositiveFeedback, accuracyNegativeFeedback, damagePositiveFeedback, damageNegativeFeedback
+    ];
+
+    const result = await pool.query(sqlQuery, values);
+    
     res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error('Error recording tactics:', error);

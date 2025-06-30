@@ -1,5 +1,7 @@
-/** BattlePage.tsx takes in a unit from the studentPage.tsx and conducts an engagement with an enemy unit that a cadet selects
-The engagement continues until either the friendly or enemy unit dies and the information is logged in the After Action Reviews Page **/
+/** BattlePage.tsx takes in a unit from the studentPage.tsx and conducts an engagement with an enemy unit that a cadet selects. 
+ * Enemy unit selection drop down populates with enemy units in the selected unit's WEZ. Calculates detection ability probability, 
+ * accuracy percentage, and damage while providing feedback at the end of each round. 
+ * The engagement continues until either the friendly or enemy unit dies and the information is logged in the After Action Reviews Page **/
 
 import React, { useEffect, useState } from 'react';
 import '@mantine/core/styles.css';
@@ -7,7 +9,7 @@ import '../App.css';
 import { Table, Progress, Text, Group, Image, Stepper, Button, SegmentedControl, rem, MantineProvider, Grid, Card, Center, Select, useMantineTheme, rgba, Tooltip, Space, Container } from '@mantine/core';
 import { useInterval } from '@mantine/hooks';
 import { useNavigate } from 'react-router-dom';
-import { IconSwords, IconHeartbeat, IconNumber1Small, IconNumber2Small, IconNumber3Small, IconNumber4Small } from '@tabler/icons-react';
+import { IconSwords, IconHeartbeat, IconNumber1Small, IconNumber2Small, IconNumber3Small, IconNumber4Small, IconTrendingDown, IconTrendingUp } from '@tabler/icons-react';
 import { useUserRole } from '../context/UserContext';
 import { useUnitProvider } from '../context/UnitContext';
 import { Unit } from '../components/Cards';
@@ -22,6 +24,8 @@ export interface Form {
   ID: string;
   friendlyScore: number;
   enemyScore: number;
+  friendlyAnswer: 'Yes' | 'No'; 
+  enemyAnswer: 'Yes' | 'No'; 
 }
 
 interface UnitTactics {
@@ -32,6 +36,37 @@ interface UnitTactics {
   comms: number;
   fire: number;
   pattern: number;
+}
+
+interface tacticsData {
+  FriendlyISR: number;
+  EnemyISR: number;
+  FriendlyLogistics: number;
+  EnemyLogistics: number;
+  FriendlyCritical: number;
+  EnemyCritical: number;
+  FriendlyGPS: number;
+  EnemyGPS: number;
+  FriendlyComms: number;
+  EnemyComms: number;
+  FriendlyCAS: number;
+  EnemyCAS: number;
+  FriendlyAccess: number;
+  EnemyAccess: number;
+  engagementid?: number;
+  firstAttackFriendly?: boolean;
+  friendlyAccuracyPercent: number;
+  friendlyAccuracyLevel: string;
+  enemyAccuracyPercent: number;
+  enemyAccuracyLevel: string;
+  friendlyDamage: number;
+  enemyDamage: number;
+  detectionPositiveFeedback: string;
+  detectionNegativeFeedback: string;
+  accuracyPositiveFeedback: string;
+  accuracyNegativeFeedback: string;
+  damagePositiveFeedback: string;
+  damageNegativeFeedback: string
 }
 
 // define PresetTacticsResponse interface to be used when calling backend to populate preset enemy tactics
@@ -59,15 +94,24 @@ function BattlePage() {
   const [inEngagement, setInEngagement] = useState<Boolean>(false); // Used to track whether a unit is in an engagement or not
   const [round, setRound] = useState<number>(1); // Sets the round number for each round of the engagement
   const [totalEnemyDamage, setTotalEnemyDamage] = useState<number>(0);
-  const [totalFriendlyDamage, setTotalFriendlyDamage] = useState<number | null>(null);
+  const [totalFriendlyDamage, setTotalFriendlyDamage] = useState<number>(0);
   const [enemyUnits, setEnemyUnits] = useState<Unit[]>([]);
   const [unitTactics, setUnitTactics] = useState<UnitTactics | null>(null);
   const [enemyBaseValue, setEnemyBaseValue] = useState<number>(0); // Sets and gets the state for the enemy base value 
   const [enemyWithinWEZ, setEnemeyWithinWEZ] = useState<Unit[]>([]); //array of strings that tracks enemies within the WEZ
   const [isLoadingUnits, setisLoadingUnits] = useState(true); //creates variable to check that data for units has loaded before the engagement can start
+  const [submittedAnswers, setSubmittedAnswers] = useState<Form[] | null>(null); //ensure tactics answers submitted right 
   const [firstAttackFriendly, setFirstAttackFriendly] = useState<Boolean>(false);
   const [friendlyAccuracyLevel, setFriendlyAccuracyLevel] = useState<string>("Low");
   const [enemyAccuracyLevel, setEnemyAccuracyLevel] = useState<string>("Low");
+  const [friendlyAccuracyPercent, setFriendlyAccuracyPercent] = useState<number | 0>(0);
+  const [enemyAccuracyPercent, setEnemyAccuracyPercent] = useState<number | 0>(0);
+  const [detectionPositiveFeedback, setDetectionPositiveFeedback] = useState("Positive detection factors will be listed here.");
+  const [detectionNegativeFeedback, setDetectionNegativeFeedback] = useState("Negative detection factors will be listed here.");
+  const [accuracyPositiveFeedback, setAccuracyPositiveFeedback] = useState("Positive accuracy factors will be listed here.");
+  const [accuracyNegativeFeedback, setAccuracyNegativeFeedback] = useState("Negative accuracy factors will be listed here.");
+  const [damagePositiveFeedback, setDamagePositiveFeedback] = useState("Positive damage factors will be listed here.");
+  const [damageNegativeFeedback, setDamageNegativeFeedback] = useState("Negative damage factors will be listed here.");
 
   // Fetches data of the units(friendly units) based on class section
   useEffect(() => {
@@ -338,10 +382,10 @@ function BattlePage() {
       return; // Exit the function early
     }
     
-    // Convert question answers from strings to numbers
-    const tacticsData = {
-      FriendlyCoverage: question1 === "Yes" ? 1 : 0,
-      EnemyCoverage: enemyquestion1 === "Yes" ? 1 : 0,
+    // Convert question answers from strings to numbers + initialize tactics feedback data 
+    let currentTacticsData: tacticsData = {
+      FriendlyISR: question1 === "Yes" ? 1 : 0,
+      EnemyISR: enemyquestion1 === "Yes" ? 1 : 0,
       FriendlyLogistics: question2 === "Yes" ? 1 : 0,
       EnemyLogistics: enemyquestion2 === "Yes" ? 1 : 0,
       FriendlyCritical: question3 === "Yes" ? 1 : 0,
@@ -354,6 +398,20 @@ function BattlePage() {
       EnemyCAS: enemyquestion6 === "Yes" ? 1 : 0,
       FriendlyAccess: question7 === "Yes" ? 1 : 0,
       EnemyAccess: enemyquestion7 === "Yes" ? 1 : 0,
+      engagementid: undefined,
+      firstAttackFriendly: false,
+      friendlyAccuracyPercent: 0,
+      friendlyAccuracyLevel: "Low",
+      enemyAccuracyPercent: 0,
+      enemyAccuracyLevel: "Low",
+      friendlyDamage: 0,
+      enemyDamage: 0,
+      detectionPositiveFeedback: "",
+      detectionNegativeFeedback: "",
+      accuracyPositiveFeedback: "",
+      accuracyNegativeFeedback: "",
+      damagePositiveFeedback: "",
+      damageNegativeFeedback: ""
     };
 
     // ------------------- DETECTION PHASE ------------------------------------------------------------------------------------------
@@ -416,6 +474,10 @@ function BattlePage() {
       "Railhead": 10
     };
 
+    // Initialize feedback message arrays
+    let detectionPositiveLocal: string[] = [];
+    let detectionNegativeLocal: string[] = [];
+
     let friendlyBeamWidth = unitDetectionBeamWidth[unit.unit_type] || 0;         // Defaults to 0 if type not listed above
     let friendlySphOfInflu = unitSphereOfInflu[unit.unit_type] || 0;             // Defaults to 0 if type not listed above
     console.log("friendlyBeamWidth = ", friendlyBeamWidth)
@@ -425,18 +487,21 @@ function BattlePage() {
     if (unit.unit_role === "Headquarters") {
       friendlyBeamWidth *= 1.25     // Increase "w" by 25%
       friendlySphOfInflu *= 0.50   // Decrease "A" by 50%
+      detectionPositiveLocal.push("FRIENDLY unit role: headquarters");
       console.log("FRIENDLY w and A changed due to unit being 'Headquarters'")
       console.log("friendlyBeamWidth = ", friendlyBeamWidth, "friendlySphOfInflu = ", friendlySphOfInflu)
     }
     else if (unit.unit_role === "Facility") {
       friendlyBeamWidth *= 1.30     // Increase "w" by 30%
       friendlySphOfInflu *= 0.75   // Decrease "A" by 25%
+      detectionPositiveLocal.push("FRIENDLY unit role: facility");
       console.log("FRIENDLY w and A changed due to unit being 'Facility'")
       console.log("friendlyBeamWidth = ", friendlyBeamWidth, "friendlySphOfInflu = ", friendlySphOfInflu)
     }
     if (unit.unit_mobility === "Fixed") {
       friendlySphOfInflu = 5          // Set "A" to 5
-      console.log("FRIENDLY A changed due to unit being 'Facility'")
+      detectionPositiveLocal.push("FRIENDLY unit mobility: fixed");
+      console.log("FRIENDLY A changed due to unit being 'fixed'")
       console.log("friendlySphOfInflu = ", friendlySphOfInflu)
     }
 
@@ -448,35 +513,41 @@ function BattlePage() {
     }
     
     // unit readiness affects on "t"
-    if (unit.unit_readiness == "Low") {
+    if (unit.unit_readiness === "Low") {
       tFriendly *= 0.50 // Decrease "t" by 50%
+      detectionNegativeLocal.push("FRIENDLY unit readiness: low");
       console.log("tFriendly changed due to low unit readiness")
       console.log("tFriendly = ", tFriendly)
     }
-    else if (unit.unit_readiness == "Medium") {
+    else if (unit.unit_readiness === "Medium") {
       tFriendly *= 0.85 // Decrease "t" by 15%
+      detectionNegativeLocal.push("FRIENDLY unit readiness: medium");
       console.log("tFriendly changed due to medium unit readiness")
       console.log("tFriendly = ", tFriendly)
     }
 
-    // Only coverage and comms answers affect "t" 
-    if (tacticsData.FriendlyCoverage === 1) { 
+    // Only ISR and comms answers affect "t" 
+    if (currentTacticsData.FriendlyISR === 1) { 
       tFriendly *= 1.25 // Increase "t" by 25%
-      console.log("tFriendly changed due to FriendlyCoverage answered yes")
+      detectionPositiveLocal.push("Conducted ISR");
+      console.log("tFriendly changed due to FriendlyISR answered yes")
       console.log("tFriendly = ", tFriendly)
     }
     else {
       tFriendly *= 0.75 // Decrease "t" by 25%
-      console.log("tFriendly changed due to FriendlyCoverage answered no")
+      detectionNegativeLocal.push("Did NOT conduct ISR");
+      console.log("tFriendly changed due to FriendlyISR answered no")
       console.log("tFriendly = ", tFriendly)
     }
-    if (tacticsData.FriendlyComms === 1) {
-      tFriendly *= 1.25 // Increase "t" by 15%
+    if (currentTacticsData.FriendlyComms === 0) {
+      tFriendly *= 1.25 // Increase "t" by 25%
+      detectionPositiveLocal.push("Working comms");
       console.log("tFriendly changed due to FriendlyComms answered yes")
       console.log("tFriendly = ", tFriendly)
     }
     else {
       tFriendly *= 0.75 // Decrease "t" by 25%
+      detectionNegativeLocal.push("No comms (jammed)");
       console.log("tFriendly changed due to FriendlyComms answered no")
       console.log("tFriendly = ", tFriendly)
     }
@@ -487,8 +558,6 @@ function BattlePage() {
       : 0;
     console.log("friendlyDetectProb calculated: ", friendlyDetectProb)
 
-
-
     let enemyBeamWidth = unitDetectionBeamWidth[enemyUnit.unit_type] || 0;       // Defaults to 0 if type not listed above
     let enemySphOfInflu = unitSphereOfInflu[enemyUnit.unit_type] || 0;           // Defaults to 0 if type not listed above
     console.log("enemyBeamWidth = ", enemyBeamWidth)
@@ -498,17 +567,20 @@ function BattlePage() {
     if (enemyUnit.unit_role === "Headquarters") {
       enemyBeamWidth *= 1.25     // Increase "w" by 25%
       enemySphOfInflu *= 0.50   // Decrease "A" by 50%
+      detectionNegativeLocal.push("ENEMY unit role: headquarters");
       console.log("ENEMY w and A changed due to unit being 'Headquarters'")
       console.log("enemyBeamWidth = ", enemyBeamWidth, "enemySphOfInflu = ", enemySphOfInflu)
     }
     else if (enemyUnit.unit_role === "Facility") {
       enemyBeamWidth *= 1.30     // Increase "w" by 30%
       enemySphOfInflu *= 0.75   // Decrease "A" by 25%
+      detectionNegativeLocal.push("ENEMY unit role: facility");
       console.log("ENEMY w and A changed due to unit being 'Facility'")
       console.log("enemyBeamWidth = ", enemyBeamWidth, "enemySphOfInflu = ", enemySphOfInflu)
     }
     if (enemyUnit.unit_mobility === "Fixed") {
       enemySphOfInflu = 5          // Set "A" to 5
+      detectionNegativeLocal.push("ENEMY unit mobility: fixed");
       console.log("ENEMY A changed due to unit being 'Fixed'")
       console.log("enemySphOfInflu = ", enemySphOfInflu)
     }
@@ -521,30 +593,32 @@ function BattlePage() {
     }
     
     // unit readiness affects on "t"
-    if (enemyUnit.unit_readiness == "Low") {
+    if (enemyUnit.unit_readiness === "Low") {
       tEnemy *= 0.50 // Decrease "t" by 50%
+      detectionPositiveLocal.push("ENEMY unit readiness: low");
       console.log("tEnemy changed due to low unit readiness")
       console.log("tEnemy = ", tEnemy)
     }
-    else if (enemyUnit.unit_readiness == "Medium") {
+    else if (enemyUnit.unit_readiness === "Medium") {
       tEnemy *= 0.85 // Decrease "t" by 15%
+      detectionPositiveLocal.push("ENEMY unit readiness: medium");
       console.log("tEnemy changed due to medium unit readiness")
       console.log("tEnemy = ", tEnemy)
     }
 
-    // Only coverage and comms answers affect "t" 
-    if (tacticsData.EnemyCoverage === 1) { 
+    // Only ISR and comms answers affect "t" 
+    if (currentTacticsData.EnemyISR === 1) { 
       tEnemy *= 1.25 // Increase "t" by 25%
-      console.log("tEnemy changed due to EnemyCoverage answered yes")
+      console.log("tEnemy changed due to EnemyISR answered yes")
       console.log("tEnemy = ", tEnemy)
     }
     else {
       tEnemy *= 0.75 // Decrease "t" by 25%
-      console.log("tEnemy changed due to EnemyCoverage answered no")
+      console.log("tEnemy changed due to EnemyISR answered no")
       console.log("tEnemy = ", tEnemy)
     }
-    if (tacticsData.EnemyComms === 1) {
-      tEnemy *= 1.25 // Increase "t" by 15%
+    if (currentTacticsData.EnemyComms === 1) {
+      tEnemy *= 1.25 // Increase "t" by 25%
       console.log("tEnemy changed due to EnemyComms answered yes")
       console.log("tEnemy = ", tEnemy)
     }
@@ -559,14 +633,20 @@ function BattlePage() {
       ? 1 - Math.exp(-(enemyBeamWidth * tEnemy) / enemySphOfInflu)
       : 0;
     console.log("enemyDetectProb calculated: ", enemyDetectProb)
+    setDetectionPositiveFeedback(detectionPositiveLocal.length > 0 ? detectionPositiveLocal.join('\n') : "No significant positive factors.");
+    setDetectionNegativeFeedback(detectionNegativeLocal.length > 0 ? detectionNegativeLocal.join('\n') : "No significant negative factors.");
+    currentTacticsData.detectionPositiveFeedback = detectionPositiveFeedback;
+    currentTacticsData.detectionNegativeFeedback = detectionNegativeFeedback
 
     if (friendlyDetectProb > enemyDetectProb) {
       setFirstAttackFriendly(true);
+      currentTacticsData.firstAttackFriendly = true;
       console.log("Friendly attacks first")
     }
     else {
       // Includes the case where probabilities are equal, granting the defender the ambush
       setFirstAttackFriendly(false);
+      currentTacticsData.firstAttackFriendly = false;
       console.log("Enemy attacks first")
     }
 
@@ -640,59 +720,75 @@ function BattlePage() {
         "Railhead": 0
     };
 
+    // Initialize feedback message arrays
+    let accuracyPositiveLocal: string[] = [];
+    let accuracyNegativeLocal: string[] = [];
+
     let vFriendly = vValue[unit.unit_type] || 0;                 // Defaults to 0 if type not listed above
     let rhoFriendly = unitAccuracyError[unit.unit_type] || 0;    // Defaults to 0 if type not listed above
     console.log("vFriendly = ", vFriendly)
     console.log("rhoFriendly = ", rhoFriendly)
 
     // unit readiness affects on "rho"
-    if (unit.unit_readiness == "Low") {
-      rhoFriendly *= 0.50 // Decrease "rho" by 50%
+    if (unit.unit_readiness === "Low") {
+      rhoFriendly *= 1.50 // Increase "rho" by 50%
+      accuracyNegativeLocal.push("FRIENDLY unit readiness: low")
       console.log("rhoFriendly changed due to low unit readiness")
       console.log("rhoFriendly = ", rhoFriendly)
     }
-    else if (unit.unit_readiness == "Medium") {
-      rhoFriendly *= 0.85 // Decrease "rho" by 15%
+    else if (unit.unit_readiness === "Medium") {
+      rhoFriendly *= 1.15 // Increase "rho" by 15%
+      accuracyNegativeLocal.push("FRIENDLY unit readiness: medium")
       console.log("rhoFriendly changed due to medium unit readiness")
       console.log("rhoFriendly = ", rhoFriendly)
     }
 
     // Only close air support (CAS) and GPA answers affect "rho" 
-    if (tacticsData.FriendlyCAS === 1) { 
-      rhoFriendly *= 1.10 // Increase "rho" by 10%
+    if (currentTacticsData.FriendlyCAS === 1) { 
+      rhoFriendly *= 0.90 // Decrease "rho" by 10%
+      accuracyPositiveLocal.push("Have close air support")
       console.log("rhoFriendly changed due to FriendlyCAS answered yes")
       console.log("rhoFriendly = ", rhoFriendly)
     }
-    if (tacticsData.FriendlyGPS === 1) {
-      rhoFriendly *= 0.70 // Decrease "t" by 30%
+    if (currentTacticsData.FriendlyGPS === 1) {
+      rhoFriendly *= 1.30 // Increase "rho" by 30%
+      accuracyNegativeLocal.push("No GPS (jammed)")
       console.log("rhoFriendly changed due to FriendlyGPS answered yes")
       console.log("rhoFriendly = ", rhoFriendly)
     }
 
     // Target engagement phase equation: P_h = 1 - e^(-(u^2)/(2*σ^2))
-    const friendlyAccuracyPercent = (rhoFriendly > 0)  // ensure not dividing by 0 or neg
-      ? 1 - Math.exp(-(vFriendly**2) / (2*(rhoFriendly)**2))
-      : 0; // equates to zero if rho is 0 or neg 
-    console.log("friendlyAccuracyPercent calculated:", friendlyAccuracyPercent)
+    if (rhoFriendly > 0) {   // ensure not dividing by 0 or neg
+      setFriendlyAccuracyPercent ((1 - Math.exp(-(vFriendly**2) / (2*(rhoFriendly)**2)))*100);
+      currentTacticsData.friendlyAccuracyPercent = friendlyAccuracyPercent;
+      console.log("friendlyAccuracyPercent calculated:", friendlyAccuracyPercent) 
+    }
+    else {   // equates to zero if rho is 0 or neg 
+      setFriendlyAccuracyPercent(0) 
+      currentTacticsData.friendlyAccuracyPercent = friendlyAccuracyPercent;
+    }
 
     // Sorts percentage values into 3 levels
-    if (friendlyAccuracyPercent >= 0 && friendlyAccuracyPercent < 0.3333) {
+    if (friendlyAccuracyPercent >= 0 && friendlyAccuracyPercent < 22.2222) {
       setFriendlyAccuracyLevel("Low")
+      currentTacticsData.friendlyAccuracyLevel = friendlyAccuracyLevel;
       console.log("friendlyAccuracyLevel = ", friendlyAccuracyLevel)
     }
-    else if (friendlyAccuracyPercent >= 0.3333 && friendlyAccuracyPercent < 0.6667) {
+    else if (friendlyAccuracyPercent >= 22.2222 && friendlyAccuracyPercent < 44.4444) {
       setFriendlyAccuracyLevel("Medium")
+      currentTacticsData.friendlyAccuracyLevel = friendlyAccuracyLevel;
       console.log("friendlyAccuracyLevel = ", friendlyAccuracyLevel)
     }
-    else if (friendlyAccuracyPercent >= 0.6667 && friendlyAccuracyPercent < 1.001) {
+    else if (friendlyAccuracyPercent >= 44.4444 && friendlyAccuracyPercent < 66.6667) { // out of all possible unit + tactics combos, can only get up to 65% accuracy
       setFriendlyAccuracyLevel("High")
+      currentTacticsData.friendlyAccuracyLevel = friendlyAccuracyLevel;
       console.log("friendlyAccuracyLevel = ", friendlyAccuracyLevel)
     }
     else {
       console.log("Accuracy percent not valid.")
     } 
-      
 
+    
 
     let vEnemy = vValue[enemyUnit.unit_type] || 0;                    // Defaults to 0 if type not listed above
     let rhoEnemy = unitAccuracyError[enemyUnit.unit_type] || 0;       // Defaults to 0 if type not listed above
@@ -700,46 +796,63 @@ function BattlePage() {
     console.log("rhoEnemy = ", rhoEnemy)
 
     // unit readiness affects on "rho"
-    if (enemyUnit.unit_readiness == "Low") {
-      rhoEnemy *= 0.50 // Decrease "rho" by 50%
+    if (enemyUnit.unit_readiness === "Low") {
+      rhoEnemy *= 1.50 // Increase "rho" by 50%
+      accuracyPositiveLocal.push("ENEMY unit readiness: low")
       console.log("rhoEnemy changed due to low unit readiness")
       console.log("rhoEnemy = ", rhoEnemy)
     }
-    else if (enemyUnit.unit_readiness == "Medium") {
-      rhoEnemy *= 0.85 // Decrease "rho" by 15%
+    else if (enemyUnit.unit_readiness === "Medium") {
+      rhoEnemy *= 1.15 // Increase "rho" by 15%
+      accuracyPositiveLocal.push("ENEMY unit readiness: medium")
       console.log("rhoEnemy changed due to medium unit readiness")
       console.log("rhoEnemy = ", rhoEnemy)
     }
 
     // Only close air support (CAS) and GPA answers affect "rho" 
-    if (tacticsData.EnemyCAS === 1) { 
-      rhoEnemy *= 1.10 // Increase "rho" by 10%
+    if (currentTacticsData.EnemyCAS === 1) { 
+      rhoEnemy *= 0.90 // Decrease "rho" by 10%
       console.log("rhoEnemy changed due to EnemyCAS answered yes")
       console.log("rhoEnemy = ", rhoEnemy)
     }
-    if (tacticsData.EnemyGPS === 1) {
-      rhoEnemy *= 0.70 // Decrease "t" by 30%
+    if (currentTacticsData.EnemyGPS === 1) {
+      rhoEnemy *= 1.30 // Increase "rho" by 30%
       console.log("rhoEnemy changed due to EnemyGPS answered yes")
       console.log("rhoEnemy = ", rhoEnemy)
     }
 
+    // Saves feedback into one variable
+    setAccuracyPositiveFeedback(accuracyPositiveLocal.length > 0 ? accuracyPositiveLocal.join('\n') : "No significant positive factors.");
+    setAccuracyNegativeFeedback(accuracyNegativeLocal.length > 0 ? accuracyNegativeLocal.join('\n') : "No significant negative factors.");
+    currentTacticsData.accuracyPositiveFeedback = accuracyPositiveFeedback;
+    currentTacticsData.accuracyNegativeFeedback = accuracyNegativeFeedback;
+
+    
     // Target engagement phase equation: P_h = 1 - e^(-(u^2)/(2*σ^2))
-    const enemyAccuracyPercent = (rhoEnemy > 0)  // ensure not dividing by 0 or neg
-      ? 1 - Math.exp(-(vEnemy**2) / (2*(rhoEnemy)**2))
-      : 0;  // equates to zero if rho is 0 or neg 
-    console.log("enemyAccuracyPercent calculated:", enemyAccuracyPercent)
+    if (rhoEnemy > 0) {   // ensure not dividing by 0 or neg
+      setEnemyAccuracyPercent ((1 - Math.exp(-(vEnemy**2) / (2*(rhoEnemy)**2)))*100);
+      currentTacticsData.enemyAccuracyPercent = enemyAccuracyPercent;
+      console.log("enemyAccuracyPercent calculated:", enemyAccuracyPercent) 
+    }
+    else {   // equates to zero if rho is 0 or neg 
+      setEnemyAccuracyPercent(0) 
+      currentTacticsData.enemyAccuracyPercent = enemyAccuracyPercent;
+    }
 
     // Sorts percentage values into 3 levels
-    if (enemyAccuracyPercent >= 0 && enemyAccuracyPercent < 0.3333){
+    if (enemyAccuracyPercent >= 0 && enemyAccuracyPercent < 22.2222){
       setEnemyAccuracyLevel("Low")
+      currentTacticsData.enemyAccuracyLevel = enemyAccuracyLevel;
       console.log("enemyAccuracyLevel = ", enemyAccuracyLevel)
     }
-    else if (enemyAccuracyPercent >= 0.3333 && enemyAccuracyPercent < 0.6667) {
+    else if (enemyAccuracyPercent >= 22.2222 && enemyAccuracyPercent < 44.4444) {
       setEnemyAccuracyLevel("Medium")
+      currentTacticsData.enemyAccuracyLevel = enemyAccuracyLevel;
       console.log("enemyAccuracyLevel = ", enemyAccuracyLevel)
     }
-    else if (enemyAccuracyPercent >= 0.6667 && enemyAccuracyPercent < 1.001) {
+    else if (enemyAccuracyPercent >= 44.4444 && enemyAccuracyPercent < 66.6667) { // out of all possible unit + tactics combos, can only get up to 65% accuracy
       setEnemyAccuracyLevel("High")
+      currentTacticsData.enemyAccuracyLevel = enemyAccuracyLevel;
       console.log("enemyAccuracyLevel = ", enemyAccuracyLevel)
     }
     else {
@@ -749,11 +862,14 @@ function BattlePage() {
     // --------------- DAMAGE ASSESSMENT PHASE --------------------------------------------------------------------------------------
     // This phase defines the damage inflicted, applied to the max damage a unit can inflict 
 
+    let damagePositiveLocal: string[] = [];
+    let damageNegativeLocal: string[] = [];
+
     // Dummy data for enemyscore
-    const enemyTotalScore = ((enemyBaseValue * .70) + (Number(enemyTacticsScore) * .30));
+    const enemyTotalScore = ((enemyBaseValue * .70) + (Number(calculateEnemyTacticsScore()) * .30));
 
     // Calculates the total friendly score which is 70% of the base value plue 30% of the tactics value
-    const friendlyTotalScore = ((baseValue * .70) + (Number(TacticsScore) * .30));
+    const friendlyTotalScore = ((baseValue * .70) + (Number(calculateTacticsScore()) * .30));
 
     // Checks whether the friendly unit won the engagement or not
     const isWin = friendlyTotalScore > enemyTotalScore;
@@ -761,11 +877,15 @@ function BattlePage() {
     // 'r' generates a random number 
     let r = Math.floor(Math.random() * (5 - 0 + 1)) + 0;
     let r_enemy = Math.floor(Math.random() * (5 - 0 + 1)) + 0;
-    if (tacticsData.FriendlyCritical === 1) {
-      r = r * 1.25
+
+    // let r = rhoFriendly
+    // let r_enemy = rhoEnemy
+    if (currentTacticsData.FriendlyCritical === 1) {
+      r = r * 1.25  // Increase r by 25%
+      damagePositiveLocal.push("FRIENDLY defending critical location")
     }
-    if (tacticsData.EnemyCritical === 1) {
-      r_enemy = r_enemy * 1.25
+    if (currentTacticsData.EnemyCritical === 1) {
+      r_enemy = r_enemy * 1.25 // Increase r_enemy by 25%
     }
     console.log("Friendly rand num (r): ", r);
     console.log("Enemy rand num (r_enemy): ", r_enemy);
@@ -784,32 +904,30 @@ function BattlePage() {
     else if (unit_type === 'Air Defense') {
       b = 50;
     }
-    else if (unit_type === 'Infantry') {
+    else if (unit_type === 'Infantry' || unit_type === 'Combined Arms') {
       b = 10; //needs to be 10
     }
     else if (unit_type === 'Reconnaissance' || unit_type === 'Unmanned Aerial Systems') {
       b = 5;
     }
-    else if (unit_type === 'Combined Arms') {
-      b = 30;
-    }
-    else if (unit_type === 'Self-propelled' || unit_type === 'Electronic Warfare' || unit_type === 'Air Assault' || unit_type === 'Aviation Rotary Wing') {
+    else if (unit_type === 'Self-propelled' || unit_type === 'Electronic Warfare' || unit_type === 'Air Assault' || unit_type === 'Aviation Rotary Wing' || unit_type === 'Combat Support') {
       b = 15;
     }
     else if (unit_type === 'Signal' || unit_type === 'Special Operations Forces') {
       b = 10;
-
     } // add multiple special forces types some are b=10 and some are b=15 add MEU and MLR
     else if (unit_type === 'Special Operations Forces - EZO') {
       b = 15;
     }
     else {
       b = 0;
+      console.log("Friendly unit type not recognized, WEZ set to 0")
     }
 
     // Access answers affect b
-    if (tacticsData.FriendlyAccess === 1) {
+    if (currentTacticsData.FriendlyAccess === 1) {
       b *= 0.75 // Decrease b by 25%
+      damagePositiveLocal.push("Your target is in a good range")
     }
 
     // These are based on values given by Lt. Col. Rayl
@@ -829,34 +947,41 @@ function BattlePage() {
     else if (enemyUnit?.unit_type === 'Reconnaissance' || enemyUnit?.unit_type === 'Unmanned Aerial Systems') {
       b_enemy = 10;
     }
-    else if (enemyUnit?.unit_type === 'Combined Arms') {
-      b_enemy = 10;
-    }
-    else if (enemyUnit?.unit_type === 'Self-propelled' || enemyUnit?.unit_type === 'Electronic Warfare' || enemyUnit?.unit_type === 'Air Assault' || unit_type === 'Aviation Rotary Wing') {
+    else if (enemyUnit?.unit_type === 'Self-propelled' || enemyUnit?.unit_type === 'Electronic Warfare' || enemyUnit?.unit_type === 'Air Assault' || enemyUnit?.unit_type === 'Aviation Rotary Wing' || enemyUnit?.unit_type === 'Combat Support') {
       b_enemy = 10;
     }
     else if (enemyUnit?.unit_type === 'Signal' || enemyUnit?.unit_type === 'Special Operations Forces') {
       b_enemy = 10;
+    } // add multiple special forces types some are b=10 and some are b=15 add MEU and MLR
+    else if (enemyUnit?.unit_type === 'Special Operations Forces - EZO') {
+      b = 15;
     }
     else {
       b_enemy = 0;
+      console.log("Enemy unit type not recognized, WEZ set to 0")
     }
 
     // Access answers affect b
-    if (tacticsData.EnemyAccess === 1) {
+    if (currentTacticsData.EnemyAccess === 1) {
       b_enemy *= 0.75 // Decrease b by 25%
     }
 
+    setDamagePositiveFeedback(damagePositiveLocal.length > 0 ? damagePositiveLocal.join('\n') : "No significant positive factors.");
+    setDamageNegativeFeedback(damageNegativeLocal.length > 0 ? damageNegativeLocal.join('\n') : "No significant negative factors.");
+    currentTacticsData.damagePositiveFeedback = damagePositiveFeedback;
+    currentTacticsData.damageNegativeFeedback = damageNegativeFeedback; 
+
     // Calculates the damage previously done to the friendly unit
     let prevFriendlyDamage
-    if (b_enemy > 0) {
+    if (b > 0 && calculateEnemyTacticsScore() > 0) {
       // Friendly damage assessment phase calculations ------------------------------------------------------------------------------
       prevFriendlyDamage = Math.exp(-((r ** 2) / (2 * ((b_enemy * (calculateEnemyTacticsScore() / 100)) ** 2))));
-      console.log("Friendly tactics score (calculateTacticsScore): ", calculateTacticsScore())
       console.log("Enemy tactics score (calculateEnemyTacticsScore): ", calculateEnemyTacticsScore())
     }
     else {
       prevFriendlyDamage = 0;
+      console.log("calculateEnemyTacticsScore = 0")
+      console.log("Enemy tactics score (calculateEnemyTacticsScore): ", calculateEnemyTacticsScore())
     }
 
     // Calculates the maximum damage that the friendly striking unit can inflict in a particular engagement
@@ -874,6 +999,8 @@ function BattlePage() {
 
     // Calculates the overall damage to the friendly unit
     setTotalFriendlyDamage(friendlyDamage);
+    currentTacticsData.friendlyDamage = totalFriendlyDamage;
+    console.log("total friendly damage: ", totalFriendlyDamage);
 
     // Friendly attrition calculation: Fn = Fi - D ----------------------------------------------------------------------------------
     // Subtracts the total damage from the previous friendly health in order to set a new health for the friendly unit
@@ -884,12 +1011,15 @@ function BattlePage() {
 
     let prevEnemyDamage = 0;
     // Calculates the damage previously done to the enemy unit
-    if (b > 0) {
+    if (b > 0 && calculateTacticsScore() > 0) {
       // Enemy damage assessment phase calculations ---------------------------------------------------------------------------------
       prevEnemyDamage = Math.exp(-((r_enemy ** 2) / (2 * ((b * (calculateTacticsScore() / 100)) ** 2))));
+      console.log("Friendly tactics score (calculateTacticsScore): ", calculateTacticsScore())
     }
     else {
       prevEnemyDamage = 0;
+      console.log("calculateTacticsScore = 0")
+      console.log("Friendly tactics score (calculateTacticsScore): ", calculateTacticsScore())
     }
 
     // Make sure enemy health is never negative
@@ -904,6 +1034,8 @@ function BattlePage() {
 
     // // Calculates the overall damage to the enemy unit and sets it to the totalEnemyDamage variable
     setTotalEnemyDamage(enemyDamage);
+    currentTacticsData.enemyDamage = totalEnemyDamage;
+    console.log("total enemy damage: ", totalEnemyDamage);
 
     // Enemy attrition calculation: Fn = Fi - D -------------------------------------------------------------------------------------
     // Subtracts the total damage from the previous enemy health in order to set a new health for the enemy unit
@@ -914,6 +1046,59 @@ function BattlePage() {
     setTacticsScore(friendlyScore);
     const enemyScore = calculateEnemyTacticsScore();
     setEnemyTacticsScore(enemyScore);
+
+    const answersForThisRound: Form[] = [
+      { 
+        ID: 'Conducted ISR prior to moving land forces?', 
+        friendlyScore: weights.ISR[question1.toLowerCase() as 'yes' | 'no'], 
+        enemyScore: weights.ISR[enemyquestion1.toLowerCase() as 'yes' | 'no'],
+        friendlyAnswer: question1 as 'Yes' | 'No',
+        enemyAnswer: enemyquestion1 as 'Yes' | 'No'
+      },
+      { 
+        ID: 'Within logistics support range?', 
+        friendlyScore: weights.logisticsSupportRange[question2.toLowerCase() as 'yes' | 'no'], 
+        enemyScore: weights.logisticsSupportRange[enemyquestion2.toLowerCase() as 'yes' | 'no'],
+        friendlyAnswer: question2 as 'Yes' | 'No',
+        enemyAnswer: enemyquestion2 as 'Yes' | 'No'
+      },
+      { 
+        ID: 'Is the target defending a critical location?', 
+        friendlyScore: weights.criticalLocation[question3.toLowerCase() as 'yes' | 'no'], 
+        enemyScore: weights.criticalLocation[enemyquestion3.toLowerCase() as 'yes' | 'no'],
+        friendlyAnswer: question3 as 'Yes' | 'No',
+        enemyAnswer: enemyquestion3 as 'Yes' | 'No'
+      },
+      { 
+        ID: 'GPS being jammed?', 
+        friendlyScore: weights.gpsJammed[question4.toLowerCase() as 'yes' | 'no'], 
+        enemyScore: weights.gpsJammed[enemyquestion4.toLowerCase() as 'yes' | 'no'],
+        friendlyAnswer: question4 as 'Yes' | 'No',
+        enemyAnswer: enemyquestion4 as 'Yes' | 'No'
+      },
+      { 
+        ID: 'Communications being jammed?', 
+        friendlyScore: weights.communicationsJammed[question5.toLowerCase() as 'yes' | 'no'], 
+        enemyScore: weights.communicationsJammed[enemyquestion5.toLowerCase() as 'yes' | 'no'],
+        friendlyAnswer: question5 as 'Yes' | 'No',
+        enemyAnswer: enemyquestion5 as 'Yes' | 'No'
+      },
+      { 
+        ID: 'Have close air support?', 
+        friendlyScore: weights.closeAirSupport[question6.toLowerCase() as 'yes' | 'no'], 
+        enemyScore: weights.closeAirSupport[enemyquestion6.toLowerCase() as 'yes' | 'no'],
+        friendlyAnswer: question6 as 'Yes' | 'No',
+        enemyAnswer: enemyquestion6 as 'Yes' | 'No'
+      },
+      { 
+        ID: 'Is the target accessible?', 
+        friendlyScore: weights.accessTarget[question7.toLowerCase() as 'yes' | 'no'], 
+        enemyScore: weights.accessTarget[enemyquestion7.toLowerCase() as 'yes' | 'no'],
+        friendlyAnswer: question7 as 'Yes' | 'No',
+        enemyAnswer: enemyquestion7 as 'Yes' | 'No'
+      }
+    ];
+    setSubmittedAnswers(answersForThisRound);
 
     setRound(round + 1); // Updates the round as the scores are finalized
 
@@ -926,8 +1111,8 @@ function BattlePage() {
       EnemyID: enemyUnit?.unit_id,
       FriendlyBaseScore: baseValue,
       EnemyBaseScore: enemyBaseValue,
-      FriendlyTacticsScore: TacticsScore,
-      EnemyTacticsScore: enemyTacticsScore,
+      FriendlyTacticsScore: friendlyScore,
+      EnemyTacticsScore: enemyScore,
       FriendlyTotalScore: friendlyTotalScore,
       EnemyTotalScore: enemyTotalScore,
       isWin: isWin,
@@ -950,6 +1135,7 @@ function BattlePage() {
 
       const engagementResult = await engagementResponse.json();
       console.log('Engagement created:', engagementResult);
+      currentTacticsData.engagementid = engagementResult.engagementid;
 
       // Submit tactics data
       const tacticsResponse = await fetch(`${REACT_APP_BACKEND_URL}/tactics`, {
@@ -957,7 +1143,7 @@ function BattlePage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(tacticsData),
+        body: JSON.stringify(currentTacticsData),
       });
 
       if (!tacticsResponse.ok) {
@@ -998,41 +1184,30 @@ function BattlePage() {
 
   // Variable Conditions and corresponding weights
   const weights: Record<WeightKeys, { yes: number; no: number }> = {
-    awareOfPresence: { yes: 20, no: 0 },
+    ISR: { yes: 20, no: 0 },
     logisticsSupportRange: { yes: 25, no: 0 },
-    isrCoverage: { yes: 10, no: 0 },
-    gpsWorking: { yes: 10, no: 0 },
-    communicationsWorking: { yes: 10, no: 0 },
-    fireSupportRange: { yes: 15, no: 0 },
-    patternForceRange: { yes: 10, no: 0 }
+    criticalLocation: { yes: 10, no: 0 },
+    gpsJammed: { yes: 0, no: 10 },
+    communicationsJammed: { yes: 0, no: 10 },
+    closeAirSupport: { yes: 15, no: 0 },
+    accessTarget: { yes: 10, no: 0 }
   };
 
   // Defines the keys for the different tactics to assign to different weights
-  type WeightKeys = 'awareOfPresence' | 'logisticsSupportRange' | 'isrCoverage' | 'gpsWorking' | 'communicationsWorking' | 'fireSupportRange' | 'patternForceRange';
+  type WeightKeys = 'ISR' | 'logisticsSupportRange' | 'criticalLocation' | 'gpsJammed' | 'communicationsJammed' | 'closeAirSupport' | 'accessTarget';
 
   // Calculates the score based on different tactics for each engagement
   const calculateTacticsScore = () => {
     let score = 0;
 
-    // Variable Conditions and corresponding weights
-    const weights: Record<WeightKeys, { yes: number; no: number }> = {
-      awareOfPresence: { yes: 20, no: 0 },
-      logisticsSupportRange: { yes: 25, no: 0 },
-      isrCoverage: { yes: 10, no: 0 },
-      gpsWorking: { yes: 10, no: 0 },
-      communicationsWorking: { yes: 10, no: 0 },
-      fireSupportRange: { yes: 15, no: 0 },
-      patternForceRange: { yes: 10, no: 0 }
-    };
-
     // Calculate score based on current state values of questions
-    score += weights.awareOfPresence[question1.toLowerCase() as 'yes' | 'no'];
+    score += weights.ISR[question1.toLowerCase() as 'yes' | 'no'];
     score += weights.logisticsSupportRange[question2.toLowerCase() as 'yes' | 'no'];
-    score += weights.isrCoverage[question3.toLowerCase() as 'yes' | 'no'];
-    score += weights.gpsWorking[question4.toLowerCase() as 'yes' | 'no'];
-    score += weights.communicationsWorking[question5.toLowerCase() as 'yes' | 'no'];
-    score += weights.fireSupportRange[question6.toLowerCase() as 'yes' | 'no'];
-    score += weights.patternForceRange[question7.toLowerCase() as 'yes' | 'no'];
+    score += weights.criticalLocation[question3.toLowerCase() as 'yes' | 'no'];
+    score += weights.gpsJammed[question4.toLowerCase() as 'yes' | 'no'];
+    score += weights.communicationsJammed[question5.toLowerCase() as 'yes' | 'no'];
+    score += weights.closeAirSupport[question6.toLowerCase() as 'yes' | 'no'];
+    score += weights.accessTarget[question7.toLowerCase() as 'yes' | 'no'];
 
     return score;
   };
@@ -1041,50 +1216,27 @@ function BattlePage() {
   const calculateEnemyTacticsScore = () => {
     let score = 0;
 
-      const weights: Record<WeightKeys, { yes: number; no: number }> = {
-      awareOfPresence: { yes: 20, no: 0 },
-      logisticsSupportRange: { yes: 25, no: 0 },
-      isrCoverage: { yes: 10, no: 0 },
-      gpsWorking: { yes: 10, no: 0 },
-      communicationsWorking: { yes: 10, no: 0 },
-      fireSupportRange: { yes: 15, no: 0 },
-      patternForceRange: { yes: 10, no: 0 }
-    };
-
     // Calculate score based on current state values of questions
-    score += weights.awareOfPresence[enemyquestion1.toLowerCase() as 'yes' | 'no'];
+    score += weights.ISR[enemyquestion1.toLowerCase() as 'yes' | 'no'];
     score += weights.logisticsSupportRange[enemyquestion2.toLowerCase() as 'yes' | 'no'];
-    score += weights.isrCoverage[enemyquestion3.toLowerCase() as 'yes' | 'no'];
-    score += weights.gpsWorking[enemyquestion4.toLowerCase() as 'yes' | 'no'];
-    score += weights.communicationsWorking[enemyquestion5.toLowerCase() as 'yes' | 'no'];
-    score += weights.fireSupportRange[enemyquestion6.toLowerCase() as 'yes' | 'no'];
-    score += weights.patternForceRange[enemyquestion7.toLowerCase() as 'yes' | 'no'];
+    score += weights.criticalLocation[enemyquestion3.toLowerCase() as 'yes' | 'no'];
+    score += weights.gpsJammed[enemyquestion4.toLowerCase() as 'yes' | 'no'];
+    score += weights.communicationsJammed[enemyquestion5.toLowerCase() as 'yes' | 'no'];
+    score += weights.closeAirSupport[enemyquestion6.toLowerCase() as 'yes' | 'no'];
+    score += weights.accessTarget[enemyquestion7.toLowerCase() as 'yes' | 'no'];
 
-    //score = ((20 * Number(unitTactics?.awareness)) + (25 * Number(unitTactics?.logistics) + (10 * Number(unitTactics?.coverage)) + (10 * Number(unitTactics?.gps)) +
+    //score = ((20 * Number(unitTactics?.awareness)) + (25 * Number(unitTactics?.logistics) + (10 * Number(unitTactics?.ISR)) + (10 * Number(unitTactics?.gps)) +
       //(10 * Number(unitTactics?.comms)) + (15 * Number(unitTactics?.fire)) + (10 * Number(unitTactics?.pattern))));
     return score;
   };
 
-
-  // Printing scores into the Engagement Data card in AAR
-  const answers: Form[] = [
-    { ID: 'Aware of OPFOR?', friendlyScore: weights.awareOfPresence[question1.toLowerCase() as 'yes' | 'no'], enemyScore: weights.awareOfPresence[enemyquestion1.toLowerCase() as 'yes' | 'no']},
-    { ID: 'Within Logistics Support Range?', friendlyScore: weights.logisticsSupportRange[question2.toLowerCase() as 'yes' | 'no'], enemyScore: weights.logisticsSupportRange[enemyquestion2.toLowerCase() as 'yes' | 'no'] },
-    { ID: 'Within RPA/ISR Coverage?', friendlyScore: weights.isrCoverage[question3.toLowerCase() as 'yes' | 'no'], enemyScore: weights.isrCoverage[enemyquestion3.toLowerCase() as 'yes' | 'no'] },
-    { ID: 'Working GPS?', friendlyScore: weights.gpsWorking[question4.toLowerCase() as 'yes' | 'no'], enemyScore: weights.gpsWorking[enemyquestion4.toLowerCase() as 'yes' | 'no'] },
-    { ID: 'Working Communications?', friendlyScore: weights.communicationsWorking[question5.toLowerCase() as 'yes' | 'no'], enemyScore: weights.communicationsWorking[enemyquestion5.toLowerCase() as 'yes' | 'no'] },
-    { ID: 'Within Fire Support Range?', friendlyScore: weights.fireSupportRange[question6.toLowerCase() as 'yes' | 'no'], enemyScore: weights.fireSupportRange[enemyquestion6.toLowerCase() as 'yes' | 'no'] },
-    { ID: 'Within Range of a Pattern Force?', friendlyScore: weights.patternForceRange[question7.toLowerCase() as 'yes' | 'no'], enemyScore: weights.patternForceRange[enemyquestion7.toLowerCase() as 'yes' | 'no'] }
-  ]
-
-
   // Maps each tactic and its corresponding blue/red score to a row
-  const tacticToRow = (answers: Form[]) => (
-    answers.map((tactic) => (
+  const tacticToRow = (answersForThisRound: Form[]) => (
+    answersForThisRound.map((tactic) => (
       <Table.Tr key={tactic.ID}>
         <Table.Td>{tactic.ID}</Table.Td>
-        <Table.Td>{tactic.friendlyScore !== 0 ? 'Yes' : 'No'}</Table.Td>
-        <Table.Td>{tactic.enemyScore !== 0 ? 'Yes' : 'No'}</Table.Td>
+        <Table.Td>{tactic.friendlyAnswer}</Table.Td>
+        <Table.Td>{tactic.enemyAnswer}</Table.Td>
       </Table.Tr>
     ))
 
@@ -1289,7 +1441,7 @@ function BattlePage() {
                   {/* Displays a card that contains pertinent information about the selected friendly unit */}
                   <Card.Section><Center><h2>{unit_name}</h2></Center></Card.Section>
                   {unit ? (
-                    <Text size="xl" style={{ whiteSpace: 'pre-line' }}>
+                    <div style={{ fontSize: 'var(--mantine-font-size-xl)', whiteSpace: 'pre-line' }}>
                       <strong>Type:</strong> {unit_type}<br />
                       <Space mb="5px" />
                       <strong>Unit Size:</strong> {unit_size}<br />
@@ -1305,7 +1457,7 @@ function BattlePage() {
 
                       <strong>Health:</strong> {friendlyHealth}<br />
                       <CustomProgressBarHealth value={Number(friendlyHealth)} />
-                    </Text>
+                    </div>
                   ) : (
                     <Text size="sm">Unit not found</Text>
                   )}
@@ -1332,7 +1484,7 @@ function BattlePage() {
 
                     <Card.Section><Center><h2>{enemyUnit.unit_name}</h2></Center></Card.Section>
                     {unit ? (
-                      <Text size="xl">
+                      <div style={{ fontSize: 'var(--mantine-font-size-xl)' }}>
                         <strong>Type:</strong> {enemyUnit.unit_type}<br />
                         <Space mb="5px" />
                         <strong>Unit Size:</strong> {enemyUnit.unit_size}<br />
@@ -1349,7 +1501,7 @@ function BattlePage() {
                         <strong>Health:</strong> {enemyHealth}<br />
                         <CustomProgressBarHealth value={Number(enemyHealth)} />
 
-                      </Text>
+                      </div>
                     ) : (
                       <Text size="sm">Unit not found</Text>
                     )}
@@ -1386,21 +1538,21 @@ function BattlePage() {
         </Stepper.Step>
 
         {/* This begins the yes/no pages for the students to answer about individual tactics*/}
-        {/* Phase 1 questions about OPFOR and logistics support */}
+        {/* Phase 1 questions about awareness (ISR) and logistics support */}
         <Stepper.Step allowStepSelect={false} label="Force Strength" icon={<IconNumber1Small stroke={1.5} style={{ width: rem(80), height: rem(80) }} />}>
           <div>
             <p>Phase 1: Force Strength</p>
             <Grid>
               <Grid.Col span={4}>
                 <h1>Friendly: {unit_name}</h1>
-                <p>Aware of OPFOR presence?</p>
+                <p>Conducted ISR prior to moving land forces?</p>
                 <SegmentedControl value={question1} onChange={setQuestion1} size='xl' radius='xs' color="gray" data={['Yes', 'No']} />
                 <p>Within logistics support range?</p>
                 <SegmentedControl value={question2} onChange={setQuestion2} size='xl' radius='xs' color="gray" data={['Yes', 'No']} />
               </Grid.Col>
               <Grid.Col span={6}>
                 <h1>Enemy: {enemyUnit?.unit_name}</h1>
-                <p>Aware of OPFOR presence?</p>
+                <p>Conducted ISR prior to moving land forces?</p>
                 <SegmentedControl
                   value={enemyquestion1}
                   onChange={setEnemyQuestion1}
@@ -1429,21 +1581,21 @@ function BattlePage() {
           </div>
         </Stepper.Step>
 
-        {/* Phase 2 questions about ISR coverage and GPS*/}
+        {/* Phase 2 questions about target defense and GPS*/}
         <Stepper.Step allowStepSelect={false} label="Tactical Advantage" icon={<IconNumber2Small stroke={1.5} style={{ width: rem(80), height: rem(80) }} />}>
           <div>
             <p>Phase 2: Tactical Advantage</p>
             <Grid>
               <Grid.Col span={6}>
                 <h1>Friendly: {unit_name}</h1>
-                <p>Under ISR coverage?</p>
+                <p>Is the target defending a critical location?</p>
                 <SegmentedControl value={question3} onChange={setQuestion3} size='xl' radius='xs' color="gray" data={['Yes', 'No']} />
-                <p>Working GPS?</p>
+                <p>GPS being jammed?</p>
                 <SegmentedControl value={question4} onChange={setQuestion4} size='xl' radius='xs' color="gray" data={['Yes', 'No']} />
               </Grid.Col>
               <Grid.Col span={6}>
                 <h1>Enemy: {enemyUnit?.unit_name}</h1>
-                <p>Under ISR coverage?</p>
+                <p>Is the target defending a critical location?</p>
                 <SegmentedControl
                   value={enemyquestion3}
                   onChange={setEnemyQuestion3}
@@ -1452,7 +1604,7 @@ function BattlePage() {
                   color="gray"
                   data={['Yes', 'No']}
                 />
-                <p>Working GPS?</p>
+                <p>GPS being jammed?</p>
                 <SegmentedControl
                   value={enemyquestion4}
                   onChange={setEnemyQuestion4}
@@ -1472,21 +1624,21 @@ function BattlePage() {
           </div>
         </Stepper.Step>
 
-        {/* Phase 3 questions about communications and fire support range */}
+        {/* Phase 3 questions about communications and close air support (CAS) */}
         <Stepper.Step allowStepSelect={false} label="Fire Support" icon={<IconNumber3Small stroke={1.5} style={{ width: rem(80), height: rem(80) }} />} >
           <div>
             <p>Phase 3: Fire Support</p>
             <Grid>
               <Grid.Col span={6}>
                 <h1>Friendly: {unit_name}</h1>
-                <p>Working communications?</p>
+                <p>Communications being jammed?</p>
                 <SegmentedControl value={question5} onChange={setQuestion5} size='xl' radius='xs' color="gray" data={['Yes', 'No']} />
-                <p>Within fire support range?</p>
+                <p>Have close air support?</p>
                 <SegmentedControl value={question6} onChange={setQuestion6} size='xl' radius='xs' color="gray" data={['Yes', 'No']} />
               </Grid.Col>
               <Grid.Col span={6}>
                 <h1>Enemy: {enemyUnit?.unit_name}</h1>
-                <p>Working communications?</p>
+                <p>Communications being jammed?</p>
                 <SegmentedControl
                   value={enemyquestion5}
                   onChange={setEnemyQuestion5}
@@ -1495,7 +1647,7 @@ function BattlePage() {
                   color="gray"
                   data={['Yes', 'No']}
                 />
-                <p>Within fire support range?</p>
+                <p>Have close air support?</p>
                 <SegmentedControl
                   value={enemyquestion6}
                   onChange={setEnemyQuestion6}
@@ -1522,12 +1674,12 @@ function BattlePage() {
             <Grid>
               <Grid.Col span={6}>
                 <h1>Friendly: {unit_name}</h1>
-                <p>Accessible by pattern force?</p>
+                <p>Is the target accessible?</p>
                 <SegmentedControl value={question7} onChange={setQuestion7} size='xl' radius='xs' color="gray" data={['Yes', 'No']} disabled={progress !== 0} />
               </Grid.Col>
               <Grid.Col span={6}>
                 <h1>Enemy: {enemyUnit?.unit_name}</h1>
-                <p>Accessible by pattern force?</p>
+                <p>Is the target accessible?</p>
                 <SegmentedControl
                   value={enemyquestion7}
                   onChange={setEnemyQuestion7}
@@ -1551,8 +1703,6 @@ function BattlePage() {
                     interval.start();
                   }
                   finalizeTactics();
-                  console.log("total friendly damage: ", totalFriendlyDamage);
-                  console.log("total enemy damage: ", totalEnemyDamage);
                 }}
                 color={theme.primaryColor}
                 disabled={progress !== 0} // Disable the button during loading
@@ -1575,7 +1725,7 @@ function BattlePage() {
             </Group>
           </div>
         </Stepper.Step>
-        {/* Dnd of yes/no questions for cadets */}
+        {/* End of yes/no questions for cadets */}
 
         {/* AAR PAGE */}
         {/* Displays the round summary page with comparisons between friendly and enemy units */}
@@ -1695,13 +1845,137 @@ function BattlePage() {
                   <Table verticalSpacing={'xs'} style={{ justifyContent: 'center' }}>
                     <Table.Thead>
                       <Table.Tr>
-                        <Table.Th>Tactic</Table.Th>
-                        <Table.Th style={{ color: '#3d85c6' }}>Friendly Tactic</Table.Th>
-                        <Table.Th style={{ color: '#c1432d' }}>Enemy Tactic</Table.Th>
+                        <Table.Th style={{ textAlign: 'center' }}>Tactic</Table.Th>
+                        <Table.Th style={{ color: '#60acf7', textAlign: 'center' }}>Friendly Tactic</Table.Th>
+                        <Table.Th style={{ color: '#f4888a', textAlign: 'center' }}>Enemy Tactic</Table.Th>
                       </Table.Tr>
                     </Table.Thead>
-                    <Table.Tbody>{tacticToRow(answers)}</Table.Tbody>
+                    <Table.Tbody>{submittedAnswers ? tacticToRow(submittedAnswers) : null}</Table.Tbody>
                   </Table>
+                </Card.Section>
+
+                <Card.Section withBorder inheritPadding py="xs">
+                  {/* feedback section */}
+                  <Container>
+                    <Text size="xl" fw={700}>Tactics Feedback & Effects</Text>
+                  </Container>
+
+                  {/* feedback table */}
+                  <Table verticalSpacing={'xs'} style={{ justifyContent: 'center', width: "100%" }} >
+                    {/* headers */}
+                    <Table.Thead>
+                      <Table.Tr>
+                        <Table.Th style={{ textAlign: 'center', width: '34%' }}>Detection</Table.Th>
+                        <Table.Th style={{ textAlign: 'center', width: '33%' }}>Accuracy</Table.Th>
+                        <Table.Th style={{ textAlign: 'center', width: '33%' }}>Damage</Table.Th>
+                      </Table.Tr>
+                    </Table.Thead>
+                    <Table.Tbody>
+                      {/* Row 1: Text Feedback */}
+                      <Table.Tr>
+                        {/* detection */}
+                        <Table.Td>
+                          <Text c={firstAttackFriendly ? '#60acf7' : '#f4888a'}>
+                            {firstAttackFriendly ? 'You surprised the enemy and attacked first!' : 'Enemy surprised you and attacked first!'}
+                          </Text>
+                        </Table.Td>
+                        {/* accuracy */}
+                        <Table.Td>
+                          <Text c="#60acf7">{friendlyAccuracyLevel}, {friendlyAccuracyPercent.toFixed(2)}%</Text>
+                          <Text c="#f4888a">{enemyAccuracyLevel}, {enemyAccuracyPercent.toFixed(2)}%</Text>
+                        </Table.Td>
+                        {/* damage */}
+                        <Table.Td>
+                          <Text c="#60acf7">-{totalFriendlyDamage.toFixed(0)} points</Text>
+                          <Text c="#f4888a">-{totalEnemyDamage.toFixed(0)} points</Text>
+                        </Table.Td>
+                      </Table.Tr>
+
+                      {/* Row 2: Icon Tooltips */}
+                      <Table.Tr>
+                        {/* Detection Column */}
+                        <Table.Td>
+                          <Group justify="center" gap="xs">
+                            <Tooltip label={
+                              <div style={{textAlign: 'left', paddingBottom: '0.7rem'}}>
+                                <p style={{color: 'black'}}>Factors that INCREASED your detection ability:</p>
+                                  {detectionPositiveFeedback.split('\n').map((factor, index) => (
+                                <p key={index} style={{margin: 0, paddingLeft: '1em', color: 'black'}}>- {factor}</p>
+                                ))}
+                              </div>
+                            }  color="#8bc17c" position="bottom">
+                              <IconTrendingUp size={24} color="#8bc17c" />
+                            </Tooltip>
+                            <Tooltip label={
+                              <div style={{textAlign: 'left', paddingBottom: '0.7rem'}}>
+                                <p style={{color: 'black'}}>Factors that DECREASED your detection ability:</p>
+                                  {detectionNegativeFeedback.split('\n').map((factor, index) => (
+                                <p key={index} style={{margin: 0, paddingLeft: '1em', color: 'black'}}>- {factor}</p>
+                                ))}
+                              </div>
+                            }  color="#f4888a" position="bottom">
+                              <IconTrendingDown size={24} color="#f4888a" />
+                            </Tooltip>
+                          </Group>
+                        </Table.Td>
+
+                        {/* Accuracy Column */}
+                        <Table.Td>
+                          <Group justify="center" gap="xs">
+                            <Tooltip label={
+                              <div style={{textAlign: 'left', paddingBottom: '0.7rem'}}>
+                                <p style={{color: 'black'}}>Factors that INCREASED your accuracy:</p>
+                                  {accuracyPositiveFeedback.split('\n').map((factor, index) => (
+                                <p key={index} style={{margin: 0, paddingLeft: '1em', color: 'black'}}>- {factor}</p>
+                                ))}
+                              </div>
+                            }  color="#8bc17c" position="bottom">
+                              <IconTrendingUp size={24} color="#8bc17c" />
+                            </Tooltip>
+                            <Tooltip label={
+                              <div style={{textAlign: 'left', paddingBottom: '0.7rem'}}>
+                                <p style={{color: 'black'}}>Factors that DECREASED your accuracy:</p>
+                                  {accuracyNegativeFeedback.split('\n').map((factor, index) => (
+                                <p key={index} style={{margin: 0, paddingLeft: '1em', color: 'black'}}>- {factor}</p>
+                                ))}
+                              </div>
+                            }  color="#f4888a" position="bottom">
+                              <IconTrendingDown size={24} color="#f4888a" />
+                            </Tooltip>
+                          </Group>
+                        </Table.Td>
+
+                        {/* Damage Column */}
+                        <Table.Td>
+                          <Group justify="center" gap="xs">
+                            <Tooltip label={
+                              <div style={{textAlign: 'left', paddingBottom: '0.7rem'}}>
+                                <p style={{color: 'black'}}>Factors that INCREASED damage you inflicted:</p>
+                                  {damagePositiveFeedback.split('\n').map((factor, index) => (
+                                <p key={index} style={{margin: 0, paddingLeft: '1em', color: 'black'}}>- {factor}</p>
+                                ))}
+                              </div>
+                            }  color="#8bc17c" position="bottom">
+                              <IconTrendingUp size={24} color="#8bc17c" />
+                            </Tooltip>
+                            <Tooltip label={
+                              <div style={{textAlign: 'left', paddingBottom: '0.7rem'}}>
+                                <p style={{color: 'black'}}>Factors that DECREASED damage you inflicted:</p>
+                                  {damageNegativeFeedback.split('\n').map((factor, index) => (
+                                <p key={index} style={{margin: 0, paddingLeft: '1em', color: 'black'}}>- {factor}</p>
+                                ))}
+                              </div>
+                            }  color="#f4888a" position="bottom">
+                              <IconTrendingDown size={24} color="#f4888a" />
+                            </Tooltip>
+                          </Group>
+                        </Table.Td>
+                      </Table.Tr>
+                    </Table.Tbody>
+                  </Table>
+                  <Text style={{fontSize: '0.75rem', color: '#868e96', textAlign: 'center', marginTop: '0.05rem', fontStyle: 'italic'}}>
+                      Hover over the icons above for round's feedback.
+                  </Text>
                 </Card.Section>
 
 

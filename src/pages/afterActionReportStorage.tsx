@@ -1,5 +1,5 @@
 // afterActionReviewStorage.tsx renders the after action reviews page. Core functionalities include displaying 
-// round statistics (scores/tactics/more info)
+// round statistics (scores/tactics/feedback)
 
 // Import React hooks for state and lifecycle management
 import React, { useState, useEffect } from 'react';
@@ -15,7 +15,8 @@ import {
   Card,
   Tooltip,
   Text,
-  Title
+  Title,
+  Container
 } from '@mantine/core';
 // Import Mantine hooks for UI state management
 import { useDisclosure } from '@mantine/hooks';
@@ -23,6 +24,7 @@ import { useDisclosure } from '@mantine/hooks';
 import { useNavigate, useParams } from 'react-router-dom';
 // Import icons from the react-icons library
 import { FaArrowAltCircleLeft, FaInfoCircle } from "react-icons/fa";
+import {IconTrendingUp, IconTrendingDown} from '@tabler/icons-react';
 // Import local CSS module for styling
 import classes from './TableReviews.module.css';
 // Import axios for making HTTP requests to the backend
@@ -47,24 +49,37 @@ export interface recentEngagementData {
   section: number;
 }
 
-// Defines the structure for the tactics data associated with an engagement
+// Defines the structure for the tactics data and feedback associated with an engagement
 export interface Tactics {
   question: string;
-  friendlyawareness?: number;
-  enemyawareness?: number;
-  friendlylogistics?: number;
-  enemylogistics?: number;
-  friendlycoverage?: number;
-  enemycoverage?: number;
-  friendlygps?: number;
-  enemygps?: number;
-  friendlycomms?: number;
-  enemycomms?: number;
-  friendlyfire?: number;
-  enemyfire?: number;
-  friendlypattern?: number;
-  enemypattern?: number;
+  FriendlyISR?: number;
+  EnemyISR?: number;
+  FriendlyLogistics?: number;
+  EnemyLogistics?: number;
+  FriendlyCritical?: number;
+  EnemyCritical?: number;
+  FriendlyGPS?: number;
+  EnemyGPS?: number;
+  FriendlyComms?: number;
+  EnemyComms?: number;
+  FriendlyCAS?: number;
+  EnemyCAS?: number;
+  FriendlyAccess?: number;
+  EnemyAccess?: number;
   engagementid?: number;
+  firstAttackFriendly?: boolean;
+  friendlyAccuracyPercent?: number;
+  friendlyAccuracyLevel?: string;
+  enemyAccuracyPercent?: number;
+  enemyAccuracyLevel?: string;
+  friendlyDamage?: number;
+  enemyDamage?: number;
+  detectionPositiveFeedback?: string;
+  detectionNegativeFeedback?: string;
+  accuracyPositiveFeedback?: string;
+  accuracyNegativeFeedback?: string;
+  damagePositiveFeedback?: string;
+  damageNegativeFeedback?: string
 }
 
 // Defines the structure for a single engagement's summary data
@@ -211,156 +226,36 @@ export default function AAR() {
     
     // Defines the questions and the corresponding data keys for the tactics table.
     const tacticQuestions = [
-      { question: 'Aware of OPFOR?', friendlyKey: 'friendlyawareness', enemyKey: 'enemyawareness' },
-      { question: 'Within Logistics Support Range?', friendlyKey: 'friendlylogistics', enemyKey: 'enemylogistics' },
-      { question: 'Within RPA/ISR Coverage?', friendlyKey: 'friendlycoverage', enemyKey: 'enemycoverage' },
-      { question: 'Working GPS?', friendlyKey: 'friendlygps', enemyKey: 'enemygps' },
-      { question: 'Within Communications Range?', friendlyKey: 'friendlycomms', enemyKey: 'enemycomms' },
-      { question: 'Within Fire Support Range?', friendlyKey: 'friendlyfire', enemyKey: 'enemyfire' },
-      { question: 'Within Range of a Pattern Force?', friendlyKey: 'friendlypattern', enemyKey: 'enemypattern' },
+      { question: 'Conducted ISR prior to moving land forces?', friendlyKey: 'FriendlyISR', enemyKey: 'EnemyISR' },
+      { question: 'Within logistics support range?', friendlyKey: 'FriendlyLogistics', enemyKey: 'EnemyLogistics' },
+      { question: 'Is the target defending a critical location?', friendlyKey: 'FriendlyCritical', enemyKey: 'EnemyCritical' },
+      { question: 'GPS being jammed?', friendlyKey: 'FriendlyGPS', enemyKey: 'EnemyGPS' },
+      { question: 'Communications being jammed?', friendlyKey: 'FriendlyComms', enemyKey: 'EnemyComms' },
+      { question: 'Have close air support?', friendlyKey: 'FriendlyCAS', enemyKey: 'EnemyCAS' },
+      { question: 'Is the target accessible?', friendlyKey: 'FriendlyAccess', enemyKey: 'EnemyAccess' },
     ];
     
     // Assumes the tactics array contains a single object with all the data.
     const tacticData = tactics[0]; 
 
-    /**
-     * Determines the descriptive text for the tooltip based on the question and the friendly/enemy answers.
-     * @param question - The tactic question being asked.
-     * @param friendly - The friendly force's answer ('Yes' or 'No').
-     * @param enemy - The enemy force's answer ('Yes' or 'No').
-     * @returns A descriptive string for the tooltip.
-     */
-    const getTooltipLabel = (question: string, friendly: string, enemy: string): string => {
-      // The outer switch statement checks which question is being asked
-      switch (question) {
-        case 'Aware of OPFOR?':
-          if (friendly === 'Yes' && enemy === 'Yes') {
-            return "No Advantage: Both forces were aware of each other. Neither side had the element of surprise.";
-          } else if (friendly === 'Yes' && enemy === 'No') {
-            return "Blue Advantage: Friendly forces were aware of the enemy, but the enemy was not. This provides a significant tactical advantage.";
-          } else if (friendly === 'No' && enemy === 'Yes') {
-            return "Red Advantage: Enemy forces were aware of friendlies, who were caught by surprise. This is a critical friendly vulnerability.";
-          } else {
-            return "No Advantage: Both forces were unaware of each other. The engagement likely began unexpectedly for both sides.";
-          }
-
-        case 'Within Logistics Support Range?':
-            if (friendly === 'Yes' && enemy === 'Yes') {
-                return "No Advantage: Both forces are operating within their supply lines and are able to be resupplied.";
-            } else if (friendly === 'Yes' && enemy === 'No') {
-                return "Blue Advantage: Friendly forces can sustain operations while the enemy is cut off from their supplies.";
-            } else if (friendly === 'No' && enemy === 'Yes') {
-                return "Red Advantage: Friendly forces risk exhaustion of supplies and cannot easily be reinforced or resupplied.";
-            } else {
-                return "No Advantage: Both forces are operating beyond their supply lines.";
-            }
-
-        case 'Within RPA/ISR Coverage?':
-            if (friendly === 'Yes' && enemy === 'Yes') {
-                return "No Advantage: Both sides have aerial surveillance, leading to a highly transparent battlefield.";
-            } else if (friendly === 'Yes' && enemy === 'No') {
-                return "Blue Advantage: Friendlies intel provides superior situational awareness of enemy movements.";
-            } else if (friendly === 'No' && enemy === 'Yes') {
-                return "Red Advantage: Friendly forces are operating blind while the enemy has better situational awareness.";
-            } else {
-                return "No Advantage: No aerial surveillance is available to either side.";
-            }
-        
-        case 'Working GPS?':
-            if (friendly === 'Yes' && enemy === 'Yes') {
-                return "No Advantage: Both forces have reliable access to GPS for navigation and coordination.";
-            } else if (friendly === 'Yes' && enemy === 'No') {
-                return "Blue Advantage: Friendlies can navigate and coordinate precisely, while the enemy may be disorganized.";
-            } else if (friendly === 'No' && enemy === 'Yes') {
-                return "Red Advantage: Enemy can navigate and coordinate precisely, while friendlies may be disorganized.";
-            } else {
-                return "No Advantage: This is a GPS-denied environment. Both forces must rely on analog methods like map and compass.";
-            }
-
-        case 'Within Communications Range?':
-            if (friendly === 'Yes' && enemy === 'Yes') {
-                return "No Advantage: Both forces can communicate effectively within their chains of command.";
-            } else if (friendly === 'Yes' && enemy === 'No') {
-                return "Blue Advantage: Friendlies C2 capabilities provide a strategic advantage.";
-            } else if (friendly === 'No' && enemy === 'Yes') {
-                return "Red Advantage: Friendly command and control is degraded, while the enemy is able to continue using C2.";
-            } else {
-                return "No Advantage: Communications are jammed or unavailable.";
-            }
-
-        case 'Within Fire Support Range?':
-            if (friendly === 'Yes' && enemy === 'Yes') {
-                return "No Advantage: Both forces can call for indirect fire support like artillery or mortars.";
-            } else if (friendly === 'Yes' && enemy === 'No') {
-                return "Blue Advantage: Friendlies can use artillery to suppress, fix, or destroy enemy positions from a distance.";
-            } else if (friendly === 'No' && enemy === 'Yes') {
-                return "Red Advantage: Friendlies are vulnerable to enemy artillery support.";
-            } else {
-                return "No Advantage: The engagement is outside the range of heavy fire support.";
-            }
-
-        case 'Within Range of a Pattern Force?':
-            if (friendly === 'Yes' && enemy === 'Yes') {
-                return "No Advantage: Both sides have reinforcements or a quick reaction force they can call upon.";
-            } else if (friendly === 'Yes' && enemy === 'No') {
-                return "Blue Advantage: Friendlies can be reinforced, potentially turning the tide of the battle with fresh troops.";
-            } else if (friendly === 'No' && enemy === 'Yes') {
-                return "Red Advantage: The enemy can bring in reinforcements while friendly forces are isolated.";
-            } else {
-                return "No Advantage: Both forces are isolated. The units currently engaged are the only ones that will decide the outcome.";
-            }
-
-        default:
-          // A fallback for any question that doesn't have a specific case
-          return "No specific information available for this tactic.";
-      }
-    };
-    
-    /**
-     * Determines the color for the tooltip and icon based on tactical advantage.
-     * returns A color string (hex code or color name).
-     */
-    const getAdvantageColor = (friendly: string, enemy: string): string => {
-      if (friendly === 'Yes' && enemy === 'No') { // Blue advantage
-        return "#3d85c6";
-      } else if (friendly === 'No' && enemy === 'Yes') { // Red advantage
-        return "#c1432d";
-      }
-      return "grey"; // No advantage
-    };
-
     // Maps over the predefined questions to generate a table row for each.
     return tacticQuestions.map((tactic, index) => {
       const friendlyAnswer = scoreToYesNo(tacticData[tactic.friendlyKey as keyof Tactics] as number);
       const enemyAnswer = scoreToYesNo(tacticData[tactic.enemyKey as keyof Tactics] as number);
-      const tooltipLabel = getTooltipLabel(tactic.question, friendlyAnswer, enemyAnswer);
-      const advantageColor = getAdvantageColor(friendlyAnswer, enemyAnswer);
 
       return (
         <Table.Tr key={`tactic-row-${index}`}>
           <Table.Td>{tactic.question}</Table.Td>
           <Table.Td style={{ textAlign: 'center' }}>{friendlyAnswer}</Table.Td>
           <Table.Td style={{ textAlign: 'center' }}>{enemyAnswer}</Table.Td>
-          <Table.Td style={{ textAlign: 'center' }}>
-            <Tooltip
-              label={tooltipLabel}
-              withArrow
-              position="right"
-              color={advantageColor}
-              z-index={200} 
-              multiline // Allows the tooltip text to wrap to multiple lines
-              w={220}     // Sets a fixed width, forcing text to wrap
-            >
-              {/* This div is the critical fix to allow the Tooltip to attach a ref */}
-              <div>
-                <FaInfoCircle style={{ cursor: 'pointer' }} color = {advantageColor}/>
-              </div>
-            </Tooltip>
-          </Table.Td>
         </Table.Tr>
       );
     });
   };
+
+  const selectedTacticsData = selectedEngagement 
+    ? tacticsMap.get(selectedEngagement.engagementid)?.[0] 
+    : null;
 
   return (
     <MantineProvider defaultColorScheme='dark'>
@@ -395,90 +290,248 @@ export default function AAR() {
             <Button size='sm' variant='link' onClick={handleAARClick} style={{ margin: '10px ' }}>Return</Button>
           </div>
           <h1 style={{ justifyContent: 'center', alignItems: 'center', display: 'flex' }}>After Action Reviews</h1>
-          <h2 style={{ justifyContent: 'center', alignItems: 'center', display: 'flex' }}>Scenerio: {sectionId}</h2>
+          <h3 style={{ justifyContent: 'center', alignItems: 'center', display: 'flex' }}>Scenerio: {sectionId}</h3>
           
-          {/* This AppShell contains the main content of the AAR page */}
-          <AppShell>
-            {/* This div centers the "Selected Engagement" card */}
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '45vh' }}>
+          {/* This div centers the "Selected Engagement" card */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center', // Vertically centers the placeholder text
+              margin: '2rem 0',
+              // Conditionally set a minimum height to act as a placeholder
+              minHeight: !selectedEngagement ? '550px' : undefined,
+            }}
+          >
               {/* Conditional rendering for the top card */}
               {engagements.length === 0 ? (
                 // Displayed if no engagements are loaded
-                <Title order={3} ta="center" c="gray">No engagements available for this section</Title>
-              ) : !selectedEngagement ? (
+                <Title order={3} ta="center" c="#8a8989">No engagements available for this section</Title>
+                ) : !selectedEngagement ? (
                 // Displayed if engagements are loaded but none is selected
-                <Title order={3} ta="center" c="gray">Select an engagement to view tactics</Title>
-              ) : (
+                <Title order={3} ta="center" c="#8a8989">[Select an engagement to view tactics]</Title>
+                ) : (
                 // Displayed once an engagement is selected
-                <Card shadow="sm" radius="md" withBorder style={{ overflow: 'visible', display: 'grid', height: '40vh', width: '600px', placeItems: 'center', marginBottom: '125px', marginTop: '100px', textAlign: 'center' }}>
-                  <Card.Section>
-                    <div style={{ textAlign: 'center' }}>
-                      <h2 style={{ marginTop: 10 }}>Round ID: {selectedEngagement.engagementid}</h2>
-                    </div>
 
-                    {/* Container for the friendly and enemy score progress bars */}
-                    <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: 30 }}>
-                      {/* Friendly Score Section */}
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <Text>{selectedEngagement?.friendlyname}</Text>
-                        <Tooltip
-                          position="bottom"
-                          color="gray"
-                          transitionProps={{ transition: 'fade-up', duration: 300 }}
-                          label="Overall Score Out of 100"
-                        >
-                          <Progress.Root style={{ width: '200px', height: '25px' }}>
-                            <Progress.Section
-                              className={classes.progressSection}
-                              value={Number(selectedEngagement?.friendlytotalscore)}
-                              color='#3d85c6'>
-                              {Number(selectedEngagement?.friendlytotalscore).toFixed(0)}
-                            </Progress.Section>
-                          </Progress.Root>
-                        </Tooltip>
+                <Group justify="center" mt="xl" display={'flex'}>
+                  <Card shadow="sm" radius="md" withBorder style={{ width: '600px', textAlign: 'center' }}>
+                    <Card.Section withBorder inheritPadding py="xs">
+                      <div style={{ textAlign: 'center' }}>
+                        <h2 style={{ marginTop: 10 }}>Round ID: {selectedEngagement.engagementid}</h2>
                       </div>
 
-                      {/* Enemy Score Section */}
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <Text>{selectedEngagement?.enemyname}</Text>
-                        <Tooltip
-                          position="bottom"
-                          color="gray"
-                          transitionProps={{ transition: 'fade-up', duration: 300 }}
-                          label="Overall Score Out of 100"
-                        >
-                          <Progress.Root style={{ width: '200px', height: '25px' }}>
-                            <Progress.Section
-                              className={classes.progressSection}
-                              value={Number(selectedEngagement?.enemytotalscore)}
-                              color='#c1432d'>
-                              {Number(selectedEngagement?.enemytotalscore).toFixed(0)}
-                            </Progress.Section>
-                          </Progress.Root>
-                        </Tooltip>
+                      {/* Container for the friendly and enemy score progress bars */}
+                      <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: 15 }}>
+                        {/* Friendly Score Section */}
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <Text>{selectedEngagement?.friendlyname}</Text>
+                          <Tooltip
+                            position="bottom"
+                            color="gray"
+                            transitionProps={{ transition: 'fade-up', duration: 300 }}
+                            label="Overall Score Out of 100"
+                          >
+                            <Progress.Root style={{ width: '200px', height: '25px' }}>
+                              <Progress.Section
+                                className={classes.progressSection}
+                                value={Number(selectedEngagement?.friendlytotalscore)}
+                                color='#3d85c6'>
+                                {Number(selectedEngagement?.friendlytotalscore).toFixed(0)}
+                              </Progress.Section>
+                            </Progress.Root>
+                          </Tooltip>
+                        </div>
+
+                        {/* Enemy Score Section */}
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <Text>{selectedEngagement?.enemyname}</Text>
+                          <Tooltip
+                            position="bottom"
+                            color="gray"
+                            transitionProps={{ transition: 'fade-up', duration: 300 }}
+                            label="Overall Score Out of 100"
+                          >
+                            <Progress.Root style={{ width: '200px', height: '25px' }}>
+                              <Progress.Section
+                                className={classes.progressSection}
+                                value={Number(selectedEngagement?.enemytotalscore)}
+                                color='#c1432d'>
+                                {Number(selectedEngagement?.enemytotalscore).toFixed(0)}
+                              </Progress.Section>
+                            </Progress.Root>
+                          </Tooltip>
+                        </div>
                       </div>
-                    </div>
+                      
+                      {/* Tactics Table for the selected engagement */}
+                      <Table verticalSpacing={'xs'} style={{ justifyContent: 'center', width: "100%" }} >
+                        <Table.Thead>
+                          <Table.Tr>
+                            <Table.Th style={{ textAlign: 'center' }}>Tactic</Table.Th>
+                            <Table.Th style={{ color: '#60acf7', textAlign: 'center' }}>Friendly Score</Table.Th>
+                            <Table.Th style={{ color: '#f4888a', textAlign: 'center' }}>Enemy Score</Table.Th>
+                          </Table.Tr>
+                        </Table.Thead>
+                        <Table.Tbody>{renderTacticsRows(
+                          selectedEngagement?.engagementid
+                            ? tacticsMap.get(selectedEngagement.engagementid)
+                            : undefined
+                        )}
+                        </Table.Tbody>
+                      </Table>
+                    </Card.Section>
+
+                    {/* Tactics Feedback Table for the selected engagement */}
+                    <Card.Section withBorder inheritPadding py="xs">
+                      <Container>
+                        <Text size="xl" fw={700}>Tactics Feedback & Effects</Text>
+                      </Container>
+                      <Table verticalSpacing={'xs'} style={{ justifyContent: 'center', width: "100%" }}>
+                        <Table.Thead>
+                          <Table.Tr>
+                            <Table.Th style={{ textAlign: 'center', width: '34%' }}>Detection</Table.Th>
+                            <Table.Th style={{ textAlign: 'center', width: '33%' }}>Accuracy</Table.Th>
+                            <Table.Th style={{ textAlign: 'center', width: '33%' }}>Damage</Table.Th>
+                          </Table.Tr>
+                        </Table.Thead>
+                        <Table.Tbody>
+                          {/* Row 1: Text Feedback */}
+                          <Table.Tr>
+                            <Table.Td>
+                              <Text c={selectedTacticsData?.firstAttackFriendly ? '#60acf7' : '#f4888a'}>
+                                {selectedTacticsData?.firstAttackFriendly ? 'You surprised the enemy and attacked first!' : 'Enemy surprised you and attacked first!'}
+                              </Text>
+                            </Table.Td>
+                            <Table.Td>
+                              <Text c="#60acf7">{selectedTacticsData?.friendlyAccuracyLevel}, {Number(selectedTacticsData?.friendlyAccuracyPercent).toFixed(2)}%</Text>
+                              <Text c="#f4888a">{selectedTacticsData?.enemyAccuracyLevel}, {Number(selectedTacticsData?.enemyAccuracyPercent).toFixed(2)}%</Text>
+                            </Table.Td>
+                            <Table.Td>
+                              <Text c="#60acf7">-{Number(selectedTacticsData?.friendlyDamage).toFixed(0)} points</Text>
+                              <Text c="#f4888a">-{Number(selectedTacticsData?.enemyDamage).toFixed(0)} points</Text>
+                            </Table.Td>
+                          </Table.Tr>
+
+                          {/* Row 2: Icon Tooltips */}
+                          <Table.Tr>
+                          {/* Detection columm */}
+                            <Table.Td>
+                              <Group justify="center" gap="xs">
+                                {/* Positive Feedback Tooltip */}
+                                <Tooltip
+                                  label={
+                                    <div style={{ textAlign: 'left', paddingBottom: '0.7rem' }}>
+                                      <p style={{ color: 'black' }}>Factors that INCREASED detection:</p>
+                                      {
+                                        (selectedTacticsData?.detectionPositiveFeedback || "No significant factors.")
+                                          .split('\n')
+                                          .map((factor, index) => (
+                                            <p key={index} style={{ margin: 0, paddingLeft: '1em', color: 'black' }}>- {factor}</p>
+                                          ))
+                                      }
+                                    </div>
+                                  }
+                                  color="#8bc17c" withArrow position="bottom"
+                                >
+                                  <IconTrendingUp size={24} color="#8bc17c" />
+                                </Tooltip>
+
+                                {/* Negative Feedback Tooltip */}
+                                <Tooltip
+                                  label={
+                                    <div style={{ textAlign: 'left', paddingBottom: '0.7rem' }}>
+                                      <p style={{ color: 'black' }}>Factors that DECREASED detection:</p>
+                                      {
+                                        (selectedTacticsData?.detectionNegativeFeedback || "No significant factors.")
+                                          .split('\n')
+                                          .map((factor, index) => (
+                                            <p key={index} style={{ margin: 0, paddingLeft: '1em', color: 'black' }}>- {factor}</p>
+                                          ))
+                                      }
+                                    </div>
+                                  }
+                                  color="#f4888a" withArrow position="bottom"
+                                >
+                                  <IconTrendingDown size={24} color="#f4888a" />
+                                </Tooltip>
+                              </Group>
+                            </Table.Td>
+
+                            {/* Repeat the same pattern for Accuracy and Damage columns */}
+
+                            {/* Accuracy Column */}
+                            <Table.Td>
+                              <Group justify="center" gap="xs">
+                                <Tooltip
+                                  label={
+                                    <div style={{ textAlign: 'left', paddingBottom: '0.7rem' }}>
+                                      <p style={{ color: 'black' }}>Factors that INCREASED accuracy:</p>
+                                      {(selectedTacticsData?.accuracyPositiveFeedback || "No significant factors.").split('\n').map((factor, index) => (
+                                        <p key={index} style={{ margin: 0, paddingLeft: '1em', color: 'black' }}>- {factor}</p>
+                                      ))}
+                                    </div>
+                                  }
+                                  color="#8bc17c" withArrow position="bottom"
+                                >
+                                  <IconTrendingUp size={24} color="#8bc17c" />
+                                </Tooltip>
+                                <Tooltip
+                                  label={
+                                    <div style={{ textAlign: 'left', paddingBottom: '0.7rem' }}>
+                                      <p style={{ color: 'black' }}>Factors that DECREASED accuracy:</p>
+                                      {(selectedTacticsData?.accuracyNegativeFeedback || "No significant factors.").split('\n').map((factor, index) => (
+                                        <p key={index} style={{ margin: 0, paddingLeft: '1em', color: 'black' }}>- {factor}</p>
+                                      ))}
+                                    </div>
+                                  }
+                                  color="#f4888a" withArrow position="bottom"
+                                >
+                                  <IconTrendingDown size={24} color="#f4888a" />
+                                </Tooltip>
+                              </Group>
+                            </Table.Td>
+
+                            {/* Damage Column */}
+                            <Table.Td>
+                              <Group justify="center" gap="xs">
+                                <Tooltip
+                                  label={
+                                    <div style={{ textAlign: 'left', paddingBottom: '0.7rem' }}>
+                                      <p style={{ color: 'black' }}>Factors that INCREASED damage:</p>
+                                      {(selectedTacticsData?.damagePositiveFeedback || "No significant factors.").split('\n').map((factor, index) => (
+                                        <p key={index} style={{ margin: 0, paddingLeft: '1em', color: 'black' }}>- {factor}</p>
+                                      ))}
+                                    </div>
+                                  }
+                                  color="#8bc17c" withArrow position="bottom"
+                                >
+                                  <IconTrendingUp size={24} color="#8bc17c" />
+                                </Tooltip>
+                                <Tooltip
+                                  label={
+                                    <div style={{ textAlign: 'left', paddingBottom: '0.7rem' }}>
+                                      <p style={{ color: 'black' }}>Factors that DECREASED damage:</p>
+                                      {(selectedTacticsData?.damageNegativeFeedback || "No significant factors.").split('\n').map((factor, index) => (
+                                        <p key={index} style={{ margin: 0, paddingLeft: '1em', color: 'black' }}>- {factor}</p>
+                                      ))}
+                                    </div>
+                                  }
+                                  color="#f4888a" withArrow position="bottom"
+                                >
+                                  <IconTrendingDown size={24} color="#f4888a" />
+                                </Tooltip>
+                              </Group>
+                            </Table.Td>
+                          </Table.Tr>
+                        </Table.Tbody>
+                      </Table>
+                      <Text style={{fontSize: '0.75rem', color: '#868e96', textAlign: 'center', marginTop: '0.05rem', fontStyle: 'italic'}}>
+                          Hover over the icons above for round's feedback.
+                      </Text>
+                    </Card.Section>
                     
-                    {/* Tactics Table for the selected engagement */}
-                    <Table verticalSpacing={'xs'} style={{ width: '600px', justifyContent: 'center' }}>
-                      <Table.Thead>
-                        <Table.Tr>
-                          <Table.Th style={{ textAlign: 'center' }}>Tactic</Table.Th>
-                          <Table.Th style={{ textAlign: 'center' }}>Friendly Score</Table.Th>
-                          <Table.Th style={{ textAlign: 'center' }}>Enemy Score</Table.Th>
-                          <Table.Th style={{ textAlign: 'center' }}>More Info</Table.Th>
-                        </Table.Tr>
-                      </Table.Thead>
-                      <Table.Tbody>{renderTacticsRows(
-                        // Retrieve the correct tactics from the map using the selected engagement's ID
-                        selectedEngagement?.engagementid
-                          ? tacticsMap.get(selectedEngagement.engagementid)
-                          : undefined
-                      )}
-                      </Table.Tbody>
-                    </Table>
-                  </Card.Section>
-                </Card>
+                  </Card>
+                </Group>
               )
               }
             </div>
@@ -550,7 +603,7 @@ export default function AAR() {
                 </Table.Tbody>
               ))}
             </Table>
-          </AppShell>
+          
         </AppShell.Main>
       </AppShell>
     </MantineProvider>
