@@ -19,77 +19,49 @@ Step 2. Open a new terminal tab or separate blank terminal. Run "npm start". Do 
 ## "LEAP-CSRP-25-GUI-StartUp" Branch Start
 
 Development mode:
-
-Step 1. Make sure the build in LEAP-CSRP-25 is the most up to date:
-
-    a. If this is not your first time running: delete existing build if there is one
-
-    b. open command prompt in LEAP-CSAP-25 and run "npm run build"
+1. Make sure the build in LEAP-CSRP-25 is the most up to date:
+    1. If this is not your first time running: delete existing build if there is one
+    2. open command prompt in LEAP-CSAP-25 and run "npm run build"
         (either set defualt terminal to command prompt or open command prompt and run "cd you/app/path")
+2. Start up using leap-launcher inside the LEAP-CSRP-25 project folder
+    1. open terminal in leap-launcher folder
+    2. run "npm start"
+    
+    > you should see a UI with the LEAP logo and start and stop buttons come up and a command window
 
-Step 2. Start up using leap-launcher inside the LEAP-CSRP-25 project folder
-
-    a. open terminal in leap-launcher folder
-
-    b. run "npm start"
-
-    you should see a UI with the LEAP logo and start and stop buttons come up and a command window
-
-Step 3. The program is set to open in firefox, ensure firefox is installed on you computer and set to default
+3. The program is set to open in firefox, ensure firefox is installed on you computer and set to default
  
-common issues:
+>###### common issues:
+> 
+>* nginx fail:
+>    1. if nginx fails check the nginx file for a file called "temp" if that is not there you must add it
+>    2. check that the nginx application exe is present
+>    3. check that the nginx conf is preset and has the correct program inside of it, this should point to you ../build file
+>* Postgres or Node missing: reference the LEAP Online Manual or the pop up windows for how to fix this
+>* Old build still present:
+>    1. delete original build and build CSRP-LEAP-25 from scratch again
+>    2. go into file manager and find C:\Users\STEM\AppData\Roaming and delete the leap-launcher file (this is storing cache which could be calling an old build)
+>    3. clear firefox cache in browser
+>    4. use private window in forefox and search localhost in browser (this will not save cache bypassing the browser calling saved JavaScript code)
 
-nginx fail:
-
-    1. if nginx fails check the nginx file for a file called "temp" if that is not there you must add it
-
-    2. check that the nginx application exe is present
-
-    3. check that the nginx conf is preset and has the correct program inside of it, this should point to you ../build file
- 
-Postgres or Node missing: reference the LEAP Online Manual or the pop up windows for how to fix this
- 
-Old build still present:
-    1. delete original build and build CSRP-LEAP-25 from scratch again
-
-    2. go into file manager and find C:\Users\STEM\AppData\Roaming and delete the leap-launcher file (this is storing cache which could be calling an old build)
-
-    3. clear firefox cache in browser
-
-    4. use private window in forefox and search localhost in browser (this will not save cache bypassing the browser calling saved JavaScript code)
- 
 Building the production zip:
-
-Step 1. run "npm run build" in a command prompt opened in the LEAP-CSRP-25 folder
-
-Step 2. run "npm run package-dist" in a command prompt opened in your leap-launcher folder
-
-Step 3. Create a new file for your production model folder
-
-Step 4. Copy your build folder from LEAP-CSRP-25 into your new folder
-
-Step 5. Go into your dist folder --> LEAP launcher-win32-x64 folder --> copy all the contents of this folder into your production model folder
-
-Step 6. Go to the Dis-Manager folder --> LEAP dis manager --> bin --> release --> net8.0-windows then copy the contents of this file into a folder in your production model folder called dis_reciever
-
-Step 7. Go to LEAP-CSRP-25 folder and copy the backend folder into your production model folder
-
-Step 8. Go to LEAP-CSRP-25 folder and copy the nginx-1.27.5 folder into your production model folder
+1. run "npm run build" in a command prompt opened in the LEAP-CSRP-25 folder
+2. run "npm run package-dist" in a command prompt opened in your leap-launcher folder
+3. Create a new file for your production model folder
+4. Copy your build folder from LEAP-CSRP-25 into your new folder
+5. Go into your dist folder --> LEAP launcher-win32-x64 folder --> copy all the contents of this folder into your production model folder
+6. Go to the Dis-Manager folder --> LEAP dis manager --> bin --> release --> net8.0-windows then copy the contents of this file into a folder in your production model folder called dis_reciever
+7. Go to LEAP-CSRP-25 folder and copy the backend folder into your production model folder
+8. Go to LEAP-CSRP-25 folder and copy the nginx-1.27.5 folder into your production model folder
  
  
 Production mode for customer/user use set up.
- 
-Step 1. Download and extract the .zip file
- 
-Step 2. Find LEAP Launcher.exe with the LEAP logo and double-click to run
-
-    a. to set up an icon right click the LEAP Launcher.exe and go the "send to" click "desktop (create icon)" --> there is a preset icon in the program for this
- 
-Step 3. Follow installation instructions and refer to LEAP Online Manual if you have issues.
- 
-Step 4. To use on student computers (on the same network), navigate to "http://yourIP" where "yourIP" is the IP address of your (the host) computer
-
-    a. to find your ip open windows powershell and run "ipconfig"
+1. Download and extract the .zip file
+2. Find LEAP Launcher.exe with the LEAP logo and double-click to run
+    1. to set up an icon right click the LEAP Launcher.exe and go the "send to" click "desktop (create icon)" --> there is a preset icon in the program for this
+3. Follow installation instructions and refer to LEAP Online Manual if you have issues.
+4. To use on student computers (on the same network), navigate to "http://yourIP" where "yourIP" is the IP address of your (the host) computer
+    1. to find your ip open windows powershell and run "ipconfig"
 
 ## Tools
 Frontend: React App
