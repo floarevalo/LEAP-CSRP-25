@@ -9,12 +9,17 @@ The Land Engagement Adjudication Platform (LEAP) Online is the follow on project
 2. Set up your pgAdmin databases, reference LEAP Manual and Installation Guide.pdf
 3. Clone repository to your local computer
 4. Open a command window and run "npm install"
-6. Make a file named ".env" in the project root. This is ONLY for the static version of LEAP found in "master" 
-> REACT_APP_BACKEND_URL = http://localhost:5000
-> # use local host when running locally in development
-> # this is the mdl's adress to use when containerizing:
-> # http://10.15.40.199:5000
-7. Developer tools are now set up. 
+6. Make a file named ".env" in the project root. This is ONLY for the static version of LEAP found in "master"
+
+        REACT_APP_BACKEND_URL = http://localhost:5000
+
+        # use local host when running locally in development
+
+        # this is the mdl's adress to use when containerizing:
+
+        # http://10.15.40.199:5000
+   
+8. Developer tools are now set up. 
 
 
 ## "master" Branch Start
