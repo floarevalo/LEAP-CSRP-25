@@ -6,11 +6,11 @@ The Land Engagement Adjudication Platform (LEAP) Online is the follow on project
 ## "master" Branch Start
 Development mode for code editing and development. 
 
-Quick Start: 
+#### Quick Start: 
 
 Locate and open STARTUP.bat in the project's root directory. This will start the local applicaton and the database simultaneously. The local applicaton will automatically launch in the computer's default browser but can also be found at the browser URL "http://localhost:3000/". The database must be previously configured locally for this to work. Additonally, an IP Adress URL will populate in the terminal where the application was launched. This URL can be inserted to web browsers on other computers on the same network to access the application.
 
-Manual Start:
+#### Manual Start:
 
 Step 1. Open a terminal and navigate to the backend folder from the root of the project folder. Run "node server.js". The database will now be running. The database must be previously configured locally for this to work.
 
@@ -18,35 +18,35 @@ Step 2. Open a new terminal tab or separate blank terminal. Run "npm start". Do 
 
 ## "LEAP-CSRP-25-GUI-StartUp" Branch Start
 
-Development mode:
+#### Development mode:
 1. Make sure the build in LEAP-CSRP-25 is the most up to date:
     1. If this is not your first time running: delete existing build if there is one
-    2. open command prompt in LEAP-CSAP-25 and run "npm run build"
+    2. Open command prompt in LEAP-CSAP-25 and run "npm run build"
         (either set defualt terminal to command prompt or open command prompt and run "cd you/app/path")
 2. Start up using leap-launcher inside the LEAP-CSRP-25 project folder
-    1. open terminal in leap-launcher folder
-    2. run "npm start"
+    1. Open terminal in leap-launcher folder
+    2. Run "npm start"
     
-    > you should see a UI with the LEAP logo and start and stop buttons come up and a command window
+        > You should see a UI with the LEAP logo and start and stop buttons come up and a command window
 
 3. The program is set to open in firefox, ensure firefox is installed on you computer and set to default
  
->###### common issues:
+>### common issues:
 > 
->* nginx fail:
->    1. if nginx fails check the nginx file for a file called "temp" if that is not there you must add it
->    2. check that the nginx application exe is present
->    3. check that the nginx conf is preset and has the correct program inside of it, this should point to you ../build file
->* Postgres or Node missing: reference the LEAP Online Manual or the pop up windows for how to fix this
+>* Nginx fail:
+>    1. If nginx fails check the nginx file for a file called "temp" if that is not there you must add it
+>    2. Check that the nginx application exe is present
+>    3. Check that the nginx conf is preset and has the correct program inside of it, this should point to you ../build file
+>* Postgres or Node missing: reference the LEAP Manual and Installation Guide.pdf or the pop up windows for how to fix this
 >* Old build still present:
->    1. delete original build and build CSRP-LEAP-25 from scratch again
->    2. go into file manager and find C:\Users\STEM\AppData\Roaming and delete the leap-launcher file (this is storing cache which could be calling an old build)
->    3. clear firefox cache in browser
->    4. use private window in forefox and search localhost in browser (this will not save cache bypassing the browser calling saved JavaScript code)
+>    1. Delete original build and build CSRP-LEAP-25 from scratch again
+>    2. Go into file manager and find C:\Users\STEM\AppData\Roaming and delete the leap-launcher file (this is storing cache which could be calling an old build)
+>    3. Clear firefox cache in browser
+>    4. Use private window in forefox and search localhost in browser (this will not save cache bypassing the browser calling saved JavaScript code)
 
-Building the production zip:
-1. run "npm run build" in a command prompt opened in the LEAP-CSRP-25 folder
-2. run "npm run package-dist" in a command prompt opened in your leap-launcher folder
+#### Building the production zip:
+1. Run "npm run build" in a command prompt opened in the LEAP-CSRP-25 folder
+2. Run "npm run package-dist" in a command prompt opened in your leap-launcher folder
 3. Create a new file for your production model folder
 4. Copy your build folder from LEAP-CSRP-25 into your new folder
 5. Go into your dist folder --> LEAP launcher-win32-x64 folder --> copy all the contents of this folder into your production model folder
@@ -55,7 +55,7 @@ Building the production zip:
 8. Go to LEAP-CSRP-25 folder and copy the nginx-1.27.5 folder into your production model folder
  
  
-Production mode for customer/user use set up.
+#### Production mode for customer/user use set up.
 1. Download and extract the .zip file
 2. Find LEAP Launcher.exe with the LEAP logo and double-click to run
     1. to set up an icon right click the LEAP Launcher.exe and go the "send to" click "desktop (create icon)" --> there is a preset icon in the program for this
