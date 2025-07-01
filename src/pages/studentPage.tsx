@@ -204,7 +204,7 @@ function App() {
               <img
                 src={logo}
                 alt="A descriptive alt text for the logo"
-                height="50"
+                height="30"
                 style={{
                   borderRadius: 'var(--mantine-radius-md)',
                   width: 'auto',

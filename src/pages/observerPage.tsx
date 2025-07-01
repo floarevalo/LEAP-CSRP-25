@@ -185,12 +185,11 @@ function ObserverPage() {
               <Button size='sm' variant='link' onClick={handleArrowClick} style={{ margin: '10px' }}>
                 <FaArrowAltCircleLeft />
               </Button>
-              <div style={{ display: 'flex', justifyContent: 'center', margin: '40px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center'}}>
                 <img
                   src={logo}
-                  alt="A descriptive alt text for the logo"
-                  height="200"
                   style={{
+                    height: '30px',
                     borderRadius: 'var(--mantine-radius-md)',
                     width: 'auto',
                     objectFit: 'cover'
@@ -254,7 +253,7 @@ function ObserverPage() {
                   statsBySize={unitStatsBySize['infantry'] ?? {}} // 🛠 fallback to empty object
                 />
                 <StatsRing
-                  title="Armor Company"
+                  title="Armor"
                   icon="armor"
                   friendlyCount={statsByType.armor?.friendlyCount ?? 0}
                   enemyCount={statsByType.armor?.enemyCount ?? 0}

@@ -24,7 +24,7 @@ import { useDisclosure } from '@mantine/hooks';
 import { useNavigate, useParams } from 'react-router-dom';
 // Import icons from the react-icons library
 import { FaArrowAltCircleLeft, FaInfoCircle } from "react-icons/fa";
-import {IconTrendingUp, IconTrendingDown} from '@tabler/icons-react';
+import { IconTrendingUp, IconTrendingDown } from '@tabler/icons-react';
 // Import local CSS module for styling
 import classes from './TableReviews.module.css';
 // Import axios for making HTTP requests to the backend
@@ -223,7 +223,7 @@ export default function AAR() {
         </Table.Tr>
       );
     }
-    
+
     // Defines the questions and the corresponding data keys for the tactics table.
     const tacticQuestions = [
       { question: 'Conducted ISR prior to moving land forces?', friendlyKey: 'FriendlyISR', enemyKey: 'EnemyISR' },
@@ -234,9 +234,9 @@ export default function AAR() {
       { question: 'Have close air support?', friendlyKey: 'FriendlyCAS', enemyKey: 'EnemyCAS' },
       { question: 'Is the target accessible?', friendlyKey: 'FriendlyAccess', enemyKey: 'EnemyAccess' },
     ];
-    
+
     // Assumes the tactics array contains a single object with all the data.
-    const tacticData = tactics[0]; 
+    const tacticData = tactics[0];
 
     // Maps over the predefined questions to generate a table row for each.
     return tacticQuestions.map((tactic, index) => {
@@ -253,8 +253,8 @@ export default function AAR() {
     });
   };
 
-  const selectedTacticsData = selectedEngagement 
-    ? tacticsMap.get(selectedEngagement.engagementid)?.[0] 
+  const selectedTacticsData = selectedEngagement
+    ? tacticsMap.get(selectedEngagement.engagementid)?.[0]
     : null;
 
   return (
@@ -273,13 +273,19 @@ export default function AAR() {
           <Group h="100%" justify="space-between" px="md" align="center">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: "space-between" }}>
               <Button size='sm' variant='link' onClick={handleArrowClick} style={{ margin: '10px' }}><FaArrowAltCircleLeft /> </Button>
-              <Image
+              <img
                 src={logo}
-                radius="md"
-                h={50}
-                fallbackSrc="https://placehold.co/600x400?text=Placeholder"
-                onClick={handleLogoClick}
-                style={{ cursor: 'pointer', scale: '1', padding: '8px' }}
+                alt="A descriptive alt text for the logo"
+                style={{
+                  height: "30px",
+                  borderRadius: 'var(--mantine-radius-md)',
+                  width: 'auto',
+                  objectFit: 'cover'
+                }}
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = 'https://placehold.co/600x400?text=Placeholder';
+                }}
               />
             </div>
           </Group>
@@ -291,7 +297,7 @@ export default function AAR() {
           </div>
           <h1 style={{ justifyContent: 'center', alignItems: 'center', display: 'flex' }}>After Action Reviews</h1>
           <h3 style={{ justifyContent: 'center', alignItems: 'center', display: 'flex' }}>Scenerio: {sectionId}</h3>
-          
+
           {/* This div centers the "Selected Engagement" card */}
           <div
             style={{
@@ -303,307 +309,307 @@ export default function AAR() {
               minHeight: !selectedEngagement ? '550px' : undefined,
             }}
           >
-              {/* Conditional rendering for the top card */}
-              {engagements.length === 0 ? (
-                // Displayed if no engagements are loaded
-                <Title order={3} ta="center" c="#8a8989">No engagements available for this section</Title>
-                ) : !selectedEngagement ? (
-                // Displayed if engagements are loaded but none is selected
-                <Title order={3} ta="center" c="#8a8989">[Select an engagement to view tactics]</Title>
-                ) : (
-                // Displayed once an engagement is selected
+            {/* Conditional rendering for the top card */}
+            {engagements.length === 0 ? (
+              // Displayed if no engagements are loaded
+              <Title order={3} ta="center" c="#8a8989">No engagements available for this section</Title>
+            ) : !selectedEngagement ? (
+              // Displayed if engagements are loaded but none is selected
+              <Title order={3} ta="center" c="#8a8989">[Select an engagement to view tactics]</Title>
+            ) : (
+              // Displayed once an engagement is selected
 
-                <Group justify="center" mt="xl" display={'flex'}>
-                  <Card shadow="sm" radius="md" withBorder style={{ width: '600px', textAlign: 'center' }}>
-                    <Card.Section withBorder inheritPadding py="xs">
-                      <div style={{ textAlign: 'center' }}>
-                        <h2 style={{ marginTop: 10 }}>Round ID: {selectedEngagement.engagementid}</h2>
+              <Group justify="center" mt="xl" display={'flex'}>
+                <Card shadow="sm" radius="md" withBorder style={{ width: '600px', textAlign: 'center' }}>
+                  <Card.Section withBorder inheritPadding py="xs">
+                    <div style={{ textAlign: 'center' }}>
+                      <h2 style={{ marginTop: 10 }}>Round ID: {selectedEngagement.engagementid}</h2>
+                    </div>
+
+                    {/* Container for the friendly and enemy score progress bars */}
+                    <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: 15 }}>
+                      {/* Friendly Score Section */}
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <Text>{selectedEngagement?.friendlyname}</Text>
+                        <Tooltip
+                          position="bottom"
+                          color="gray"
+                          transitionProps={{ transition: 'fade-up', duration: 300 }}
+                          label="Overall Score Out of 100"
+                        >
+                          <Progress.Root style={{ width: '200px', height: '25px' }}>
+                            <Progress.Section
+                              className={classes.progressSection}
+                              value={Number(selectedEngagement?.friendlytotalscore)}
+                              color='#3d85c6'>
+                              {Number(selectedEngagement?.friendlytotalscore).toFixed(0)}
+                            </Progress.Section>
+                          </Progress.Root>
+                        </Tooltip>
                       </div>
 
-                      {/* Container for the friendly and enemy score progress bars */}
-                      <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: 15 }}>
-                        {/* Friendly Score Section */}
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                          <Text>{selectedEngagement?.friendlyname}</Text>
-                          <Tooltip
-                            position="bottom"
-                            color="gray"
-                            transitionProps={{ transition: 'fade-up', duration: 300 }}
-                            label="Overall Score Out of 100"
-                          >
-                            <Progress.Root style={{ width: '200px', height: '25px' }}>
-                              <Progress.Section
-                                className={classes.progressSection}
-                                value={Number(selectedEngagement?.friendlytotalscore)}
-                                color='#3d85c6'>
-                                {Number(selectedEngagement?.friendlytotalscore).toFixed(0)}
-                              </Progress.Section>
-                            </Progress.Root>
-                          </Tooltip>
-                        </div>
-
-                        {/* Enemy Score Section */}
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                          <Text>{selectedEngagement?.enemyname}</Text>
-                          <Tooltip
-                            position="bottom"
-                            color="gray"
-                            transitionProps={{ transition: 'fade-up', duration: 300 }}
-                            label="Overall Score Out of 100"
-                          >
-                            <Progress.Root style={{ width: '200px', height: '25px' }}>
-                              <Progress.Section
-                                className={classes.progressSection}
-                                value={Number(selectedEngagement?.enemytotalscore)}
-                                color='#c1432d'>
-                                {Number(selectedEngagement?.enemytotalscore).toFixed(0)}
-                              </Progress.Section>
-                            </Progress.Root>
-                          </Tooltip>
-                        </div>
+                      {/* Enemy Score Section */}
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <Text>{selectedEngagement?.enemyname}</Text>
+                        <Tooltip
+                          position="bottom"
+                          color="gray"
+                          transitionProps={{ transition: 'fade-up', duration: 300 }}
+                          label="Overall Score Out of 100"
+                        >
+                          <Progress.Root style={{ width: '200px', height: '25px' }}>
+                            <Progress.Section
+                              className={classes.progressSection}
+                              value={Number(selectedEngagement?.enemytotalscore)}
+                              color='#c1432d'>
+                              {Number(selectedEngagement?.enemytotalscore).toFixed(0)}
+                            </Progress.Section>
+                          </Progress.Root>
+                        </Tooltip>
                       </div>
-                      
-                      {/* Tactics Table for the selected engagement */}
-                      <Table verticalSpacing={'xs'} style={{ justifyContent: 'center', width: "100%" }} >
-                        <Table.Thead>
-                          <Table.Tr>
-                            <Table.Th style={{ textAlign: 'center' }}>Tactic</Table.Th>
-                            <Table.Th style={{ color: '#60acf7', textAlign: 'center' }}>Friendly Score</Table.Th>
-                            <Table.Th style={{ color: '#f4888a', textAlign: 'center' }}>Enemy Score</Table.Th>
-                          </Table.Tr>
-                        </Table.Thead>
-                        <Table.Tbody>{renderTacticsRows(
-                          selectedEngagement?.engagementid
-                            ? tacticsMap.get(selectedEngagement.engagementid)
-                            : undefined
-                        )}
-                        </Table.Tbody>
-                      </Table>
-                    </Card.Section>
+                    </div>
 
-                    {/* Tactics Feedback Table for the selected engagement */}
-                    <Card.Section withBorder inheritPadding py="xs">
-                      <Container>
-                        <Text size="xl" fw={700}>Tactics Feedback & Effects</Text>
-                      </Container>
-                      <Table verticalSpacing={'xs'} style={{ justifyContent: 'center', width: "100%" }}>
-                        <Table.Thead>
-                          <Table.Tr>
-                            <Table.Th style={{ textAlign: 'center', width: '34%' }}>Detection</Table.Th>
-                            <Table.Th style={{ textAlign: 'center', width: '33%' }}>Accuracy</Table.Th>
-                            <Table.Th style={{ textAlign: 'center', width: '33%' }}>Damage</Table.Th>
-                          </Table.Tr>
-                        </Table.Thead>
-                        <Table.Tbody>
-                          {/* Row 1: Text Feedback */}
-                          <Table.Tr>
-                            <Table.Td>
-                              <Text c={selectedTacticsData?.firstAttackFriendly ? '#60acf7' : '#f4888a'}>
-                                {selectedTacticsData?.firstAttackFriendly ? 'You surprised the enemy and attacked first!' : 'Enemy surprised you and attacked first!'}
-                              </Text>
-                            </Table.Td>
-                            <Table.Td>
-                              <Text c="#60acf7">{selectedTacticsData?.friendlyAccuracyLevel}, {Number(selectedTacticsData?.friendlyAccuracyPercent).toFixed(2)}%</Text>
-                              <Text c="#f4888a">{selectedTacticsData?.enemyAccuracyLevel}, {Number(selectedTacticsData?.enemyAccuracyPercent).toFixed(2)}%</Text>
-                            </Table.Td>
-                            <Table.Td>
-                              <Text c="#60acf7">-{Number(selectedTacticsData?.friendlyDamage).toFixed(0)} points</Text>
-                              <Text c="#f4888a">-{Number(selectedTacticsData?.enemyDamage).toFixed(0)} points</Text>
-                            </Table.Td>
-                          </Table.Tr>
+                    {/* Tactics Table for the selected engagement */}
+                    <Table verticalSpacing={'xs'} style={{ justifyContent: 'center', width: "100%" }} >
+                      <Table.Thead>
+                        <Table.Tr>
+                          <Table.Th style={{ textAlign: 'center' }}>Tactic</Table.Th>
+                          <Table.Th style={{ color: '#60acf7', textAlign: 'center' }}>Friendly Score</Table.Th>
+                          <Table.Th style={{ color: '#f4888a', textAlign: 'center' }}>Enemy Score</Table.Th>
+                        </Table.Tr>
+                      </Table.Thead>
+                      <Table.Tbody>{renderTacticsRows(
+                        selectedEngagement?.engagementid
+                          ? tacticsMap.get(selectedEngagement.engagementid)
+                          : undefined
+                      )}
+                      </Table.Tbody>
+                    </Table>
+                  </Card.Section>
 
-                          {/* Row 2: Icon Tooltips */}
-                          <Table.Tr>
+                  {/* Tactics Feedback Table for the selected engagement */}
+                  <Card.Section withBorder inheritPadding py="xs">
+                    <Container>
+                      <Text size="xl" fw={700}>Tactics Feedback & Effects</Text>
+                    </Container>
+                    <Table verticalSpacing={'xs'} style={{ justifyContent: 'center', width: "100%" }}>
+                      <Table.Thead>
+                        <Table.Tr>
+                          <Table.Th style={{ textAlign: 'center', width: '34%' }}>Detection</Table.Th>
+                          <Table.Th style={{ textAlign: 'center', width: '33%' }}>Accuracy</Table.Th>
+                          <Table.Th style={{ textAlign: 'center', width: '33%' }}>Damage</Table.Th>
+                        </Table.Tr>
+                      </Table.Thead>
+                      <Table.Tbody>
+                        {/* Row 1: Text Feedback */}
+                        <Table.Tr>
+                          <Table.Td>
+                            <Text c={selectedTacticsData?.firstAttackFriendly ? '#60acf7' : '#f4888a'}>
+                              {selectedTacticsData?.firstAttackFriendly ? 'You surprised the enemy and attacked first!' : 'Enemy surprised you and attacked first!'}
+                            </Text>
+                          </Table.Td>
+                          <Table.Td>
+                            <Text c="#60acf7">{selectedTacticsData?.friendlyAccuracyLevel}, {Number(selectedTacticsData?.friendlyAccuracyPercent).toFixed(2)}%</Text>
+                            <Text c="#f4888a">{selectedTacticsData?.enemyAccuracyLevel}, {Number(selectedTacticsData?.enemyAccuracyPercent).toFixed(2)}%</Text>
+                          </Table.Td>
+                          <Table.Td>
+                            <Text c="#60acf7">-{Number(selectedTacticsData?.friendlyDamage).toFixed(0)} points</Text>
+                            <Text c="#f4888a">-{Number(selectedTacticsData?.enemyDamage).toFixed(0)} points</Text>
+                          </Table.Td>
+                        </Table.Tr>
+
+                        {/* Row 2: Icon Tooltips */}
+                        <Table.Tr>
                           {/* Detection columm */}
-                            <Table.Td>
-                              <Group justify="center" gap="xs">
-                                {/* Positive Feedback Tooltip */}
-                                <Tooltip
-                                  label={
-                                    <div style={{ textAlign: 'left', paddingBottom: '0.7rem' }}>
-                                      <p style={{ color: 'black' }}>Factors that INCREASED detection:</p>
-                                      {
-                                        (selectedTacticsData?.detectionPositiveFeedback || "No significant factors.")
-                                          .split('\n')
-                                          .map((factor, index) => (
-                                            <p key={index} style={{ margin: 0, paddingLeft: '1em', color: 'black' }}>- {factor}</p>
-                                          ))
-                                      }
-                                    </div>
-                                  }
-                                  color="#8bc17c" withArrow position="bottom"
-                                >
-                                  <IconTrendingUp size={24} color="#8bc17c" />
-                                </Tooltip>
+                          <Table.Td>
+                            <Group justify="center" gap="xs">
+                              {/* Positive Feedback Tooltip */}
+                              <Tooltip
+                                label={
+                                  <div style={{ textAlign: 'left', paddingBottom: '0.7rem' }}>
+                                    <p style={{ color: 'black' }}>Factors that INCREASED detection:</p>
+                                    {
+                                      (selectedTacticsData?.detectionPositiveFeedback || "No significant factors.")
+                                        .split('\n')
+                                        .map((factor, index) => (
+                                          <p key={index} style={{ margin: 0, paddingLeft: '1em', color: 'black' }}>- {factor}</p>
+                                        ))
+                                    }
+                                  </div>
+                                }
+                                color="#8bc17c" withArrow position="bottom"
+                              >
+                                <IconTrendingUp size={24} color="#8bc17c" />
+                              </Tooltip>
 
-                                {/* Negative Feedback Tooltip */}
-                                <Tooltip
-                                  label={
-                                    <div style={{ textAlign: 'left', paddingBottom: '0.7rem' }}>
-                                      <p style={{ color: 'black' }}>Factors that DECREASED detection:</p>
-                                      {
-                                        (selectedTacticsData?.detectionNegativeFeedback || "No significant factors.")
-                                          .split('\n')
-                                          .map((factor, index) => (
-                                            <p key={index} style={{ margin: 0, paddingLeft: '1em', color: 'black' }}>- {factor}</p>
-                                          ))
-                                      }
-                                    </div>
-                                  }
-                                  color="#f4888a" withArrow position="bottom"
-                                >
-                                  <IconTrendingDown size={24} color="#f4888a" />
-                                </Tooltip>
-                              </Group>
-                            </Table.Td>
+                              {/* Negative Feedback Tooltip */}
+                              <Tooltip
+                                label={
+                                  <div style={{ textAlign: 'left', paddingBottom: '0.7rem' }}>
+                                    <p style={{ color: 'black' }}>Factors that DECREASED detection:</p>
+                                    {
+                                      (selectedTacticsData?.detectionNegativeFeedback || "No significant factors.")
+                                        .split('\n')
+                                        .map((factor, index) => (
+                                          <p key={index} style={{ margin: 0, paddingLeft: '1em', color: 'black' }}>- {factor}</p>
+                                        ))
+                                    }
+                                  </div>
+                                }
+                                color="#f4888a" withArrow position="bottom"
+                              >
+                                <IconTrendingDown size={24} color="#f4888a" />
+                              </Tooltip>
+                            </Group>
+                          </Table.Td>
 
-                            {/* Repeat the same pattern for Accuracy and Damage columns */}
+                          {/* Repeat the same pattern for Accuracy and Damage columns */}
 
-                            {/* Accuracy Column */}
-                            <Table.Td>
-                              <Group justify="center" gap="xs">
-                                <Tooltip
-                                  label={
-                                    <div style={{ textAlign: 'left', paddingBottom: '0.7rem' }}>
-                                      <p style={{ color: 'black' }}>Factors that INCREASED accuracy:</p>
-                                      {(selectedTacticsData?.accuracyPositiveFeedback || "No significant factors.").split('\n').map((factor, index) => (
-                                        <p key={index} style={{ margin: 0, paddingLeft: '1em', color: 'black' }}>- {factor}</p>
-                                      ))}
-                                    </div>
-                                  }
-                                  color="#8bc17c" withArrow position="bottom"
-                                >
-                                  <IconTrendingUp size={24} color="#8bc17c" />
-                                </Tooltip>
-                                <Tooltip
-                                  label={
-                                    <div style={{ textAlign: 'left', paddingBottom: '0.7rem' }}>
-                                      <p style={{ color: 'black' }}>Factors that DECREASED accuracy:</p>
-                                      {(selectedTacticsData?.accuracyNegativeFeedback || "No significant factors.").split('\n').map((factor, index) => (
-                                        <p key={index} style={{ margin: 0, paddingLeft: '1em', color: 'black' }}>- {factor}</p>
-                                      ))}
-                                    </div>
-                                  }
-                                  color="#f4888a" withArrow position="bottom"
-                                >
-                                  <IconTrendingDown size={24} color="#f4888a" />
-                                </Tooltip>
-                              </Group>
-                            </Table.Td>
+                          {/* Accuracy Column */}
+                          <Table.Td>
+                            <Group justify="center" gap="xs">
+                              <Tooltip
+                                label={
+                                  <div style={{ textAlign: 'left', paddingBottom: '0.7rem' }}>
+                                    <p style={{ color: 'black' }}>Factors that INCREASED accuracy:</p>
+                                    {(selectedTacticsData?.accuracyPositiveFeedback || "No significant factors.").split('\n').map((factor, index) => (
+                                      <p key={index} style={{ margin: 0, paddingLeft: '1em', color: 'black' }}>- {factor}</p>
+                                    ))}
+                                  </div>
+                                }
+                                color="#8bc17c" withArrow position="bottom"
+                              >
+                                <IconTrendingUp size={24} color="#8bc17c" />
+                              </Tooltip>
+                              <Tooltip
+                                label={
+                                  <div style={{ textAlign: 'left', paddingBottom: '0.7rem' }}>
+                                    <p style={{ color: 'black' }}>Factors that DECREASED accuracy:</p>
+                                    {(selectedTacticsData?.accuracyNegativeFeedback || "No significant factors.").split('\n').map((factor, index) => (
+                                      <p key={index} style={{ margin: 0, paddingLeft: '1em', color: 'black' }}>- {factor}</p>
+                                    ))}
+                                  </div>
+                                }
+                                color="#f4888a" withArrow position="bottom"
+                              >
+                                <IconTrendingDown size={24} color="#f4888a" />
+                              </Tooltip>
+                            </Group>
+                          </Table.Td>
 
-                            {/* Damage Column */}
-                            <Table.Td>
-                              <Group justify="center" gap="xs">
-                                <Tooltip
-                                  label={
-                                    <div style={{ textAlign: 'left', paddingBottom: '0.7rem' }}>
-                                      <p style={{ color: 'black' }}>Factors that INCREASED damage:</p>
-                                      {(selectedTacticsData?.damagePositiveFeedback || "No significant factors.").split('\n').map((factor, index) => (
-                                        <p key={index} style={{ margin: 0, paddingLeft: '1em', color: 'black' }}>- {factor}</p>
-                                      ))}
-                                    </div>
-                                  }
-                                  color="#8bc17c" withArrow position="bottom"
-                                >
-                                  <IconTrendingUp size={24} color="#8bc17c" />
-                                </Tooltip>
-                                <Tooltip
-                                  label={
-                                    <div style={{ textAlign: 'left', paddingBottom: '0.7rem' }}>
-                                      <p style={{ color: 'black' }}>Factors that DECREASED damage:</p>
-                                      {(selectedTacticsData?.damageNegativeFeedback || "No significant factors.").split('\n').map((factor, index) => (
-                                        <p key={index} style={{ margin: 0, paddingLeft: '1em', color: 'black' }}>- {factor}</p>
-                                      ))}
-                                    </div>
-                                  }
-                                  color="#f4888a" withArrow position="bottom"
-                                >
-                                  <IconTrendingDown size={24} color="#f4888a" />
-                                </Tooltip>
-                              </Group>
-                            </Table.Td>
-                          </Table.Tr>
-                        </Table.Tbody>
-                      </Table>
-                      <Text style={{fontSize: '0.75rem', color: '#868e96', textAlign: 'center', marginTop: '0.05rem', fontStyle: 'italic'}}>
-                          Hover over the icons above for round's feedback.
-                      </Text>
-                    </Card.Section>
-                    
-                  </Card>
-                </Group>
-              )
-              }
-            </div>
+                          {/* Damage Column */}
+                          <Table.Td>
+                            <Group justify="center" gap="xs">
+                              <Tooltip
+                                label={
+                                  <div style={{ textAlign: 'left', paddingBottom: '0.7rem' }}>
+                                    <p style={{ color: 'black' }}>Factors that INCREASED damage:</p>
+                                    {(selectedTacticsData?.damagePositiveFeedback || "No significant factors.").split('\n').map((factor, index) => (
+                                      <p key={index} style={{ margin: 0, paddingLeft: '1em', color: 'black' }}>- {factor}</p>
+                                    ))}
+                                  </div>
+                                }
+                                color="#8bc17c" withArrow position="bottom"
+                              >
+                                <IconTrendingUp size={24} color="#8bc17c" />
+                              </Tooltip>
+                              <Tooltip
+                                label={
+                                  <div style={{ textAlign: 'left', paddingBottom: '0.7rem' }}>
+                                    <p style={{ color: 'black' }}>Factors that DECREASED damage:</p>
+                                    {(selectedTacticsData?.damageNegativeFeedback || "No significant factors.").split('\n').map((factor, index) => (
+                                      <p key={index} style={{ margin: 0, paddingLeft: '1em', color: 'black' }}>- {factor}</p>
+                                    ))}
+                                  </div>
+                                }
+                                color="#f4888a" withArrow position="bottom"
+                              >
+                                <IconTrendingDown size={24} color="#f4888a" />
+                              </Tooltip>
+                            </Group>
+                          </Table.Td>
+                        </Table.Tr>
+                      </Table.Tbody>
+                    </Table>
+                    <Text style={{ fontSize: '0.75rem', color: '#868e96', textAlign: 'center', marginTop: '0.05rem', fontStyle: 'italic' }}>
+                      Hover over the icons above for round's feedback.
+                    </Text>
+                  </Card.Section>
 
-            {/* Main table listing all engagements */}
-            <Table verticalSpacing={'xs'} style={{ width: '100%', tableLayout: 'fixed', justifyContent: 'space-between' }}>
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th>Round ID</Table.Th>
-                  <Table.Th>Friendly Unit Name</Table.Th>
-                  <Table.Th>Friendly Total Score</Table.Th>
-                  <Table.Th>Enemy Unit Name</Table.Th>
-                  <Table.Th>Enemy Total Score</Table.Th>
+                </Card>
+              </Group>
+            )
+            }
+          </div>
+
+          {/* Main table listing all engagements */}
+          <Table verticalSpacing={'xs'} style={{ width: '100%', tableLayout: 'fixed', justifyContent: 'space-between' }}>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Round ID</Table.Th>
+                <Table.Th>Friendly Unit Name</Table.Th>
+                <Table.Th>Friendly Total Score</Table.Th>
+                <Table.Th>Enemy Unit Name</Table.Th>
+                <Table.Th>Enemy Total Score</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            {/* Map through all engagements to create a row for each */}
+            {engagements.map((row, index) => (
+              <Table.Tbody key={index}>
+                <Table.Tr key={row.engagementid}>
+                  <Table.Td>{row.engagementid}</Table.Td>
+                  <Table.Td>{row.friendlyname}</Table.Td>
+                  <Table.Td>
+                    <Tooltip
+                      position="bottom"
+                      color="gray"
+                      transitionProps={{ transition: 'fade-up', duration: 300 }}
+                      label="Overall Score Out of 100"
+                    >
+                      <Progress.Root style={{ width: '200px', height: '25px' }}>
+                        <Progress.Section
+                          className={classes.progressSection}
+                          value={row.friendlytotalscore}
+                          color='#3d85c6'>
+                          {Number(row.friendlytotalscore).toFixed(0)}
+                        </Progress.Section>
+                      </Progress.Root>
+                    </Tooltip>
+                  </Table.Td>
+                  <Table.Td>{row.enemyname}</Table.Td>
+                  <Table.Td>
+                    <Tooltip
+                      position="bottom"
+                      color="gray"
+                      transitionProps={{ transition: 'fade-up', duration: 300 }}
+                      label="Overall Score Out of 100"
+                    >
+                      <Progress.Root style={{ width: '200px', height: '25px', display: 'flex' }}>
+
+                        <Progress.Section
+                          className={classes.progressSection}
+                          value={row.enemytotalscore}
+                          color='#c1432d'>
+                          {Number(row.enemytotalscore).toFixed(0)}
+                        </Progress.Section>
+                      </Progress.Root>
+                    </Tooltip>
+                  </Table.Td>
+                  <Table.Td style={{ display: 'flex' }}>
+                    {/* This button sets the selected engagement, causing the top card to re-render with this row's data */}
+                    <Button className='.toggle-details' size="xs" onClick={() => setSelectedEngagement(row)}>
+                      Show Engagement
+                    </Button>
+                  </Table.Td>
                 </Table.Tr>
-              </Table.Thead>
-              {/* Map through all engagements to create a row for each */}
-              {engagements.map((row, index) => ( 
-                <Table.Tbody key={index}>
-                  <Table.Tr key={row.engagementid}>
-                    <Table.Td>{row.engagementid}</Table.Td>
-                    <Table.Td>{row.friendlyname}</Table.Td>
-                    <Table.Td>
-                      <Tooltip
-                        position="bottom"
-                        color="gray"
-                        transitionProps={{ transition: 'fade-up', duration: 300 }}
-                        label="Overall Score Out of 100"
-                      >
-                        <Progress.Root style={{ width: '200px', height: '25px' }}>
-                          <Progress.Section
-                            className={classes.progressSection}
-                            value={row.friendlytotalscore}
-                            color='#3d85c6'>
-                            {Number(row.friendlytotalscore).toFixed(0)}
-                          </Progress.Section>
-                        </Progress.Root>
-                      </Tooltip>
-                    </Table.Td>
-                    <Table.Td>{row.enemyname}</Table.Td>
-                    <Table.Td>
-                      <Tooltip
-                        position="bottom"
-                        color="gray"
-                        transitionProps={{ transition: 'fade-up', duration: 300 }}
-                        label="Overall Score Out of 100"
-                      >
-                        <Progress.Root style={{ width: '200px', height: '25px', display: 'flex' }}>
+                {/* The collapsible section is currently commented out */}
+                <Table.Tr style={{ display: 'flex', justifyContent: 'center', width: '100%', marginLeft: '255%' }}>
+                  {/* <Collapse in={isOpen[index]} style={{ width: '100%' }}> ... </Collapse> */}
+                </Table.Tr>
+              </Table.Tbody>
+            ))}
+          </Table>
 
-                          <Progress.Section
-                            className={classes.progressSection}
-                            value={row.enemytotalscore}
-                            color='#c1432d'>
-                            {Number(row.enemytotalscore).toFixed(0)}
-                          </Progress.Section>
-                        </Progress.Root>
-                      </Tooltip>
-                    </Table.Td>
-                    <Table.Td style={{ display: 'flex' }}>
-                      {/* This button sets the selected engagement, causing the top card to re-render with this row's data */}
-                      <Button className='.toggle-details' size="xs" onClick={() => setSelectedEngagement(row)}>
-                        Show Engagement
-                      </Button>
-                    </Table.Td>
-                  </Table.Tr>
-                  {/* The collapsible section is currently commented out */}
-                  <Table.Tr style={{ display: 'flex', justifyContent: 'center', width: '100%', marginLeft: '255%' }}>
-                    {/* <Collapse in={isOpen[index]} style={{ width: '100%' }}> ... </Collapse> */}
-                  </Table.Tr>
-                </Table.Tbody>
-              ))}
-            </Table>
-          
         </AppShell.Main>
       </AppShell>
     </MantineProvider>

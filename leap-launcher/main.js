@@ -38,7 +38,7 @@ function createWindow() {
   });
 
   //win.webContents.openDevTools(); //debugging window for development
-  if(!fs.existsSync(appDataPath)) {
+  if (!fs.existsSync(appDataPath)) {
     dialog.showMessageBoxSync({
       type: 'info',
       title: 'Port 80 set up for LEAP',
@@ -164,39 +164,39 @@ How to fix:
 
         //console.log('[INFO] Building React app...');
         //exec('npm run build', { cwd: leapPath }, (err, stdout, stderr) => {
-          //if (err) {
-            //console.error('[ERROR] React build failed');
-            //console.error(stderr);
-          //}
+        //if (err) {
+        //console.error('[ERROR] React build failed');
+        //console.error(stderr);
+        //}
 
-          console.log('[INFO] React build completed successfully');
+        console.log('[INFO] React build completed successfully');
 
-          console.log('[INFO] Starting backend...');
-          exec(`start "" cmd /k "cd ${leapPath}/backend && node server.js"`); //this is for development and debugging so that the backend printouts show
-          //backendProcess = exec('node server.js', {
-            //cwd: path.join(leapPath, 'backend'),
-          //});
+        console.log('[INFO] Starting backend...');
+        exec(`start "" cmd /k "cd ${leapPath}/backend && node server.js"`); //this is for development and debugging so that the backend printouts show
+        //backendProcess = exec('node server.js', {
+        //cwd: path.join(leapPath, 'backend'),
+        //});
 
 
-          // Add small delay to let backend initialize
-          setTimeout(() => {
-            const disPath = path.join(leapPath, 'dis_receiver', 'leap dis manager.exe');
+        // Add small delay to let backend initialize
+        setTimeout(() => {
+          const disPath = path.join(leapPath, 'dis_receiver', 'leap dis manager.exe');
 
-            console.log('[DEBUG] Dis Listener path:', disPath);
+          console.log('[DEBUG] Dis Listener path:', disPath);
 
-            if (fs.existsSync(disPath)) {
-              console.log('[INFO] Starting dis listener');
-              listenerProcess = spawn(`"${disPath}"`, {
-                shell: true,
-                detached: true,
-                stdio: 'ignore'
-              });
-              listenerProcess.unref();
-              if(!fs.existsSync(secondInstructionFlagPath)) {
-                dialog.showMessageBoxSync({
-                  type: 'info',
-                  title:'Dis Listener Set up',
-                  message: ` For initial set up of your dis listener:
+          if (fs.existsSync(disPath)) {
+            console.log('[INFO] Starting dis listener');
+            listenerProcess = spawn(`"${disPath}"`, {
+              shell: true,
+              detached: true,
+              stdio: 'ignore'
+            });
+            listenerProcess.unref();
+            if (!fs.existsSync(secondInstructionFlagPath)) {
+              dialog.showMessageBoxSync({
+                type: 'info',
+                title: 'Dis Listener Set up',
+                message: ` For initial set up of your dis listener:
 1. Go to settings
 
 2. change to recieving IP address to 0.0.0.0
@@ -208,46 +208,47 @@ How to fix:
 5. change database port to 5432
 
 6. change exercise ID to the system ASCOTT is running on.`
-                });
-                fs.writeFileSync(secondInstructionFlagPath, 'shown');
-              }
-              //listenerProcess = exec(`"${disPath}"`);
-            } else console.warn('dis path does not exist:', disPath);
+              });
+              fs.writeFileSync(secondInstructionFlagPath, 'shown');
+            }
+            //listenerProcess = exec(`"${disPath}"`);
+          } else console.warn('dis path does not exist:', disPath);
 
-            console.log('[INFO] Restarting nginx...');
+          console.log('[INFO] Restarting nginx...');
 
-            console.log('[DEBUG] nginx path:', nginxPath);
-            exec('nginx.exe -s stop', { cwd: nginxPath }, () => {
-              nginxProcess = spawn('nginx.exe', [], {
-                cwd: nginxPath,
-                detached: false,
+          console.log('[DEBUG] nginx path:', nginxPath);
+          exec('nginx.exe -s stop', { cwd: nginxPath }, () => {
+            nginxProcess = spawn('nginx.exe', [], {
+              cwd: nginxPath,
+              detached: false,
+              stdio: 'ignore',
+            });
+            nginxProcess.unref();
+            nginxStarted = true;
+
+            console.log('[INFO] Nginx started successfully');
+
+            // Wait before opening the browser
+            setTimeout(() => {
+              const firefoxPath = 'C:\\Program Files\\Mozilla Firefox\\firefox.exe'; // adjust if needed
+              const tempProfile = path.join(__dirname, 'leap-browser-profile');
+
+              if (!fs.existsSync(tempProfile)) fs.mkdirSync(tempProfile, { recursive: true });
+
+              browserProcess = spawn(firefoxPath, [
+                '-profile', tempProfile,
+                '-new-window',
+                '-no-remote',
+                'http://localhost'
+              ], {
+                detached: true,
                 stdio: 'ignore',
               });
-              nginxProcess.unref();
-              nginxStarted = true;
+              browserProcess.unref();
 
-              console.log('[INFO] Nginx started successfully');
-
-              // Wait before opening the browser
-              setTimeout(() => {
-                const firefoxPath = 'C:\\Program Files\\Mozilla Firefox\\firefox.exe'; // adjust if needed
-                const tempProfile = path.join(__dirname, 'leap-browser-profile');
-
-                if (!fs.existsSync(tempProfile)) fs.mkdirSync(tempProfile, { recursive: true });
-
-                browserProcess = spawn(firefoxPath, [
-                  `--user-data-dir=${tempProfile}`,
-                  '--new-window',
-                  'http://localhost'
-                ], {
-                  detached: true,
-                  stdio: 'ignore',
-                });
-                browserProcess.unref();
-
-              }, 4000); // Delay to let nginx fully serve the app
-            });
-          }, 3000); // Delay to give backend time to be ready
+            }, 4000); // Delay to let nginx fully serve the app
+          });
+        }, 3000); // Delay to give backend time to be ready
         //});
       });
     });
@@ -282,12 +283,18 @@ function stopAllProcesses() {
   })
 
   if (browserProcess && browserProcess.pid) {
-    try {
-      process.kill(browserProcess.pid);
-      console.log('[INFO] LEAP Chrome tab closed');
-    } catch (e) {
-      console.warn('[WARN] Failed to close LEAP Chrome tab:', e.message);
-    }
+    exec(`taskkill /PID ${browserProcess.pid} /F /T`, (err) => {
+      if (err) {
+        console.error('Failed to run taskkill:', err);
+      }
+      process.exit();
+    });
+    //try {
+    //process.kill(browserProcess.pid);
+    //console.log('[INFO] LEAP tab closed');
+    //} catch (e) {
+    //console.warn('[WARN] Failed to close LEAP tab:', e.message);
+    //}
   }
 
 

@@ -425,11 +425,11 @@ function AdminPage() {
             <Button size='sm' variant='link' onClick={handleArrowClick} style={{ margin: '10px' }}>
               <FaArrowAltCircleLeft />
             </Button>
-            <div style={{ display: 'flex', justifyContent: 'center', margin: '40px' }}>
+            <div style={{ display: 'flex', justifyContent: 'center'}}>
               <img
                 src={logo}
                 alt="A descriptive alt text for the logo"
-                height="50"
+                height="30"
                 style={{
                   borderRadius: 'var(--mantine-radius-md)',
                   width: 'auto',
