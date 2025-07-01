@@ -5,7 +5,7 @@
 
 import '../App.css';
 // Import necessary UI components from the Mantine library
-import { AppShell, Image, Button, MantineProvider, SimpleGrid, Container, Text, Group, ThemeIcon, Box } from '@mantine/core';
+import { AppShell, Image, Button, MantineProvider, SimpleGrid, Container, Text, Group, Box } from '@mantine/core';
 // Import hooks from React and Mantine for state management and side effects
 // import { useDisclosure } from '@mantine/hooks';
 // Import useCallback along with other React hooks
@@ -237,7 +237,7 @@ function ObserverPage() {
                   statsBySize={unitStatsBySize['infantry'] ?? {}} // 🛠 fallback to empty object
                 />
                 <StatsRing
-                  title="Armor Company"
+                  title="Armor"
                   icon="armor"
                   friendlyCount={statsByType.armor?.friendlyCount ?? 0}
                   enemyCount={statsByType.armor?.enemyCount ?? 0}
