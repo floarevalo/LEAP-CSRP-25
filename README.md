@@ -3,6 +3,14 @@
 
 The Land Engagement Adjudication Platform (LEAP) Online is the follow on project developed by C1C Florence Arevalo (Class of 2026) and C2Cs Lea Broadbent & Mohamed Metwally​ (Class of 2027) for the United State Air Force Academy's Multi-Domain Laboratory (MDL). The new core functionality in LEAP Online integrates this program with the MDL's architecture using Distributed Interactive Simulation (DIS) protocol. Development and testing took place in June 2025 at the Air Force Research Laboratory's Gaming Research Integration for Learning Laboratory where the original application was developed by C1Cs Michaela Kovalsky, Kieran McCauley, Aaron Eakins, Luke Kuklis (Class of 2025).
 
+## Developers Getting Started
+
+1. Install PostgreSQL, pgAdmin 4 (included in PostgreSQL install), Node.js, VS Code, and Git/GitHub. For installation settings, reference LEAP Manual and Installation Guide.pdf
+2. Set up your pgAdmin databases, reference LEAP Manual and Installation Guide.pdf
+3. Clone repository to your local computer
+4. Open a command window and run "npm install"
+5. Developer tools are now set up 
+
 ## "master" Branch Start
 Development mode for code editing and development. 
 
