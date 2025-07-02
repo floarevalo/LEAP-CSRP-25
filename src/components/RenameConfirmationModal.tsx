@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Modal, Button, Title, Group, Text, TextInput } from '@mantine/core';
 import { Section } from '../pages/landingPage';
-
+import REACT_APP_BACKEND_URL from '../APIBase';
 // Define the props expected by this modal component
 interface RenameConfirmationModalProps {
     open: boolean; // Controls whether the modal is shown
@@ -45,7 +45,7 @@ export default function RenameConfirmationModal({ open, onClose, sectionId, onRe
         try {
             // Send PUT request to the backend to update the section ID
             console.log("Attempting to rename section");
-            await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/sections`, {
+            await axios.put(`${REACT_APP_BACKEND_URL}/sections`, {
                 sectionIdToBeRenamed: sectionId,
                 newSectionId: newSectionId // pass new name in body
             });

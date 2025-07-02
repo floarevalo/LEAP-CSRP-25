@@ -51,7 +51,7 @@ function createWindow() {
 
 4. On the right click "New Rule"
 
-5. Select "Port" -> Newt -> TCP _> Specific local ports: 80 -> Next
+5. Select "Port" -> New -> TCP -> Specific local ports: 80 -> Next
 
 6. Allow connection -> Next -> Private (if all computers running LEAP are on the same private network) -> name it LEAP permissions -> Finish
 
@@ -74,31 +74,40 @@ This message only shows once.`
 How to fix:
 1. The download page should open in your browser, if not use this link: 
     https://www.enterprisedb.com/downloads/postgres-postgresql-downloads
-    or look up postgres download
+    or find this link in your "LEAP Installation Guide"
 
 2. Download PostgreSQL 16.9 and use the installation file to set up
 
-3. when prompted my the PostgreSQL installer set password to postgres and install on port 5432
+*Install all default settings unless otherwise stated*
 
-4. During the install remember to check "add PostgreSQL to PATH"
+3. When prompted my the PostgreSQL installer set password to postgres and install on port 5432
 
-5. If intallation wizard pops up, no need to install add ons, you can close out of that
+4. You can set PostgreSQL to download to its default location
 
-6. If you already have PostreSQL 16.9 installed but it is not in path:
+5. If the "Stack Builder" window opens up, no need to use this, uncheck the box and finish set up
 
-  a) search this in for "C:\\Program Files\\PostgreSQL\\16\\bin in your file manager
+6. Add PostgreSQL to the system path:
 
-  b) go to your "Edit System Enviroment variables
+  a) search this in for "C:\\Program Files\\PostgreSQL\\16\\bin in your file manager and copy path to clipboard (you will need this later)
 
-  c) click enviroment variables
+  b) Search and open "Edit System Enviroment Variables" in you windows start menu
 
-  d) under system variables click path then edit
+  c) click "enviroment variables"
 
-  e) now click new and put the link to your own specific postgres bin folder here
+  d) under system variables click "path" then edit
 
-7. If your have PostgresSQL already but it is not on port 5432 installing this version will not be impeded
+  e) now click new and copy the path to your own specific postgres bin folder here
 
-  *For Port Error* if you are getting an error indicating port 5432 is not free follow these steps:
+7. Open pgAdmin 4:  *if you can't find pgAdmin 4 restart your computer then use the "LEAP Installation Guide" to restore database*
+
+  a) in this you can create a database for named LEAP and restore our LEAP database sql file found in your zip file, this is in plain text
+  *Refer to "LEAP Installation Guide" and find "Database Setup" for more instructions on data base restore*
+
+8. Restart your computer
+
+*If your have PostgresSQL already but it is not on port 5432 installing this version will not be impeded
+
+*For Port Error* if you are getting an error indicating port 5432 is not free follow these steps:
 
     a) open your computer task manager
 
@@ -114,16 +123,7 @@ How to fix:
 
     g) now in task manager go to detail and find the process that matches that PID
 
-    h) right click and hit "end task"
-
-8. For a user interface for the database use pgAdmin 4: 
-
-  a) in this you can create a database for named LEAP and restore our LEAP database sql file found in your zip file, this is in plain text
-  *Refer to "LEAP Online Manual" for more instructions on data base restore*
-
-  b) by doing this you have a user interface to change the database manually or the change the units being used in LEAP
-
-9. Restart computer and retry LEAP launcher`
+    h) right click and hit "end task"`
         });
         return;
       }
@@ -140,23 +140,27 @@ How to fix:
 How to fix:
 1. The Node.js download page will open in your browser, if not use this link:
    https://nodejs.org/en/download/
-   or look up node.js installer in browser
+   or find this link in your "LEAP Installation Guide"
+
+   *use default instasllation settings unless otherwise specified*
 
 2. Install Node.js make sure the last box at the top of the download page says with npm and use the installer for the .msi version
 
-3. If you think you already have Node.js installed with npm and as .msi you will need to add it to PATH:
+3. Allow the installer to make changes to your device
 
-  a) find your Node.js installation path with C:\Program Files\nodejs\ (this is the default intall path)
+4. Restart your computer and try LEAP launcher again
+
+If you still see this pop up after installing and restarting you need to add Node to PATH:
+
+  a) find your Node.js installation path with C:\\Program Files\\nodejs\ (this is the default intall path) and copy it to clipboard
 
   b) go to your "Edit System Enviroment variables"
 
-  c) click enviroment variables
+  c) click "enviroment variables"
 
-  d) under system variables click path then edit
+  d) under "system variables" click "path" then edit
 
-  e) now click new and put the link to your own specific node installation folder path here
-
-4. Restart your computer and try LEAP launcher again`
+  e) now click new and copy your node installation path here`
           });
           return;
         }
