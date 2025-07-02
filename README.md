@@ -54,7 +54,7 @@ Step 2. Open a new terminal tab or separate blank terminal. Run "npm start". Do 
 
 #### Building the production zip:
 1. Run "npm run build" in a command prompt opened in the LEAP-CSRP-25 folder
-2. Run "npm run package-dist" in a command prompt opened in your leap-launcher folder
+2. Run "npm run package-win" in a command prompt opened in your leap-launcher folder (this creates a "dist" folder)
 3. Create a new file for your production model folder
 4. Copy your build folder from LEAP-CSRP-25 into your new folder
 5. Go into your dist folder --> LEAP launcher-win32-x64 folder --> copy all the contents of this folder into your production model folder
